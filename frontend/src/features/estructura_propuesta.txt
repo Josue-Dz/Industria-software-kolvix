@@ -1,0 +1,3 @@
+En esta carpeta van una carpeta por cada feature por ejemplo: empresa, técnicos, ordenes,etc.
+
+Cada carpeta de feature puede contener otras carpetas por ejemplo: components, hooks, pages.
