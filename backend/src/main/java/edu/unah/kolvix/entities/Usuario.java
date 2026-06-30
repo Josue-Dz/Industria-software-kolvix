@@ -43,7 +43,7 @@ public class Usuario {
     @Column(name = "correo")    
     private String correo;
 
-    @Column(name = "password")  
+    @Column(name = "password_hash")  
     private String password;
 
     @Enumerated(EnumType.STRING)

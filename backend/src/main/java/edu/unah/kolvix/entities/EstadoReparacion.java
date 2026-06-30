@@ -25,14 +25,14 @@ public class EstadoReparacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_estado")
-    private Long id_estado;
+    private Integer id_estado;
 
     private String nombre;
 
     @Column(name = "color_hex")
     private String colorHex = "#6B7280";
 
-    private int orden;
+    private Short orden;
 
     @Column(name = "es_estado_final")
     private Boolean esEstadoFinal;

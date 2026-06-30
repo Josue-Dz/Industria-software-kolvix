@@ -38,6 +38,7 @@ public class PagoOrden {
 
     private BigDecimal monto;
 
+    @Column(length = 3)
     private String moneda = "HNL";
 
     @Enumerated(EnumType.STRING)

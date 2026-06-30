@@ -32,7 +32,7 @@ public class PlanSuscripcion {
     @Column(name = "monto_mensual", nullable = false)
     private BigDecimal montoMensual = BigDecimal.ZERO;
 
-    @Column(name = "moneda", nullable = false)
+    @Column(name = "moneda", nullable = false, length = 3)
     private String moneda = "HNL";
 
     @Column(name = "activo", nullable = false)

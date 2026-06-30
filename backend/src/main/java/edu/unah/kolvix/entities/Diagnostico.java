@@ -41,7 +41,7 @@ public class Diagnostico {
     @Column(name = "causa_raiz")
     private String causaRaiz;
 
-    @Column(name = "tiempo_estimado")
+    @Column(name = "tiempo_estimado_horas")
     private BigDecimal tiempoEstimado;
 
     // @Column(name = "costo_estimado")

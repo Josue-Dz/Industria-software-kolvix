@@ -56,7 +56,7 @@ public class OrdenTrabajo {
     @Column(name = "estado_pago", nullable = false, length = 20)
     private EstadoPagoOrden estadoPago = EstadoPagoOrden.NO_SOLICITADO;
 
-    @Column(name = "updated_ad")
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

@@ -40,7 +40,8 @@ public class EvidenciaFotografica {
 
     private boolean obligatorio;
 
-    private short ordenVisual;
+    @Column(name = "orden")
+    private Short ordenVisual;
 
     @CreationTimestamp
     @Column(name = "fecha_subida", nullable = false, updatable = false)

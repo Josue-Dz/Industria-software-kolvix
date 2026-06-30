@@ -39,6 +39,7 @@ public class CuentaCobro {
 
     private String titular;
 
+    @Column(length = 3)
     private String moneda = "HNL";
 
     private String instrucciones;
