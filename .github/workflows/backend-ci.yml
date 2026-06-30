@@ -1,0 +1,35 @@
+name: Java Backend CI
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+    paths:
+      - 'backend/**' # Adjust this path to match your backend directory name
+  pull_request:
+    branches: [ "main", "dev" ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    # Define the working directory if your backend is in a subfolder
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Compile and Test
+      # Runs the default compilation and tests without executing strict linters like Checkstyle
+      run: mvn clean compile test
