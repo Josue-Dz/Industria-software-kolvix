@@ -2,19 +2,20 @@ name: Java Backend CI
 
 on:
   push:
-    branches: [ "main", "dev" ]
+     # For testing this workflow , trigger on push to remote branch feature
+    branches: [ "main", "dev", "feature" ]
     paths:
-      - 'backend/**' # Adjust this path to match your backend directory name
+      - 'backend/**' 
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "main", "dev", "feature" ]
     paths:
       - 'backend/**'
+     
 
 jobs:
   build:
     runs-on: ubuntu-latest
     
-    # Define the working directory if your backend is in a subfolder
     defaults:
       run:
         working-directory: ./backend
@@ -30,6 +31,27 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
+    - name: Build and Start PostgreSQL Database
+      # Updated with the new database name (kolvix_bd) and password (sysdevjdz26)
+      run: |
+        docker build -t kolvix-db ./database
+        docker run -d -p 5432:5432 \
+          -e POSTGRES_USER=postgres \
+          -e POSTGRES_PASSWORD=sysdevjdz26 \
+          -e POSTGRES_DB=kolvix_bd \
+          --health-cmd="pg_isready -U postgres -d kolvix_bd" \
+          --health-interval=3s \
+          --health-timeout=5s \
+          --health-retries=10 \
+          --name kolvix-postgres kolvix-db
+
+    - name: Wait for Database to be Ready
+      run: |
+        echo "Waiting for PostgreSQL to initialize..."
+        while [ "$(docker inspect -f '{{.State.Health.Status}}' kolvix-postgres)" != "healthy" ]; do
+          sleep 2
+        done
+        echo "Database is initialized and ready!"
+
     - name: Compile and Test
-      # Runs the default compilation and tests without executing strict linters like Checkstyle
       run: mvn clean compile test
