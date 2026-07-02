@@ -14,14 +14,14 @@ import edu.unah.kolvix.enums.EstadoPagoOrden;
 public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long>{
 
     @EntityGraph(attributePaths = {"cliente", "dispositivo", "tecnico", "estado"})
-    Optional<OrdenTrabajo> findByIdAndEmpresaId(Long ordenId, Long empresaId);
+    Optional<OrdenTrabajo> findByIdOrdenAndEmpresaId(Long idOrden, Long empresaId);
 
     @EntityGraph(attributePaths = {"cliente", "dispositivo", "tecnico", "estado"})
-    Optional<OrdenTrabajo> findByCodigoSeguimineto(String codigoSeguimiento);
+    Optional<OrdenTrabajo> findByCodigoSeguimiento(String codigoSeguimiento);
 
     boolean existsByEmpresaIdAndNumeroOrden(Long empresaId, String numeroOrden);
 
-    boolean existByCodigoSeguimiento(String codigoSeguimiento);
+    boolean existsByCodigoSeguimiento(String codigoSeguimiento);
 
     Page<OrdenTrabajo> findbyEmpresaId(Long empresaId, Pageable pageable);
 
