@@ -15,8 +15,8 @@ import edu.unah.kolvix.enums.EstadoPagoOrden;
 
 public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long>{
 
-    @EntityGraph(attributePaths = {"cliente", "dispositivo", "tecnico", "estado"})
-    Optional<OrdenTrabajo> findByIdOrdenAndEmpresaId(Long idOrden, Long empresaId); // FIXED
+    @Query("SELECT o FROM OrdenTrabajo o WHERE o.idOrden = :idOrden AND o.empresa.idEmpresa = :empresaId")
+    Optional<OrdenTrabajo> findByIdOrdenAndEmpresaId(@Param("idOrden") Long idOrden, @Param("empresaId") Long empresaId);
 
     @EntityGraph(attributePaths = {"cliente", "dispositivo", "tecnico", "estado"})
     Optional<OrdenTrabajo> findByCodigoSeguimiento(String codigoSeguimiento); // FIXED
