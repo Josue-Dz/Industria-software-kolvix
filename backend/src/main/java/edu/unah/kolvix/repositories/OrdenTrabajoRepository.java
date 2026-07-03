@@ -14,21 +14,20 @@ import edu.unah.kolvix.enums.EstadoPagoOrden;
 public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long>{
 
     @EntityGraph(attributePaths = {"cliente", "dispositivo", "tecnico", "estado"})
-    Optional<OrdenTrabajo> findByIdOrdenAndEmpresaId(Long idOrden, Long empresaId);
+    Optional<OrdenTrabajo> findByIdOrdenAndEmpresaId(Long idOrden, Long empresaId); // FIXED
 
     @EntityGraph(attributePaths = {"cliente", "dispositivo", "tecnico", "estado"})
-    Optional<OrdenTrabajo> findByCodigoSeguimiento(String codigoSeguimiento);
+    Optional<OrdenTrabajo> findByCodigoSeguimiento(String codigoSeguimiento); // FIXED
 
     boolean existsByEmpresaIdAndNumeroOrden(Long empresaId, String numeroOrden);
 
-    boolean existsByCodigoSeguimiento(String codigoSeguimiento);
+    boolean existByCodigoSeguimiento(String codigoSeguimiento);
 
-    Page<OrdenTrabajo> findbyEmpresaId(Long empresaId, Pageable pageable);
+    Page<OrdenTrabajo> findByEmpresaId(Long empresaId, Pageable pageable); // FIXED (findby → findBy)
 
     Page<OrdenTrabajo> findByEmpresaIdAndEstadoId(Long empresaId, Long estadoId, Pageable pageable);
 
     Page<OrdenTrabajo> findByEmpresaIdAndTecnicoId(Long empresaId, Long tecnicoId, Pageable pageable);
 
     List<OrdenTrabajo> findByEmpresaIdAndEstadoPago(Long empresaId, EstadoPagoOrden estadoPago);
-
 }
