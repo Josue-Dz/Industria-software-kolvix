@@ -50,10 +50,10 @@ public class Usuario {
     @Column(name = "rol", nullable = false, length = 20)
     private RolUsuario rol = RolUsuario.RECEPCIONISTA;
 
-    private Boolean activo =  true;
+    private boolean activo =  true;
 
     @Column(name = "debe_cambiar_password")
-    private Boolean debeCambiarPassword = false;
+    private boolean debeCambiarPassword = false;
 
     @Column(name = "ultimo_acceso")
     private Instant ultimoAcceso;

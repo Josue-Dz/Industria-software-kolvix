@@ -48,7 +48,7 @@ public class Empresa {
 
 
     @Column(name = "activo")
-    private Boolean activo = true;
+    private boolean activo = true;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
