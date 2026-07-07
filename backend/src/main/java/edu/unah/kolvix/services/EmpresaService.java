@@ -8,6 +8,7 @@ import edu.unah.kolvix.entities.Empresa;
 import edu.unah.kolvix.entities.PlanSuscripcion;
 import edu.unah.kolvix.repositories.EmpresaRepository;
 import edu.unah.kolvix.repositories.PlanSuscripcionRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -18,6 +19,7 @@ public class EmpresaService {
     private final PlanSuscripcionRepository planSuscripcionRepository;
 
 
+    @Transactional
     public EmpresaResponse registrarEmpresa(EmpresaRegistroRequest request){
 
         boolean existeCorreo = empresaRepository.existsByCorreoIgnoreCase(request.correo());
@@ -31,7 +33,7 @@ public class EmpresaService {
 
         Empresa empresa = new Empresa();
         empresa.setNombre(request.nombre());
-        empresa.setRtn(request.rtn());
+        empresa.setRtn(request.rtn().isBlank() ? null : request.rtn());
         empresa.setTelefono(request.telefono());
         empresa.setCorreo(request.correo());
         empresa.setDireccion(request.direccion());
