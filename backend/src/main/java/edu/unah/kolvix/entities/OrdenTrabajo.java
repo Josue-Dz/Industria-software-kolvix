@@ -36,7 +36,7 @@ public class OrdenTrabajo {
     private String numeroOrden;
 
     @Column(name = "codigo_seguimiento")
-    private String codigoSeguimineto;
+    private String codigoSeguimiento;
 
     @Column(name = "problema_reportado")
     private String problemaReportado;

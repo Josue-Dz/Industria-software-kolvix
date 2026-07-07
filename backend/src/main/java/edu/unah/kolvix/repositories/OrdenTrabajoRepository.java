@@ -8,27 +8,39 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import edu.unah.kolvix.entities.EstadoReparacion;
 import edu.unah.kolvix.entities.OrdenTrabajo;
 import edu.unah.kolvix.enums.EstadoPagoOrden;
 
-public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long>{
+public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long> {
 
     @EntityGraph(attributePaths = {"cliente", "dispositivo", "tecnico", "estado"})
-    Optional<OrdenTrabajo> findByIdAndEmpresaId(Long ordenId, Long empresaId);
+    Optional<OrdenTrabajo> findByIdOrdenAndEmpresaIdEmpresa(Long id, Long empresaId);
 
     @EntityGraph(attributePaths = {"cliente", "dispositivo", "tecnico", "estado"})
-    Optional<OrdenTrabajo> findByCodigoSeguimineto(String codigoSeguimiento);
+    Optional<OrdenTrabajo> findByCodigoSeguimiento(String codigoSeguimiento); 
 
-    boolean existsByEmpresaIdAndNumeroOrden(Long empresaId, String numeroOrden);
+    boolean existsByEmpresaIdEmpresaAndNumeroOrden(Long empresaId, String numeroOrden);
 
-    boolean existByCodigoSeguimiento(String codigoSeguimiento);
+    boolean existsByCodigoSeguimiento(String codigoSeguimiento);
 
-    Page<OrdenTrabajo> findbyEmpresaId(Long empresaId, Pageable pageable);
+    Page<OrdenTrabajo> findByEmpresaIdEmpresaOrderByFechaIngresoDesc(Long empresaId, Pageable pageable);
 
-    Page<OrdenTrabajo> findByEmpresaIdAndEstadoId(Long empresaId, Long estadoId, Pageable pageable);
+    Page<OrdenTrabajo> findByEmpresaIdEmpresaAndEstadoOrderByFechaIngresoDesc(
+            Long empresaId,
+            EstadoReparacion estado,
+            Pageable pageable
+    );
 
-    Page<OrdenTrabajo> findByEmpresaIdAndTecnicoId(Long empresaId, Long tecnicoId, Pageable pageable);
+    Page<OrdenTrabajo> findByEmpresaIdEmpresaAndTecnicoIdTecnicoOrderByFechaIngresoDesc(
+            Long empresaId,
+            Long tecnicoId,
+            Pageable pageable
+    );
 
-    List<OrdenTrabajo> findByEmpresaIdAndEstadoPago(Long empresaId, EstadoPagoOrden estadoPago);
-
+    List<OrdenTrabajo> findByEmpresaIdEmpresaAndEstadoPagoOrderByFechaIngresoDesc(
+            Long empresaId,
+            EstadoPagoOrden estadoPago
+    );
 }
+

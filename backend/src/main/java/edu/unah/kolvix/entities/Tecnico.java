@@ -50,7 +50,7 @@ public class Tecnico {
     @Column(name = "url_fotografia")
     private String urlFotografia;
 
-    private Boolean activo = true;
+    private boolean activo = true;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_empresa", nullable = false)
