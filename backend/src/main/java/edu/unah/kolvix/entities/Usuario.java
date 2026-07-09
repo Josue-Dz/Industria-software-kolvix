@@ -1,8 +1,13 @@
 package edu.unah.kolvix.entities;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import edu.unah.kolvix.enums.RolUsuario;
 import jakarta.persistence.Column;
@@ -27,7 +32,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class Usuario {
+public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -66,4 +71,39 @@ public class Usuario {
     @JoinColumn(name = "id_empresa", nullable = false)
     private Empresa empresa;
 
+
+    // UserDetails
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + rol.name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return correo;
+    }
+
+    @Override
+    public boolean isAccountNonExpired(){
+        return true;
+     }
+    @Override
+    public boolean isAccountNonLocked(){
+        return true;
+     }
+    @Override
+    public boolean isCredentialsNonExpired(){
+        return true; 
+    }
+    @Override
+    public boolean isEnabled(){ 
+        return activo;
+    }
+
+    public String obtenerIniciales() {
+        String i1 = (nombre != null && !nombre.isBlank()) ? nombre.substring(0, 1) : "";
+        String i2 = (apellido != null && !apellido.isBlank()) ? apellido.substring(0, 1) : "";
+        return (i1 + i2).toUpperCase();
+    }
 }
