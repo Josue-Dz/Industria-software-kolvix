@@ -2,12 +2,15 @@ package edu.unah.kolvix.services;
 
 import org.springframework.stereotype.Service;
 
+import edu.unah.kolvix.Jwt.RegistroEmpresaResponse;
 import edu.unah.kolvix.dtos.empresa.EmpresaRegistroRequest;
 import edu.unah.kolvix.dtos.empresa.EmpresaResponse;
 import edu.unah.kolvix.entities.Empresa;
 import edu.unah.kolvix.entities.PlanSuscripcion;
+import edu.unah.kolvix.entities.Usuario;
 import edu.unah.kolvix.repositories.EmpresaRepository;
 import edu.unah.kolvix.repositories.PlanSuscripcionRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -17,10 +20,11 @@ public class EmpresaService {
 
     private final EmpresaRepository empresaRepository;
     private final PlanSuscripcionRepository planSuscripcionRepository;
-
+    private final AuthService authService;
+    private final UsuarioService usuarioService;
 
     @Transactional
-    public EmpresaResponse registrarEmpresa(EmpresaRegistroRequest request){
+    public RegistroEmpresaResponse registrarEmpresa(EmpresaRegistroRequest request, HttpServletResponse response) {
 
         boolean existeCorreo = empresaRepository.existsByCorreoIgnoreCase(request.correo());
         PlanSuscripcion plan = planSuscripcionRepository.findById(request.codigoPlan()).orElseThrow(
@@ -41,7 +45,7 @@ public class EmpresaService {
 
         empresa = empresaRepository.save(empresa);
 
-        EmpresaResponse response = new EmpresaResponse(
+        EmpresaResponse empresaResponse = new EmpresaResponse(
             empresa.getIdEmpresa(),
             empresa.getNombre(),
             empresa.getRtn(),
@@ -54,12 +58,12 @@ public class EmpresaService {
             empresa.getFechaRegistro()
         );
 
-        /*
-            @TODO: Implementar la creación del usuario administrador de la empresa después de registrar la empresa. Lo podes implementar en el service de usuario y llamarlo desde aquí, para que el service tenga una única responsabilidad.
-        */
+       // Se crea el usuario administrador y se autentica de una vez (cookie)
+        Usuario admin = usuarioService.crearUsuarioAdmin(empresa, request);
+        authService.generarTokenYCookie(admin, response);
         
-
-        return response;
+    return new RegistroEmpresaResponse(empresaResponse, authService.mapearUsuarioResponse(admin));
+    
     }
 
 }
