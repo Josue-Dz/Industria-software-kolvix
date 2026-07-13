@@ -31,7 +31,7 @@ public class Entrega {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_entrega")
-    private Long id;
+    private Long idEntrega;
 
     @Column(name = "identidad_verificada", nullable = false)
     private boolean identidadVerificada;

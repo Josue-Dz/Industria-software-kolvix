@@ -11,5 +11,5 @@ public interface CategoriaServicioRepository extends JpaRepository<CategoriaServ
 
     List<CategoriaServicio> findByEmpresaIdEmpresaOrderByCategoriaNombreAsc(Long empresaId);
 
-    Optional<CategoriaServicio> findByIdCategoriaServicioAndEmpresaIdEmpresa(Integer idCategoriaServicio, Long empresaId);
+    Optional<CategoriaServicio> findByIdAndEmpresaIdEmpresa(Integer idCategoriaServicio, Long empresaId);
 }

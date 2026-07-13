@@ -25,7 +25,7 @@ public class AlbumEvidencia {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_album")
-    private Short id;
+    private Short idAlbum;
 
     @Enumerated(EnumType.STRING)
     private AlbumEvidenciaCodigo codigo;

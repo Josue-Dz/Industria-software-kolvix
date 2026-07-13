@@ -38,7 +38,7 @@ public class ChecklistRecepcion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_checklist")
-    private Long id;
+    private Long idChecklist;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado_fisico_general", length = 30)

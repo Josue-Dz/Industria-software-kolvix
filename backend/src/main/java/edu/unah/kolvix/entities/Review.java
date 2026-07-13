@@ -30,7 +30,7 @@ public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_review")
-    private Long id;
+    private Long idReview;
 
     private Short calificacion;
 
