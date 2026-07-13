@@ -1,5 +1,6 @@
 package edu.unah.kolvix.entities;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -42,7 +43,7 @@ public class Entrega {
 
     @CreationTimestamp
     @Column(name = "fecha_entrega", nullable = false, updatable = false)
-    private OffsetDateTime fechaEntrega;
+    private Instant fechaEntrega;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_orden", nullable = false, unique = true)
