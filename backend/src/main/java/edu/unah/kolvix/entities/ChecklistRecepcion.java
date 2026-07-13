@@ -1,6 +1,6 @@
 package edu.unah.kolvix.entities;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +38,7 @@ public class ChecklistRecepcion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_checklist")
-    private Long id;
+    private Long idChecklist;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado_fisico_general", length = 30)
@@ -57,11 +57,11 @@ public class ChecklistRecepcion {
     private String urlDocumentoAceptacion;
 
     @Column(name = "fecha_aceptacion")
-    private OffsetDateTime fechaAceptacion;
+    private Instant fechaAceptacion;
 
     @CreationTimestamp
     @Column(name = "fecha", nullable = false, updatable = false)
-    private OffsetDateTime fecha;
+    private Instant fecha;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_orden", nullable = false, unique = true)

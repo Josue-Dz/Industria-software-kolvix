@@ -25,7 +25,7 @@ public class EstadoReparacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_estado")
-    private Integer id_estado;
+    private Integer idEstado;
 
     private String nombre;
 

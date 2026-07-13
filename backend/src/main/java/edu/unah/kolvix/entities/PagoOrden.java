@@ -34,7 +34,7 @@ public class PagoOrden {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_pago")
-    private Long id;
+    private Long idPago;
 
     private BigDecimal monto;
 

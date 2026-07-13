@@ -31,7 +31,7 @@ public class Notificacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_notificacion")
-    private Long id;
+    private Long idNotificacion;
 
     @Enumerated(EnumType.STRING)
     private CanalNotificacion canal;

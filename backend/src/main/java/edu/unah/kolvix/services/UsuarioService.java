@@ -8,6 +8,7 @@ import edu.unah.kolvix.entities.Empresa;
 import edu.unah.kolvix.entities.Usuario;
 import edu.unah.kolvix.enums.RolUsuario;
 import edu.unah.kolvix.repositories.UsuarioRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -18,6 +19,7 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
 
     // El rol admin lo defini aqui y no viene del request
+    @Transactional
     public Usuario crearUsuarioAdmin(Empresa empresa, EmpresaRegistroRequest request) {
         if (usuarioRepository.existsByCorreoIgnoreCase(request.correoAdministrador())) {
             throw new IllegalArgumentException("El correo del administrador ya está registrado");
