@@ -29,7 +29,7 @@ public class EvidenciaFotografica {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_evidencia")
-    private Long id;
+    private Long idEvidencia;
 
     private String etiqueta;
 

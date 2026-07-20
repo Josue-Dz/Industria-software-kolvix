@@ -33,7 +33,7 @@ public class MovimientoInventario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_movimiento")
-    private Long id;
+    private Long idMovimiento;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_movimiento", nullable = false)

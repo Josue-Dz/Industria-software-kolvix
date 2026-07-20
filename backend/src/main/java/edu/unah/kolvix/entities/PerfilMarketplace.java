@@ -30,7 +30,7 @@ public class PerfilMarketplace {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_marketplace")
-    private Long id;
+    private Long idMarketplace;
 
     @Column(name = "descripcion_publica")
     private String descripcionPublica;
