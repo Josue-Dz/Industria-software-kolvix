@@ -22,6 +22,8 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
 
     boolean existsByEmpresaIdEmpresaAndNumeroOrden(Long empresaId, String numeroOrden);
 
+    Optional<OrdenTrabajo> findByEmpresaIdEmpresaAndNumeroOrden(Long empresaId, String numeroOrden);
+
     boolean existsByCodigoSeguimiento(String codigoSeguimiento);
 
     Page<OrdenTrabajo> findByEmpresaIdEmpresaOrderByFechaIngresoDesc(Long empresaId, Pageable pageable);
