@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '../../../components/layout/DashboardLayout';
 import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
-import { Plus, Search, Eye, Edit3, Trash2, X, CheckCircle, Camera } from 'lucide-react';
+import { Plus, Search, Eye, Edit3, Trash2, X, Camera } from 'lucide-react';
 
 export const OrdenesPage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState('Todos los estados');

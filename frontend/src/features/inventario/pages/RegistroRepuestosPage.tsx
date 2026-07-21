@@ -4,7 +4,7 @@ import { DashboardLayout } from '../../../components/layout/DashboardLayout';
 import { Card } from '../../../components/ui/Card';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
-import { ArrowLeft, Upload, CheckCircle2 } from 'lucide-react';
+import { Upload, CheckCircle2 } from 'lucide-react';
 
 export const RegistroRepuestosPage: React.FC = () => {
   const navigate = useNavigate();
