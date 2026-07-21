@@ -13,7 +13,9 @@ import edu.unah.kolvix.dtos.usuario.TecnicoUpdateRequest;
 import edu.unah.kolvix.entities.Empresa;
 import edu.unah.kolvix.entities.Tecnico;
 import edu.unah.kolvix.entities.Usuario;
+import edu.unah.kolvix.enums.RolUsuario;
 import edu.unah.kolvix.repositories.TecnicoRepository;
+import edu.unah.kolvix.repositories.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -21,16 +23,25 @@ import lombok.RequiredArgsConstructor;
 public class TecnicoService {
     
     private final TecnicoRepository tecnicoRepository;
-    private final UsuarioService usuarioService;
+    private final UsuarioRepository usuarioRepository;
 
     @Transactional
     public TecnicoResponse crear(TecnicoRequest request, Empresa empresa) {
+
+        Usuario usuario = usuarioRepository.findByIdUsuarioAndEmpresaIdEmpresa(request.idUsuario(), empresa.getIdEmpresa())
+                .orElseThrow(() -> new IllegalArgumentException("El usuario no existe en esta empresa"));
+
+        if (usuario.getRol() != RolUsuario.TECNICO) {
+            throw new IllegalArgumentException("El usuario debe tener rol TECNICO para poder asociarse");
+        }
+
+        if (tecnicoRepository.existsByUsuarioIdUsuario(usuario.getIdUsuario())) {
+            throw new IllegalArgumentException("Este usuario ya está asociado a un técnico existente");
+        }
+
         if (tecnicoRepository.existsByEmpresaIdEmpresaAndDni(empresa.getIdEmpresa(), request.dni())) {
             throw new IllegalArgumentException("Ya existe un técnico con ese DNI en la empresa");
         }
-
-        Usuario usuario = usuarioService.crearUsuarioTecnico(
-                empresa, request.nombre(), request.apellido(), request.correo());
 
         Tecnico tecnico = new Tecnico();
         tecnico.setEmpresa(empresa);

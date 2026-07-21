@@ -15,6 +15,8 @@ import edu.unah.kolvix.Jwt.JwtService;
 import edu.unah.kolvix.Jwt.LoginRequestDTO;
 import edu.unah.kolvix.dtos.usuario.UsuarioResponse;
 import edu.unah.kolvix.entities.Usuario;
+import edu.unah.kolvix.enums.RolUsuario;
+import edu.unah.kolvix.repositories.TecnicoRepository;
 import edu.unah.kolvix.repositories.UsuarioRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthService {
     
 private final UsuarioRepository usuarioRepository;
+    private final TecnicoRepository tecnicoRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
@@ -43,25 +46,25 @@ private final UsuarioRepository usuarioRepository;
     public void generarTokenYCookie(Usuario usuario, HttpServletResponse response) {
         String token = jwtService.getToken(usuario);
         ResponseCookie cookie = ResponseCookie.from("token", token)
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .path("/")
-                .maxAge(10 * 60 * 60)
-                .build();
+            .httpOnly(true)
+            .secure(false) // Changed to false for local HTTP testing
+            .sameSite("Lax") // Changed to Lax for HTTP compatibility
+            .path("/")
+            .maxAge(10 * 60 * 60)
+            .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-    }
+}
 
     public void logout(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie.from("token", "")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .path("/")
-                .maxAge(0) // borra la cookie
-                .build();
+            .httpOnly(true)
+            .secure(false)
+            .sameSite("Lax")
+            .path("/")
+            .maxAge(0)
+            .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-    }
+}
 
     public UsuarioResponse getMyProfile() {
         Usuario usuario = getUsuarioAutenticado();
@@ -76,7 +79,21 @@ private final UsuarioRepository usuarioRepository;
         return usuarioRepository.findByCorreoIgnoreCase(principal.getCorreo())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
     }
+    public boolean isTecnicoOwner(Long idTecnico) {
+        try {
+            Usuario usuarioAutenticado = getUsuarioAutenticado();
+            if (usuarioAutenticado.getRol() != RolUsuario.TECNICO) {
+                return false;
+            }
 
+            return tecnicoRepository.findById(idTecnico)
+                    .map(tecnico -> tecnico.getUsuario() != null
+                            && tecnico.getUsuario().getIdUsuario().equals(usuarioAutenticado.getIdUsuario()))
+                    .orElse(false);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
     public UsuarioResponse mapearUsuarioResponse(Usuario usuario) {
         return new UsuarioResponse(
                 usuario.getIdUsuario(),

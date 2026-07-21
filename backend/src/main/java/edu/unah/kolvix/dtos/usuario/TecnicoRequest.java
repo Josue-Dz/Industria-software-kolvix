@@ -2,15 +2,13 @@ package edu.unah.kolvix.dtos.usuario;
 
 import java.time.LocalDate;
 
-import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 //Se quita el ID_USUARIO porque no trae un usuario existente, se crea uno nuevo internamente
 public record TecnicoRequest(
-        @NotBlank @Size(max = 50) String nombre,
-        @NotBlank @Size(max = 50) String apellido,
-        @NotBlank @Email @Size(max = 100) String correo,
+        @NotNull Long idUsuario,
         @NotBlank @Size(max = 20) String dni,
         @Size(max = 20) String rtn,
         @Size(max = 255) String direccion,
