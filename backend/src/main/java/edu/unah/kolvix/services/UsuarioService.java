@@ -1,5 +1,7 @@
 package edu.unah.kolvix.services;
 
+import java.util.UUID;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -36,4 +38,29 @@ public class UsuarioService {
 
         return usuarioRepository.save(admin);
     }
+
+
+    // Usuario interno para el técnico. Sin login habilitado por ahora:
+    // password temporal aleatoria + debeCambiarPassword = true, queda listo para
+    // cuando se implemente esa fase.
+    public Usuario crearUsuarioTecnico(Empresa empresa, String nombre, String apellido, String correo) {
+        if (usuarioRepository.existsByCorreoIgnoreCase(correo)) {
+            throw new IllegalArgumentException("El correo ya está registrado");
+        }
+
+        String passwordTemporal = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+
+        Usuario usuario = new Usuario();
+        usuario.setEmpresa(empresa);
+        usuario.setNombre(nombre);
+        usuario.setApellido(apellido);
+        usuario.setCorreo(correo);
+        usuario.setPassword(passwordEncoder.encode(passwordTemporal));
+        usuario.setRol(RolUsuario.TECNICO);
+        usuario.setActivo(true);
+        usuario.setDebeCambiarPassword(true);
+
+        return usuarioRepository.save(usuario);
+    }
 }
+

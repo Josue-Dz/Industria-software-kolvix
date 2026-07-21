@@ -33,6 +33,7 @@ public class SecurityConfig {
                         // seguimiento del cliente por código, sin login (según flujo MVP)
                         .requestMatchers("/api/seguimiento/**").permitAll()
                         .requestMatchers("/api/usuarios/**").hasAnyRole("ADMIN", "PROPIETARIO")
+                        .requestMatchers("/api/tecnicos/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
