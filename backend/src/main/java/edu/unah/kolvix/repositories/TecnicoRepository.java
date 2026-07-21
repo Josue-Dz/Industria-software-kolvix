@@ -24,4 +24,6 @@ public interface TecnicoRepository extends JpaRepository<Tecnico, Long>{
 
     boolean existsByEmpresaIdEmpresaAndDni(Long empresaId, String dni);
 
+    boolean existsByUsuarioIdUsuario(Long idUsuario);
+
 }

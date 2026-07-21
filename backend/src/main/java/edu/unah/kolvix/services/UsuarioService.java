@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import edu.unah.kolvix.dtos.empresa.EmpresaRegistroRequest;
+import edu.unah.kolvix.dtos.usuario.UsuarioRequest;
 import edu.unah.kolvix.entities.Empresa;
 import edu.unah.kolvix.entities.Usuario;
 import edu.unah.kolvix.enums.RolUsuario;
@@ -40,27 +41,33 @@ public class UsuarioService {
     }
 
 
-    // Usuario interno para el técnico. Sin login habilitado por ahora:
-    // password temporal aleatoria + debeCambiarPassword = true, queda listo para
-    // cuando se implemente esa fase.
-    public Usuario crearUsuarioTecnico(Empresa empresa, String nombre, String apellido, String correo) {
-        if (usuarioRepository.existsByCorreoIgnoreCase(correo)) {
+   // Este crear es generico, usado por TecnicoService y (más adelante) por UsuarioController
+    // para crear técnicos/recepcionistas. Si no viene password, se genera una
+    // temporal y se marca debeCambiarPassword=true (sin login habilitado todavía).
+    @Transactional
+    public Usuario crear(UsuarioRequest request, Empresa empresa) {
+        if (usuarioRepository.existsByCorreoIgnoreCase(request.correo())) {
             throw new IllegalArgumentException("El correo ya está registrado");
         }
 
-        String passwordTemporal = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        boolean sinPassword = request.password() == null || request.password().isBlank();
+        String passwordFinal = sinPassword ? generarPasswordTemporal() : request.password();
 
         Usuario usuario = new Usuario();
         usuario.setEmpresa(empresa);
-        usuario.setNombre(nombre);
-        usuario.setApellido(apellido);
-        usuario.setCorreo(correo);
-        usuario.setPassword(passwordEncoder.encode(passwordTemporal));
-        usuario.setRol(RolUsuario.TECNICO);
-        usuario.setActivo(true);
-        usuario.setDebeCambiarPassword(true);
+        usuario.setNombre(request.nombre());
+        usuario.setApellido(request.apellido());
+        usuario.setCorreo(request.correo());
+        usuario.setPassword(passwordEncoder.encode(passwordFinal));
+        usuario.setRol(request.rol());
+        usuario.setActivo(request.activo());
+        usuario.setDebeCambiarPassword(sinPassword);
 
         return usuarioRepository.save(usuario);
+    }
+
+    private String generarPasswordTemporal() {
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }
 }
 
