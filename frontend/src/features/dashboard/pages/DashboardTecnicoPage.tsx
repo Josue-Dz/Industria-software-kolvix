@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { DashboardLayout } from '../../../components/layout/DashboardLayout';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
-import { Wrench, Camera, CheckCircle, Clock } from 'lucide-react';
+import { Wrench, Camera } from 'lucide-react';
 
 export const DashboardTecnicoPage: React.FC = () => {
   return (

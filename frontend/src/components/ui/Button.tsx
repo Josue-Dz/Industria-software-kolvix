@@ -15,12 +15,6 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
-  const sizeStyles = {
-    sm: 'padding: 8px 16px; font-size: 13px;',
-    md: 'padding: 12px 24px; font-size: 15px;',
-    lg: 'padding: 16px 32px; font-size: 16px;'
-  }[size];
-
   return (
     <button
       className={`btn btn-${variant} ${className}`}

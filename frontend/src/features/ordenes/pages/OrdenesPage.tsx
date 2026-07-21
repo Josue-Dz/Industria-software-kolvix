@@ -5,12 +5,29 @@ import { Card } from '../../../components/ui/Card';
 import { Input } from '../../../components/ui/Input';
 import { Plus, Search, Eye, Edit3, Trash2, X, Camera } from 'lucide-react';
 
+interface OrderTicket {
+  ticketId: string;
+  client: string;
+  phone: string;
+  device: string;
+  serial: string;
+  tech: string;
+  status: string;
+  total: string;
+  reportedDamage: string;
+  diagBase: string;
+  partsCost: string;
+  laborCost: string;
+  evidenceNote1: string;
+  evidenceNote2: string;
+}
+
 export const OrdenesPage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState('Todos los estados');
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeDrawerTicket, setActiveDrawerTicket] = useState<any | null>(null);
+  const [activeDrawerTicket, setActiveDrawerTicket] = useState<OrderTicket | null>(null);
 
-  const [orders, setOrders] = useState([
+  const [orders, setOrders] = useState<OrderTicket[]>([
     {
       ticketId: 'KLX-2026-F89D',
       client: 'Nohely Reyes',

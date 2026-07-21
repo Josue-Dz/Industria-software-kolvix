@@ -4,7 +4,7 @@ import { Footer } from '../../../components/layout/Footer';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
-import { Search, Smartphone, Wrench, CheckCircle, Clock, FileText } from 'lucide-react';
+import { Search, CheckCircle, Clock } from 'lucide-react';
 
 export const ConsultaReparacionPage: React.FC = () => {
   const [code, setCode] = useState('ORD-2026-089');

@@ -12,8 +12,7 @@ import {
   PackageCheck,
   AlertTriangle,
   ChevronRight,
-  Clock,
-  ArrowRight
+  Clock
 } from 'lucide-react';
 
 export const DashboardTallerPage: React.FC = () => {

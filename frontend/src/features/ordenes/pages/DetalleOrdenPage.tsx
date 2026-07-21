@@ -27,12 +27,20 @@ import {
   Trash2
 } from 'lucide-react';
 
+interface InventoryItem {
+  sku: string;
+  name: string;
+  category: string;
+  price: string;
+  stock: number;
+}
+
 export const DetalleOrdenPage: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'info' | 'diag' | 'cot' | 'evi'>('cot');
   const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
   const [inventorySearch, setInventorySearch] = useState('');
 
-  const availableInventory = [
+  const availableInventory: InventoryItem[] = [
     { sku: 'REP-001', name: 'Pantalla LCD Retina 14', category: 'Pantallas', price: 'L. 500', stock: 12 },
     { sku: 'REP-002', name: 'Batería compatible MacBook Pro', category: 'Batería', price: 'L. 1500', stock: 8 },
     { sku: 'REP-003', name: 'Flex de carga USB-C', category: 'Flex', price: 'L. 800', stock: 10 },
@@ -49,7 +57,7 @@ export const DetalleOrdenPage: React.FC = () => {
     { sku: 'REP-003', name: 'Flex de carga USB-C', category: 'Flex', price: 'L. 800', qty: 1, stock: '10 disponibles' }
   ]);
 
-  const handleSelectPart = (part: any) => {
+  const handleSelectPart = (part: InventoryItem) => {
     if (!assignedParts.find(p => p.sku === part.sku)) {
       setAssignedParts(prev => [...prev, {
         sku: part.sku,
