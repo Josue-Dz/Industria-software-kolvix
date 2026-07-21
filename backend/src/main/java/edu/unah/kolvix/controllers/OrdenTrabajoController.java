@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.unah.kolvix.dtos.orden.AsignarTecnicoRequest;
+import edu.unah.kolvix.dtos.orden.CambioEstadoOrdenRequest;
 import edu.unah.kolvix.dtos.orden.CambioEstadoPagoRequest;
-import edu.unah.kolvix.dtos.orden.EstadoReparacionRequest;
 import edu.unah.kolvix.dtos.orden.OrdenTrabajoRequest;
 import edu.unah.kolvix.dtos.orden.OrdenTrabajoResponse;
 import edu.unah.kolvix.enums.EstadoPagoOrden;
@@ -78,7 +78,7 @@ public class OrdenTrabajoController {
     public ResponseEntity<OrdenTrabajoResponse> cambiarEstadoReparacion(
             @PathVariable Long empresaId,
             @PathVariable Long idOrden,
-            @Valid @RequestBody EstadoReparacionRequest request) {
+            @Valid @RequestBody CambioEstadoOrdenRequest request) {
         return ResponseEntity.ok(ordenTrabajoService.cambiarEstadoReparacion(empresaId, idOrden, request));
     }
 

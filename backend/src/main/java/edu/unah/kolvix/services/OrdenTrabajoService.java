@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import edu.unah.kolvix.dtos.orden.CambioEstadoPagoRequest;
 import edu.unah.kolvix.dtos.orden.AsignarTecnicoRequest;
-import edu.unah.kolvix.dtos.orden.EstadoReparacionRequest;
+import edu.unah.kolvix.dtos.orden.CambioEstadoOrdenRequest;
+import edu.unah.kolvix.dtos.orden.CambioEstadoPagoRequest;
 import edu.unah.kolvix.dtos.orden.HistorialOrdenResponse;
 import edu.unah.kolvix.dtos.orden.OrdenTrabajoRequest;
 import edu.unah.kolvix.dtos.orden.OrdenTrabajoResponse;
@@ -148,21 +148,15 @@ public class OrdenTrabajoService {
     }
 // Estado de Reparacion y Historial de Ordenes
     @Transactional
-    public OrdenTrabajoResponse cambiarEstadoReparacion(Long empresaId, Long idOrden, EstadoReparacionRequest request) {
+    public OrdenTrabajoResponse cambiarEstadoReparacion(Long empresaId, Long idOrden, CambioEstadoOrdenRequest request) {
         OrdenTrabajo orden = obtenerOrdenEmpresa(empresaId, idOrden);
-        EstadoReparacion estado = orden.getEstado();
-        if (estado == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La orden no tiene un estado de reparación asignado");
-        }
+        EstadoReparacion estadoDestino = estadoReparacionRepository
+                .findByIdEstadoAndEmpresaIdEmpresa(request.estadoNuevoId(), empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El estado de reparación no existe en la empresa"));
 
-        EstadoReparacion estadoAnterior = estado;
-        estado.setNombre(normalizarTexto(request.nombre()));
-        estado.setColorHex(normalizarTexto(request.colorHex()));
-        estado.setOrden(request.orden());
-        estado.setEsEstadoFinal(request.estadoFinal());
-        estado.setNotificarCliente(request.notificarCliente());
+        EstadoReparacion estadoAnterior = orden.getEstado();
+        orden.setEstado(estadoDestino);
         orden.setUpdatedAt(Instant.now());
-        estadoReparacionRepository.save(estado);
         ordenTrabajoRepository.save(orden);
 
         Usuario usuario = usuarioRepository.findById(1L)
@@ -170,9 +164,9 @@ public class OrdenTrabajoService {
         HistorialOrden historial = new HistorialOrden();
         historial.setOrden(orden);
         historial.setUsuario(usuario);
-        historial.setEstadoNuevo(estado);
+        historial.setEstadoNuevo(estadoDestino);
         historial.setEstadoAnterior(estadoAnterior);
-        historial.setComentario(null);
+        historial.setComentario(normalizarTexto(request.comentario()));
         historialOrdenRepository.save(historial);
 
         return mapearResponse(orden);
