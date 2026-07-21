@@ -12,4 +12,6 @@ public interface EstadoReparacionRepository extends JpaRepository<EstadoReparaci
     List<EstadoReparacion> findByEmpresaIdEmpresaOrderByOrdenAsc(Long empresaId);
 
     Optional<EstadoReparacion> findByIdEstadoAndEmpresaIdEmpresa(Integer idEstado, Long empresaId);
+
+    boolean existsByEmpresaIdEmpresaAndNombreIgnoreCase(Long empresaId, String nombre);
 }

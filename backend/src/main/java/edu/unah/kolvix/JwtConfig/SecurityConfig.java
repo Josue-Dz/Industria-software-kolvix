@@ -34,6 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/seguimiento/**").permitAll()
                         .requestMatchers("/api/usuarios/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .requestMatchers("/api/tecnicos/**").hasAnyRole("ADMIN", "PROPIETARIO")
+                        .requestMatchers("/api/estados-reparacion/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
