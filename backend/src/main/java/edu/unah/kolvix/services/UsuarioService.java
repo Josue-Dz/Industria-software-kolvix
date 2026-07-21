@@ -1,6 +1,7 @@
 package edu.unah.kolvix.services;
 
-import org.springframework.http.HttpStatus;
+import java.util.UUID;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -44,60 +45,28 @@ public class UsuarioService {
         return usuarioRepository.save(admin);
     }
 
-    @Transactional
-    public UsuarioResponse crearUsuarioPorAdmin(UsuarioRequest request, Usuario admin) {
-        if (admin == null || admin.getRol() != RolUsuario.ADMIN) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo un administrador puede crear usuarios");
+
+    // Usuario interno para el técnico. Sin login habilitado por ahora:
+    // password temporal aleatoria + debeCambiarPassword = true, queda listo para
+    // cuando se implemente esa fase.
+    public Usuario crearUsuarioTecnico(Empresa empresa, String nombre, String apellido, String correo) {
+        if (usuarioRepository.existsByCorreoIgnoreCase(correo)) {
+            throw new IllegalArgumentException("El correo ya está registrado");
         }
 
-        if (request.rol() == RolUsuario.ADMIN) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se puede crear un usuario con rol ADMIN");
-        }
-
-        if (usuarioRepository.existsByCorreoIgnoreCase(request.correo())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "El correo ya está registrado");
-        }
-
-        if (request.password() == null || request.password().isBlank() || request.password().length() < 8) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña debe tener al menos 8 caracteres");
-        }
+        String passwordTemporal = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
 
         Usuario usuario = new Usuario();
-        usuario.setEmpresa(admin.getEmpresa());
-        usuario.setNombre(request.nombre());
-        usuario.setApellido(request.apellido());
-        usuario.setCorreo(request.correo());
-        usuario.setPassword(passwordEncoder.encode(request.password()));
-        usuario.setRol(request.rol());
-        usuario.setActivo(request.activo());
+        usuario.setEmpresa(empresa);
+        usuario.setNombre(nombre);
+        usuario.setApellido(apellido);
+        usuario.setCorreo(correo);
+        usuario.setPassword(passwordEncoder.encode(passwordTemporal));
+        usuario.setRol(RolUsuario.TECNICO);
+        usuario.setActivo(true);
         usuario.setDebeCambiarPassword(true);
 
-        Usuario guardado = usuarioRepository.save(usuario);
-
-        if (guardado.getRol() == RolUsuario.TECNICO) {
-            if (tecnicoRepository.findAll().stream().noneMatch(tecnico -> tecnico.getUsuario() != null && tecnico.getUsuario().getIdUsuario().equals(guardado.getIdUsuario()))) {
-                Tecnico tecnico = new Tecnico();
-                tecnico.setEmpresa(guardado.getEmpresa());
-                tecnico.setUsuario(guardado);
-                tecnico.setActivo(true);
-                tecnicoRepository.save(tecnico);
-            }
-        }
-
-        return mapearUsuarioResponse(guardado);
-    }
-
-    private UsuarioResponse mapearUsuarioResponse(Usuario usuario) {
-        return new UsuarioResponse(
-                usuario.getIdUsuario(),
-                usuario.getEmpresa() != null ? usuario.getEmpresa().getIdEmpresa() : null,
-                usuario.getNombre(),
-                usuario.getApellido(),
-                usuario.getCorreo(),
-                usuario.getRol(),
-                usuario.isActivo(),
-                usuario.isDebeCambiarPassword(),
-                usuario.getUltimoAcceso()
-        );
+        return usuarioRepository.save(usuario);
     }
 }
+
