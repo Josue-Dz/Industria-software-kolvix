@@ -21,14 +21,4 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UsuarioController {
 
-    private final UsuarioService usuarioService;
-    private final AuthService authService;
-
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UsuarioResponse> crearUsuario(@Valid @RequestBody UsuarioRequest request) {
-        Usuario admin = authService.getUsuarioAutenticado();
-        UsuarioResponse response = usuarioService.crearUsuarioPorAdmin(request, admin);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
 }
