@@ -22,6 +22,7 @@ public class EmpresaService {
     private final PlanSuscripcionRepository planSuscripcionRepository;
     private final AuthService authService;
     private final UsuarioService usuarioService;
+    private final EstadoReparacionService estadoReparacionService;
 
     @Transactional
     public RegistroEmpresaResponse registrarEmpresa(EmpresaRegistroRequest request, HttpServletResponse response) {
@@ -62,6 +63,8 @@ public class EmpresaService {
         Usuario admin = usuarioService.crearUsuarioAdmin(empresa, request);
         authService.generarTokenYCookie(admin, response);
         
+        estadoReparacionService.crearEstadosPorDefecto(empresa);
+
     return new RegistroEmpresaResponse(empresaResponse, authService.mapearUsuarioResponse(admin));
     
     }

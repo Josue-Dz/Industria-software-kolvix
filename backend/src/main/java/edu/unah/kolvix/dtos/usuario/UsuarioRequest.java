@@ -10,7 +10,7 @@ public record UsuarioRequest(
         @NotBlank @Size(max = 50) String nombre,
         @NotBlank @Size(max = 50) String apellido,
         @NotBlank @Email @Size(max = 100) String correo,
-        @Size(min = 8, max = 100) String password,
+        @NotBlank @Size(min = 8, max = 100) String password,
         @NotNull RolUsuario rol,
         boolean activo
 ) {
