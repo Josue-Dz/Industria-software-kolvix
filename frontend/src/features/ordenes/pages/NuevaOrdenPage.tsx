@@ -4,7 +4,7 @@ import { DashboardLayout } from '../../../components/layout/DashboardLayout';
 import { Card } from '../../../components/ui/Card';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
-import { Plus, Upload, CheckCircle2, X } from 'lucide-react';
+import { Plus, Upload, CheckCircle2 } from 'lucide-react';
 
 export const NuevaOrdenPage: React.FC = () => {
   const navigate = useNavigate();

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { DashboardLayout } from '../../../components/layout/DashboardLayout';
 import { Card } from '../../../components/ui/Card';
 import { Input } from '../../../components/ui/Input';
-import { Plus, Search, AlertTriangle } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 
 export const InventarioDashboardPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
