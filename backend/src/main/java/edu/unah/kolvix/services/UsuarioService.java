@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import edu.unah.kolvix.dtos.empresa.EmpresaRegistroRequest;
 import edu.unah.kolvix.dtos.usuario.UsuarioRequest;
 import edu.unah.kolvix.entities.Empresa;
