@@ -44,5 +44,11 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
             Long empresaId,
             EstadoPagoOrden estadoPago
     );
+
+
+    List<OrdenTrabajo> findByEmpresaIdEmpresaAndEstadoIdEstadoOrderByFechaIngresoDesc (
+                Long empresaId,
+                Integer estadoId   
+    );
 }
 

@@ -12,4 +12,6 @@ public interface CategoriaServicioRepository extends JpaRepository<CategoriaServ
     List<CategoriaServicio> findByEmpresaIdEmpresaOrderByCategoriaNombreAsc(Long empresaId);
 
     Optional<CategoriaServicio> findByIdAndEmpresaIdEmpresa(Integer idCategoriaServicio, Long empresaId);
+
+    boolean existsByEmpresaIdEmpresaAndCategoriaIdCategoria(Long empresaId, Integer categoriaId);
 }

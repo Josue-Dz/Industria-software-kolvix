@@ -14,4 +14,6 @@ public interface EstadoReparacionRepository extends JpaRepository<EstadoReparaci
     Optional<EstadoReparacion> findByIdEstadoAndEmpresaIdEmpresa(Integer idEstado, Long empresaId);
 
     boolean existsByEmpresaIdEmpresaAndNombreIgnoreCase(Long empresaId, String nombre);
+
+    Optional<EstadoReparacion> findByNombreAndEmpresaIdEmpresa(String nombre, Long empresaId);
 }

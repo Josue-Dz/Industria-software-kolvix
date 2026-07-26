@@ -12,4 +12,8 @@ public interface CuentaPagoTallerRepository extends JpaRepository<CuentaPagoTall
     List<CuentaPagoTaller> findByEmpresaIdEmpresaAndActivoTrueOrderByBancoAsc(Long empresaId);
 
     Optional<CuentaPagoTaller> findByIdCuentaAndEmpresaIdEmpresa(Long idCuenta, Long empresaId);
+
+    List<CuentaPagoTaller> findByEmpresaIdEmpresaOrderByBancoAsc(Long empresaId); 
+
+    boolean existsByEmpresaIdEmpresaAndBancoIgnoreCaseAndNumeroCuenta(Long empresaId, String banco, String numeroCuenta); 
 }

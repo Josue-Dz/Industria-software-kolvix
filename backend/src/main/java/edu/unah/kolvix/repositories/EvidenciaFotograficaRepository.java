@@ -21,5 +21,7 @@ public interface EvidenciaFotograficaRepository extends JpaRepository<EvidenciaF
             AlbumEvidenciaCodigo codigo
     );
 
+
     Optional<EvidenciaFotografica> findByIdEvidenciaAndOrdenEmpresaIdEmpresa(Long idEvidencia, Long empresaId);
+
 }
