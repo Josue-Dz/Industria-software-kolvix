@@ -230,6 +230,16 @@ public class OrdenTrabajoService {
         return obtenerHistorialOrden(empresaId, orden.getIdOrden());
     }
 
+     @Transactional(readOnly = true)
+    public OrdenTrabajo obtenerOrden(Long empresaId, Long ordenId) {
+        return ordenTrabajoRepository
+                .findByIdOrdenAndEmpresaIdEmpresa(ordenId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Orden de trabajo no encontrada"
+                ));
+    }
+
     private OrdenTrabajo obtenerOrdenEmpresa(Long empresaId, Long idOrden) {
         return ordenTrabajoRepository.findByIdOrdenAndEmpresaIdEmpresa(idOrden, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "La orden no existe en la empresa"));
@@ -308,7 +318,7 @@ private void validarEmpresa(Long empresaId) {
         return ((nombre != null ? nombre : "") + " " + (apellido != null ? apellido : "")).trim();
     }
 
-    private String nombreCompleto(edu.unah.kolvix.entities.Usuario usuario) {
+    private String nombreCompleto(Usuario usuario) {
         if (usuario == null) {
             return null;
         }

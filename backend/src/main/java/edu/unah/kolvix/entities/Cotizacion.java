@@ -78,8 +78,8 @@ public class Cotizacion {
     @JoinColumn(name = "id_orden", nullable = false)
     private OrdenTrabajo orden;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_diagnostico", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_diagnostico", nullable = false)
     private Diagnostico diagnostico;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

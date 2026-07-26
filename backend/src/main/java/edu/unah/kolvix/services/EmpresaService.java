@@ -1,6 +1,7 @@
 package edu.unah.kolvix.services;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import edu.unah.kolvix.Jwt.RegistroEmpresaResponse;
 import edu.unah.kolvix.dtos.empresa.EmpresaRegistroRequest;
@@ -11,7 +12,7 @@ import edu.unah.kolvix.entities.Usuario;
 import edu.unah.kolvix.repositories.EmpresaRepository;
 import edu.unah.kolvix.repositories.PlanSuscripcionRepository;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 
 @Service

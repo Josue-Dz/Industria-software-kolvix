@@ -16,7 +16,6 @@ import edu.unah.kolvix.entities.ChecklistRecepcion;
 import edu.unah.kolvix.entities.OrdenTrabajo;
 import edu.unah.kolvix.entities.PlantillaInspeccion;
 import edu.unah.kolvix.entities.Usuario;
-import edu.unah.kolvix.enums.EstadoFisicoGeneral;
 import edu.unah.kolvix.enums.RolUsuario;
 import edu.unah.kolvix.repositories.ChecklistRecepcionRepository;
 import edu.unah.kolvix.repositories.OrdenTrabajoRepository;
