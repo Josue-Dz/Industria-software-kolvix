@@ -123,6 +123,18 @@ public class OrdenTrabajoService {
                 .toList();
     }
 
+    //Listar por orden de reparacion
+    @Transactional(readOnly = true)
+    public List<OrdenTrabajoResponse> listarPorEmpresaYEstadoReparacion(Long empresaId, String estadoReparacion) {
+        validarEmpresa(empresaId);
+        EstadoReparacion estado = estadoReparacionRepository.findByNombreAndEmpresaIdEmpresa(estadoReparacion, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El estado de reparación no existe en la empresa"));
+        return ordenTrabajoRepository.findByEmpresaIdEmpresaAndEstadoIdEstadoOrderByFechaIngresoDesc(empresaId, estado.getIdEstado())
+                .stream()
+                .map(this::mapearResponse)
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public OrdenTrabajoResponse obtenerPorId(Long empresaId, Long idOrden) {
         validarEmpresa(empresaId);
@@ -233,7 +245,7 @@ public class OrdenTrabajoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "La orden no existe en la empresa"));
     }
 
-    private void validarEmpresa(Long empresaId) {
+private void validarEmpresa(Long empresaId) {
         if (!empresaRepository.existsById(empresaId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La empresa no existe");
         }
