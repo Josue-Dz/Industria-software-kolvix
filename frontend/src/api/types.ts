@@ -156,6 +156,9 @@ export interface PageResponse<T> {
   totalElements: number;
   totalPages: number;
   number: number;
+  size: number;
+  first: boolean;
+  last: boolean;
 }
 
 export type ComplejidadDiagnostico = "BAJA" | "MEDIA" | "ALTA";
@@ -367,4 +370,101 @@ export interface NotificacionResponse {
 export interface ArchivoResponse {
   url: string;
   nombreOriginal: string;
+}
+
+export interface PerfilMarketplace {
+  id: number;
+  empresaId: number;
+  nombreEmpresa: string;
+  telefonoEmpresa: string;
+  correoEmpresa: string;
+  direccionEmpresa: string;
+  descripcionPublica: string | null;
+  horarioAtencion: string | null;
+  latitud: number | null;
+  longitud: number | null;
+  marketplaceVisible: boolean;
+  calificacionPromedio: number;
+  totalReviews: number;
+  fechaActualizacion: string;
+}
+
+export interface CategoriaServicio {
+  id: number;
+  empresaId: number;
+  categoriaId: number;
+  categoriaNombre: string;
+}
+
+export interface CategoriaDispositivo {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+}
+
+export interface Review {
+  id: number;
+  ordenId: number;
+  empresaId: number;
+  empresaNombre: string;
+  clienteId: number;
+  clienteNombre: string;
+  calificacion: number;
+  comentario: string | null;
+  fechaReview: string;
+}
+
+export interface TallerCercano {
+  perfil: PerfilMarketplace;
+  distanciaKm: number;
+}
+
+export interface OrdenTrabajo {
+  idOrden: number;
+  idEmpresa: number;
+  idCliente: number;
+  idDispositivo: number;
+  idTecnico: number | null;
+  idEstado: number;
+  nombreCliente: string;
+  dispositivoResumen: string;
+  nombreTecnico: string | null;
+  nombreEstado: string;
+  colorHexEstado: string;
+  numeroOrden: string;
+  codigoSeguimiento: string;
+  problemaReportado: string;
+  fechaIngreso: string;
+  fechaEntrega: string | null;
+  fechaCierre: string | null;
+  observaciones: string | null;
+  estadoPAgo: string; 
+}
+
+export interface HistorialEvento {
+  id: number;
+  estadoAnteriorNombre: string | null;
+  estadoNuevoNombre: string;
+  estadoNuevoColorHex: string;
+  comentario: string | null;
+  fecha: string;
+}
+
+export interface CuentaPagoTaller {
+  id: number;
+  banco: string;
+  tipoCuenta: string;
+  numeroCuenta: string;
+  titular: string;
+  moneda: string;
+  instrucciones: string | null;
+  activo: boolean;
+}
+
+export interface SeguimientoOrden {
+  orden: OrdenTrabajo;
+  historial: HistorialEvento[];
+  cuentasPago: CuentaPagoTaller[];
+  review: import('./types').Review | null;
+  puedeCalificar: boolean;
 }
