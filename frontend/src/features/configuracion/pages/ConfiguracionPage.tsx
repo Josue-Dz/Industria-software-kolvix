@@ -16,12 +16,7 @@ import {
   Trash2,
   Plus,
   Check,
-  AlertCircle,
-  PlusCircle,
-  Bell,
-  Search,
   ExternalLink,
-  ChevronRight,
   Sparkles
 } from 'lucide-react';
 
