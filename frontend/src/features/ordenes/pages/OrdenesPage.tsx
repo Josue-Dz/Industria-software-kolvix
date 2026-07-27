@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '../../../components/layout/DashboardLayout';
 import { Card } from '../../../components/ui/Card';
 import { Input } from '../../../components/ui/Input';
 import { Plus, Search, Eye, Edit3, Trash2, X, Camera } from 'lucide-react';
+import { authService } from '../../../api/services/authService';
+import { ordenesService } from '../../../api/services/ordenesService';
+import type { EstadoReparacionResponse, OrdenTrabajoResponse } from '../../../api/types';
 
 interface OrderTicket {
+  orderId?: number;
+  companyId?: number;
+  stateId?: number;
   ticketId: string;
   client: string;
   phone: string;
@@ -22,10 +28,36 @@ interface OrderTicket {
   evidenceNote2: string;
 }
 
+const mapOrderToTicket = (order: OrdenTrabajoResponse): OrderTicket => ({
+  orderId: order.idOrden,
+  companyId: order.idEmpresa,
+  stateId: order.idEstado,
+  ticketId: order.numeroOrden || order.codigoSeguimiento || `ORD-${order.idOrden}`,
+  client: order.nombreCliente || 'Cliente sin nombre',
+  phone: order.codigoSeguimiento ? `Seguimiento: ${order.codigoSeguimiento}` : 'Telefono no disponible',
+  device: order.dispositivoResumen || 'Dispositivo sin detalle',
+  serial: `ID dispositivo: ${order.idDispositivo}`,
+  tech: order.nombreTecnico || 'Sin asignar',
+  status: order.nombreEstado || 'Sin estado',
+  total: order.estadoPAgo ? `Pago: ${order.estadoPAgo}` : 'Pendiente',
+  reportedDamage: order.problemaReportado || order.observaciones || 'Sin problema reportado',
+  diagBase: '-',
+  partsCost: '-',
+  laborCost: '-',
+  evidenceNote1: order.observaciones || 'Sin observaciones',
+  evidenceNote2: order.fechaIngreso
+    ? `Ingreso: ${new Date(order.fechaIngreso).toLocaleDateString()}`
+    : 'Sin fecha de ingreso',
+});
+
 export const OrdenesPage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState('Todos los estados');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeDrawerTicket, setActiveDrawerTicket] = useState<OrderTicket | null>(null);
+  const [statusOptions, setStatusOptions] = useState<EstadoReparacionResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [activeCompanyId, setActiveCompanyId] = useState<number | null>(null);
 
   const [orders, setOrders] = useState<OrderTicket[]>([
     {
@@ -94,8 +126,70 @@ export const OrdenesPage: React.FC = () => {
     }
   ]);
 
-  const handleStatusChange = (ticketId: string, newStatus: string) => {
-    setOrders(prev => prev.map(o => o.ticketId === ticketId ? { ...o, status: newStatus } : o));
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadOrders = async () => {
+      setIsLoading(true);
+      setLoadError('');
+
+      try {
+        const cachedUser = authService.getCachedUser();
+        const user = cachedUser ?? await authService.getCurrentUser();
+        const [states, backendOrders] = await Promise.all([
+          ordenesService.listarEstados(),
+          ordenesService.listarTodas(user.empresaId),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setActiveCompanyId(user.empresaId);
+        setStatusOptions(states);
+        setOrders(backendOrders.map(mapOrderToTicket));
+      } catch {
+        if (isMounted) {
+          setLoadError('No se pudieron cargar las ordenes desde el backend. Se muestran datos de ejemplo.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadOrders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleStatusChange = async (ticketId: string, newStatus: string) => {
+    const order = orders.find(o => o.ticketId === ticketId);
+    const targetStatus = statusOptions.find(status => status.nombre === newStatus);
+
+    setOrders(prev => prev.map(o => o.ticketId === ticketId ? {
+      ...o,
+      status: newStatus,
+      stateId: targetStatus?.id ?? o.stateId,
+    } : o));
+
+    if (!order?.orderId || !activeCompanyId || !targetStatus) {
+      return;
+    }
+
+    try {
+      const updatedOrder = await ordenesService.cambiarEstado(activeCompanyId, order.orderId, {
+        estadoNuevoId: targetStatus.id,
+        comentario: `Estado actualizado desde frontend a ${targetStatus.nombre}`,
+      });
+
+      setOrders(prev => prev.map(o => o.ticketId === ticketId ? mapOrderToTicket(updatedOrder) : o));
+    } catch {
+      setLoadError('No se pudo actualizar el estado en el backend.');
+    }
   };
 
   const handleDeleteOrder = (ticketId: string) => {
@@ -156,6 +250,18 @@ export const OrdenesPage: React.FC = () => {
           </Link>
         </div>
 
+        {isLoading && (
+          <Card hoverable={false} style={{ padding: '14px 18px', borderRadius: '12px', backgroundColor: '#EEF2FF', color: '#3730A3', fontWeight: '700' }}>
+            Cargando ordenes desde el backend...
+          </Card>
+        )}
+
+        {loadError && (
+          <Card hoverable={false} style={{ padding: '14px 18px', borderRadius: '12px', backgroundColor: '#FEF2F2', color: '#991B1B', fontWeight: '700' }}>
+            {loadError}
+          </Card>
+        )}
+
         {/* Search and Filter Box */}
         <Card hoverable={false} style={{ padding: '20px', borderRadius: '16px', backgroundColor: '#FFFFFF' }}>
           <div style={{ display: 'flex', gap: '20px', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -179,6 +285,9 @@ export const OrdenesPage: React.FC = () => {
                 style={{ width: '200px', padding: '10px 14px' }}
               >
                 <option>Todos los estados</option>
+                {statusOptions.map(status => (
+                  <option key={status.id} value={status.nombre}>{status.nombre}</option>
+                ))}
                 <option>Ingresado</option>
                 <option>Cotización</option>
                 <option>En Reparación</option>
@@ -242,6 +351,9 @@ export const OrdenesPage: React.FC = () => {
                         outline: 'none'
                       }}
                     >
+                      {statusOptions.map(status => (
+                        <option key={status.id} value={status.nombre}>- {status.nombre}</option>
+                      ))}
                       <option value="Ingresado">• Ingresado</option>
                       <option value="Cotización">• Cotización</option>
                       <option value="En Reparación">• En Reparación</option>
@@ -263,9 +375,15 @@ export const OrdenesPage: React.FC = () => {
                         <Edit3 size={18} />
                       </button>
 
-                      <Link to="/ordenes/detalle" style={{ color: '#6366F1' }} title="Ver Cotización y Flujo">
-                        <Eye size={18} />
-                      </Link>
+                      {ord.orderId ? (
+                        <Link to={`/ordenes/detalle/${ord.orderId}`} style={{ color: '#6366F1' }} title="Ver Cotización y Flujo">
+                          <Eye size={18} />
+                        </Link>
+                      ) : (
+                        <span style={{ color: '#CBD5E1' }} title="Orden de ejemplo sin detalle">
+                          <Eye size={18} />
+                        </span>
+                      )}
 
                       <button
                         onClick={() => handleDeleteOrder(ord.ticketId)}

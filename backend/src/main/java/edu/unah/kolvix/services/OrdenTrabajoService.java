@@ -33,7 +33,6 @@ import edu.unah.kolvix.repositories.EstadoReparacionRepository;
 import edu.unah.kolvix.repositories.HistorialOrdenRepository;
 import edu.unah.kolvix.repositories.OrdenTrabajoRepository;
 import edu.unah.kolvix.repositories.TecnicoRepository;
-import edu.unah.kolvix.repositories.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -47,7 +46,7 @@ public class OrdenTrabajoService {
     private final TecnicoRepository tecnicoRepository;
     private final EstadoReparacionRepository estadoReparacionRepository;
     private final HistorialOrdenRepository historialOrdenRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final AuthService authService;
 
     @Transactional
     public OrdenTrabajoResponse crearOrdenTrabajo(Long empresaId, OrdenTrabajoRequest request) {
@@ -101,6 +100,15 @@ public class OrdenTrabajoService {
         orden.setEstadoPago(EstadoPagoOrden.NO_SOLICITADO);
 
         return mapearResponse(ordenTrabajoRepository.save(orden));
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrdenTrabajoResponse> listarPorEmpresa(Long empresaId) {
+        validarEmpresa(empresaId);
+        return ordenTrabajoRepository.findByEmpresaIdEmpresaOrderByFechaIngresoDesc(empresaId, Pageable.unpaged())
+                .stream()
+                .map(this::mapearResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -171,8 +179,7 @@ public class OrdenTrabajoService {
         orden.setUpdatedAt(Instant.now());
         ordenTrabajoRepository.save(orden);
 
-        Usuario usuario = usuarioRepository.findById(1L)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No se pudo registrar el historial"));
+        Usuario usuario = authService.getUsuarioAutenticado();
         HistorialOrden historial = new HistorialOrden();
         historial.setOrden(orden);
         historial.setUsuario(usuario);

@@ -11,10 +11,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import edu.unah.kolvix.dtos.diagnostico.DiagnosticoRepuestoRequest;
 import edu.unah.kolvix.dtos.diagnostico.DiagnosticoRepuestoResponse;
-import edu.unah.kolvix.entities.Cotizacion;
 import edu.unah.kolvix.entities.Diagnostico;
 import edu.unah.kolvix.entities.DiagnosticoRepuesto;
 import edu.unah.kolvix.entities.Repuesto;
+import edu.unah.kolvix.enums.EstadoCotizacion;
 import edu.unah.kolvix.repositories.CotizacionRepository;
 import edu.unah.kolvix.repositories.DiagnosticoRepository;
 import edu.unah.kolvix.repositories.DiagnosticoRepuestoRepository;
@@ -41,6 +41,7 @@ public class DiagnosticoRepuestoService {
                 .toList();
     }
 
+    @Transactional
     public DiagnosticoRepuestoResponse agregar(Long empresaId, Long idDiagnostico,
             DiagnosticoRepuestoRequest request) {
 
@@ -50,6 +51,7 @@ public class DiagnosticoRepuestoService {
         DiagnosticoRepuesto detalle = new DiagnosticoRepuesto();
         detalle.setEmpresa(diagnostico.getEmpresa());
         detalle.setDiagnostico(diagnostico);
+        aplicarDatosRepuesto(detalle, empresaId, request);
 
         return mapearResponse(diagnosticoRepuestoRepository.save(detalle));
     }
@@ -94,18 +96,27 @@ public class DiagnosticoRepuestoService {
     }
 
 
+    // Los repuestos solo se bloquean cuando la última versión de cotización del diagnóstico
+    // está ENVIADA (el cliente evalúa exactamente eso) o APROBADA (compromiso cerrado).
+    // Con borrador PENDIENTE o cotización RECHAZADA/VENCIDA/CANCELADA se permiten cambios
+    // para preparar la siguiente versión.
     private void asegurarDiagnosticoSinCotizacion(Diagnostico diagnostico) {
-        boolean yaCotizado = cotizacionRepository
+        cotizacionRepository
                 .findByOrdenIdOrdenAndEmpresaIdEmpresaOrderByVersionDesc(diagnostico.getOrden().getIdOrden(),
                         diagnostico.getEmpresa().getIdEmpresa())
                 .stream()
-                .map(Cotizacion::getDiagnostico)
-                .anyMatch(d -> Objects.equals(d.getIdDiagnostico(), diagnostico.getIdDiagnostico()));
-
-        if (yaCotizado) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "No se pueden modificar los repuestos porque ya existe una cotización");
-        }
+                .filter(c -> Objects.equals(c.getDiagnostico().getIdDiagnostico(), diagnostico.getIdDiagnostico()))
+                .findFirst()
+                .ifPresent(ultimaVersion -> {
+                    if (ultimaVersion.getEstado() == EstadoCotizacion.ENVIADA) {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,
+                                "La cotización está enviada; espera la respuesta del cliente antes de modificar los repuestos");
+                    }
+                    if (ultimaVersion.getEstado() == EstadoCotizacion.APROBADA) {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,
+                                "La cotización ya fue aprobada; los repuestos del diagnóstico quedan bloqueados");
+                    }
+                });
     }
 
 

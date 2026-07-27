@@ -1,29 +1,172 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../../../components/layout/DashboardLayout';
 import { Card } from '../../../components/ui/Card';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Plus, Upload, CheckCircle2 } from 'lucide-react';
+import { authService } from '../../../api/services/authService';
+import { clientesService } from '../../../api/services/clientesService';
+import { dispositivosService } from '../../../api/services/dispositivosService';
+import { tecnicosService } from '../../../api/services/tecnicosService';
+import { ordenesService } from '../../../api/services/ordenesService';
+import type {
+  CategoriaDispositivoResponse,
+  ClienteResponse,
+  TecnicoResponse,
+} from '../../../api/types';
 
 export const NuevaOrdenPage: React.FC = () => {
   const navigate = useNavigate();
 
+  // Catálogos cargados del backend
+  const [empresaId, setEmpresaId] = useState<number | null>(null);
+  const [clientes, setClientes] = useState<ClienteResponse[]>([]);
+  const [categorias, setCategorias] = useState<CategoriaDispositivoResponse[]>([]);
+  const [tecnicos, setTecnicos] = useState<TecnicoResponse[]>([]);
+
+  // Cliente ('' = registrar cliente nuevo)
+  const [selectedClienteId, setSelectedClienteId] = useState('');
   const [clientName, setClientName] = useState('');
+  const [clientLastName, setClientLastName] = useState('');
   const [phone, setPhone] = useState('');
-  const [deviceType, setDeviceType] = useState('Celular');
+
+  // Dispositivo
+  const [categoriaId, setCategoriaId] = useState('');
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
+  const [color, setColor] = useState('');
   const [serial, setSerial] = useState('');
-  const [estimatedCost, setEstimatedCost] = useState('800');
-  const [technician, setTechnician] = useState('-- Dejar sin asignar temporalmente --');
+  const [accessories, setAccessories] = useState('');
+
+  // Orden
+  const [technicianId, setTechnicianId] = useState('');
   const [issueDescription, setIssueDescription] = useState('');
+  const [observations, setObservations] = useState('');
+
+  // Evidencia visual (panel derecho, módulo de recepción pendiente de conectar)
   const [markType, setMarkType] = useState('Rotura / Crack');
   const [markNote, setMarkNote] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [loadError, setLoadError] = useState('');
+
+  const isExistingClient = selectedClienteId !== '';
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCatalogs = async () => {
+      try {
+        const cachedUser = authService.getCachedUser();
+        const user = cachedUser ?? await authService.getCurrentUser();
+        if (!isMounted) return;
+        setEmpresaId(user.empresaId);
+
+        const [clientesResult, categoriasResult, tecnicosResult] = await Promise.allSettled([
+          clientesService.listar(user.empresaId),
+          dispositivosService.listarCategorias(),
+          tecnicosService.listar(),
+        ]);
+
+        if (!isMounted) return;
+
+        if (clientesResult.status === 'fulfilled') setClientes(clientesResult.value);
+        if (categoriasResult.status === 'fulfilled') {
+          setCategorias(categoriasResult.value);
+          if (categoriasResult.value.length > 0) {
+            setCategoriaId(String(categoriasResult.value[0].id));
+          }
+        } else {
+          setLoadError('No se pudo cargar el catalogo de dispositivos. Verifica que el backend este activo.');
+        }
+        // Técnicos: un rol sin permiso recibe 403; la orden puede quedar sin asignar
+        if (tecnicosResult.status === 'fulfilled') setTecnicos(tecnicosResult.value);
+      } catch {
+        if (isMounted) {
+          setLoadError('No se pudo cargar la informacion inicial. Inicia sesion nuevamente.');
+        }
+      }
+    };
+
+    void loadCatalogs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleClienteChange = (value: string) => {
+    setSelectedClienteId(value);
+    if (value === '') {
+      setClientName('');
+      setClientLastName('');
+      setPhone('');
+      return;
+    }
+    const cliente = clientes.find((c) => String(c.idCliente) === value);
+    if (cliente) {
+      setClientName(cliente.nombre);
+      setClientLastName(cliente.apellido);
+      setPhone(cliente.telefono ?? '');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/ordenes');
+    if (empresaId === null) {
+      setSubmitError('No se pudo identificar la empresa activa. Inicia sesion nuevamente.');
+      return;
+    }
+    if (categoriaId === '') {
+      setSubmitError('Selecciona el tipo de dispositivo.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      let clienteId: number;
+      if (isExistingClient) {
+        clienteId = Number(selectedClienteId);
+      } else {
+        const cliente = await clientesService.crear(empresaId, {
+          nombre: clientName.trim(),
+          apellido: clientLastName.trim(),
+          telefono: phone.trim() || undefined,
+        });
+        clienteId = cliente.idCliente;
+        // Si un paso posterior falla, el reintento reutiliza este cliente en vez de duplicarlo
+        setClientes((prev) => [cliente, ...prev]);
+        setSelectedClienteId(String(cliente.idCliente));
+      }
+
+      const dispositivo = await dispositivosService.crear({
+        idCliente: clienteId,
+        idCategoria: Number(categoriaId),
+        marca: brand.trim() || undefined,
+        modelo: model.trim() || undefined,
+        color: color.trim() || undefined,
+        numeroSerie: serial.trim() || undefined,
+        accesoriosRecibidos: accessories.trim() || undefined,
+      });
+
+      await ordenesService.crear(empresaId, {
+        idCliente: clienteId,
+        idDispositivo: dispositivo.idDispositivo,
+        idTecnico: technicianId === '' ? undefined : Number(technicianId),
+        problemaReportado: issueDescription.trim(),
+        observaciones: observations.trim() || undefined,
+      });
+
+      navigate('/ordenes');
+    } catch {
+      setSubmitError('No se pudo registrar la orden. Revisa los datos e intenta de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -33,7 +176,7 @@ export const NuevaOrdenPage: React.FC = () => {
       role="admin"
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        
+
         {/* Top Tabs matching Registro de ordenes.png */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Link to="/ordenes">
@@ -69,7 +212,7 @@ export const NuevaOrdenPage: React.FC = () => {
 
         {/* Main Card Container */}
         <Card hoverable={false} style={{ padding: '32px', borderRadius: '20px', backgroundColor: '#FFFFFF' }}>
-          
+
           <div style={{ marginBottom: '24px' }}>
             <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#1E1B4B', margin: 0 }}>
               Registro Inteligente de Orden
@@ -79,9 +222,23 @@ export const NuevaOrdenPage: React.FC = () => {
             </p>
           </div>
 
+          {loadError && (
+            <div style={{
+              padding: '12px 16px',
+              borderRadius: '12px',
+              backgroundColor: '#FEF2F2',
+              color: '#991B1B',
+              fontSize: '13px',
+              fontWeight: '600',
+              marginBottom: '20px'
+            }}>
+              {loadError}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '32px' }}>
-              
+
               {/* Left Section: 1. Información Operativa y de Contacto */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: '8px' }}>
@@ -90,44 +247,78 @@ export const NuevaOrdenPage: React.FC = () => {
                   </h3>
                 </div>
 
+                <div className="input-group">
+                  <label className="input-label">CLIENTE</label>
+                  <select
+                    className="input-field"
+                    value={selectedClienteId}
+                    onChange={(e) => handleClienteChange(e.target.value)}
+                  >
+                    <option value="">-- Registrar cliente nuevo --</option>
+                    {clientes.map((cliente) => (
+                      <option key={cliente.idCliente} value={String(cliente.idCliente)}>
+                        {cliente.nombre} {cliente.apellido}{cliente.telefono ? ` — ${cliente.telefono}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="grid-2">
                   <Input
                     label="NOMBRE DE CLIENTE *"
-                    placeholder="Ej. Nohely Reyes"
+                    placeholder="Ej. Nohely"
                     value={clientName}
                     onChange={(e) => setClientName(e.target.value)}
+                    disabled={isExistingClient}
+                    maxLength={50}
                     required
                   />
                   <Input
-                    label="TELÉFONO DE ENLACE *"
-                    placeholder="Ej. +504 8956-3652"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    label="APELLIDO DE CLIENTE *"
+                    placeholder="Ej. Reyes"
+                    value={clientLastName}
+                    onChange={(e) => setClientLastName(e.target.value)}
+                    disabled={isExistingClient}
+                    maxLength={50}
                     required
                   />
                 </div>
 
-                <div className="grid-3">
+                <div className="grid-2">
+                  <Input
+                    label="TELÉFONO DE ENLACE"
+                    placeholder="Ej. +504 8956-3652"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={isExistingClient}
+                    maxLength={20}
+                  />
+
                   <div className="input-group">
-                    <label className="input-label">TIPO DE DISPOSITIVO</label>
+                    <label className="input-label">TIPO DE DISPOSITIVO *</label>
                     <select
                       className="input-field"
-                      value={deviceType}
-                      onChange={(e) => setDeviceType(e.target.value)}
+                      value={categoriaId}
+                      onChange={(e) => setCategoriaId(e.target.value)}
+                      required
                     >
-                      <option value="Celular">Celular</option>
-                      <option value="Laptop">Laptop</option>
-                      <option value="Tablet">Tablet</option>
-                      <option value="Consola">Consola</option>
-                      <option value="Electrodoméstico">Electrodoméstico</option>
+                      {categorias.length === 0 && <option value="">Cargando catalogo...</option>}
+                      {categorias.map((categoria) => (
+                        <option key={categoria.id} value={String(categoria.id)}>
+                          {categoria.nombre}
+                        </option>
+                      ))}
                     </select>
                   </div>
+                </div>
 
+                <div className="grid-3">
                   <Input
                     label="MARCA *"
                     placeholder="Ej. Samsung"
                     value={brand}
                     onChange={(e) => setBrand(e.target.value)}
+                    maxLength={50}
                     required
                   />
 
@@ -136,7 +327,16 @@ export const NuevaOrdenPage: React.FC = () => {
                     placeholder="Ej. Galaxy 23"
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
+                    maxLength={50}
                     required
+                  />
+
+                  <Input
+                    label="COLOR (OPCIONAL)"
+                    placeholder="Ej. Negro"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    maxLength={30}
                   />
                 </div>
 
@@ -146,14 +346,14 @@ export const NuevaOrdenPage: React.FC = () => {
                     placeholder="Escriba código de etiqueta"
                     value={serial}
                     onChange={(e) => setSerial(e.target.value)}
+                    maxLength={80}
                   />
 
                   <Input
-                    label="MANO DE OBRA ESTIMADA"
-                    placeholder="800"
-                    type="number"
-                    value={estimatedCost}
-                    onChange={(e) => setEstimatedCost(e.target.value)}
+                    label="ACCESORIOS RECIBIDOS (OPCIONAL)"
+                    placeholder="Ej. Cargador, estuche"
+                    value={accessories}
+                    onChange={(e) => setAccessories(e.target.value)}
                   />
                 </div>
 
@@ -161,13 +361,15 @@ export const NuevaOrdenPage: React.FC = () => {
                   <label className="input-label">ASIGNAR TÉCNICO RESPONSABLE</label>
                   <select
                     className="input-field"
-                    value={technician}
-                    onChange={(e) => setTechnician(e.target.value)}
+                    value={technicianId}
+                    onChange={(e) => setTechnicianId(e.target.value)}
                   >
-                    <option value="-- Dejar sin asignar temporalmente --">-- Dejar sin asignar temporalmente --</option>
-                    <option value="L. Soto">L. Soto</option>
-                    <option value="J. Pérez">J. Pérez</option>
-                    <option value="A. Rivas">A. Rivas</option>
+                    <option value="">-- Dejar sin asignar temporalmente --</option>
+                    {tecnicos.filter((tecnico) => tecnico.activo).map((tecnico) => (
+                      <option key={tecnico.idTecnico} value={String(tecnico.idTecnico)}>
+                        {tecnico.nombre} {tecnico.apellido}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -179,7 +381,20 @@ export const NuevaOrdenPage: React.FC = () => {
                     placeholder="Describa el fallo indicado por el cliente..."
                     value={issueDescription}
                     onChange={(e) => setIssueDescription(e.target.value)}
+                    maxLength={500}
                     required
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label className="input-label">OBSERVACIONES (OPCIONAL)</label>
+                  <textarea
+                    className="input-field"
+                    rows={2}
+                    placeholder="Notas internas del ingreso..."
+                    value={observations}
+                    onChange={(e) => setObservations(e.target.value)}
+                    maxLength={300}
                   />
                 </div>
               </div>
@@ -248,11 +463,26 @@ export const NuevaOrdenPage: React.FC = () => {
 
             </div>
 
+            {submitError && (
+              <div style={{
+                padding: '12px 16px',
+                borderRadius: '12px',
+                backgroundColor: '#FEF2F2',
+                color: '#991B1B',
+                fontSize: '13px',
+                fontWeight: '600',
+                marginTop: '24px'
+              }}>
+                {submitError}
+              </div>
+            )}
+
             {/* Bottom Right Action Buttons matching Registro de ordenes.png */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', marginTop: '32px' }}>
               <Button
                 type="button"
                 variant="outline"
+                disabled={isSubmitting}
                 onClick={() => navigate('/ordenes')}
                 style={{ borderRadius: '12px', padding: '12px 24px', borderColor: '#3730A3', color: '#3730A3' }}
               >
@@ -262,10 +492,11 @@ export const NuevaOrdenPage: React.FC = () => {
               <Button
                 type="submit"
                 variant="primary"
+                disabled={isSubmitting}
                 style={{ backgroundColor: '#3730A3', borderRadius: '12px', padding: '12px 32px' }}
                 icon={<CheckCircle2 size={18} />}
               >
-                Generar ticket
+                {isSubmitting ? 'Generando ticket...' : 'Generar ticket'}
               </Button>
             </div>
 

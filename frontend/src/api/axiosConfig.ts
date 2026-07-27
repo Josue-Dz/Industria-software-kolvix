@@ -2,7 +2,7 @@ import type { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConf
 import axios from "axios";
 
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_PUBLIC_BACKEND_URL as string,
+  baseURL: import.meta.env.VITE_PUBLIC_BACKEND_URL || "http://localhost:8080/api",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.unah.kolvix.dtos.usuario.CambiarEstadoRequest;
+import edu.unah.kolvix.dtos.usuario.TecnicoRegistroRequest;
 import edu.unah.kolvix.dtos.usuario.TecnicoRequest;
 import edu.unah.kolvix.dtos.usuario.TecnicoResponse;
 import edu.unah.kolvix.dtos.usuario.TecnicoUpdateRequest;
@@ -33,6 +34,13 @@ public class TecnicoController {
     private final TecnicoService tecnicoService;
     private final AuthService authService;
 
+
+    // Registro en un solo paso: usuario con rol TECNICO + perfil de tecnico
+    @PostMapping("/registrar")
+    public ResponseEntity<TecnicoResponse> registrar(@Valid @RequestBody TecnicoRegistroRequest request) {
+        Empresa empresa = authService.getUsuarioAutenticado().getEmpresa();
+        return ResponseEntity.status(HttpStatus.CREATED).body(tecnicoService.registrar(request, empresa));
+    }
 
     @PostMapping("/crear")
     public ResponseEntity<TecnicoResponse> crear(@Valid @RequestBody TecnicoRequest request) {

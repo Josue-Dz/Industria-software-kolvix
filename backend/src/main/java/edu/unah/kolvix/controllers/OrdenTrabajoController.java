@@ -37,6 +37,11 @@ public class OrdenTrabajoController {
             @Valid @RequestBody OrdenTrabajoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ordenTrabajoService.crearOrdenTrabajo(empresaId, request));
     }
+    @GetMapping("/empresa/{empresaId}")
+    public ResponseEntity<List<OrdenTrabajoResponse>> listarPorEmpresa(@PathVariable Long empresaId) {
+        return ResponseEntity.ok(ordenTrabajoService.listarPorEmpresa(empresaId));
+    }
+
     //Filtrar ordenes por empresa,estado de pago y estado de reparacion
     @GetMapping("/empresa/{empresaId}/estado-reparacion")
     public ResponseEntity<List<OrdenTrabajoResponse>> listarPorEmpresaYEstadoReparacion(

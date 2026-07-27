@@ -3,16 +3,28 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
+import { authService } from '../../../api/services/authService';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Redirect to admin dashboard by default
-    navigate('/dashboard');
+    setIsSubmitting(true);
+    setLoginError('');
+
+    try {
+      const user = await authService.login({ correo: email, password });
+      navigate(user.rol === 'TECNICO' ? '/dashboard/tecnico' : '/dashboard');
+    } catch {
+      setLoginError('No se pudo iniciar sesion. Revisa tus credenciales o que el backend este activo.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -94,13 +106,25 @@ export const LoginPage: React.FC = () => {
             </a>
           </div>
 
-          <Button type="submit" variant="primary" style={{ width: '100%', padding: '14px', borderRadius: '12px', marginTop: '8px' }}>
-            Ingresar al Taller
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={isSubmitting}
+            style={{ width: '100%', padding: '14px', borderRadius: '12px', marginTop: '8px' }}
+          >
+            {isSubmitting ? 'Ingresando...' : 'Ingresar al Taller'}
           </Button>
+
+          {loginError && (
+            <p style={{ color: '#EF4444', fontSize: '13px', fontWeight: '600', margin: 0, textAlign: 'center' }}>
+              {loginError}
+            </p>
+          )}
 
           <Button
             type="button"
             variant="outline"
+            disabled={isSubmitting}
             onClick={() => navigate('/dashboard/tecnico')}
             style={{ width: '100%', padding: '12px', borderRadius: '12px' }}
           >

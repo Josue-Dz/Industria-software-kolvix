@@ -10,11 +10,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import edu.unah.kolvix.dtos.diagnostico.DiagnosticoRequest;
 import edu.unah.kolvix.dtos.diagnostico.DiagnosticoResponse;
-import edu.unah.kolvix.entities.Cotizacion;
 import edu.unah.kolvix.entities.Diagnostico;
 import edu.unah.kolvix.entities.OrdenTrabajo;
 import edu.unah.kolvix.entities.Tecnico;
 import edu.unah.kolvix.entities.Usuario;
+import edu.unah.kolvix.enums.EstadoCotizacion;
 import edu.unah.kolvix.repositories.CotizacionRepository;
 import edu.unah.kolvix.repositories.DiagnosticoRepository;
 import edu.unah.kolvix.repositories.OrdenTrabajoRepository;
@@ -167,22 +167,32 @@ public class DiagnosticoService {
         }
     }
 
+    // El diagnóstico solo se bloquea cuando su última versión de cotización está ENVIADA
+    // o APROBADA; con borrador PENDIENTE o cotización RECHAZADA/VENCIDA/CANCELADA se
+    // permiten cambios para preparar la siguiente versión.
     private void asegurarDiagnosticoSinCotizacion(Diagnostico diagnostico) {
-        boolean yaCotizado = cotizacionRepository
+        cotizacionRepository
                 .findByOrdenIdOrdenAndEmpresaIdEmpresaOrderByVersionDesc(
                         diagnostico.getOrden().getIdOrden(),
                         diagnostico.getEmpresa().getIdEmpresa()
                 )
                 .stream()
-                .map(Cotizacion::getDiagnostico)
-                .anyMatch(d -> Objects.equals(d.getIdDiagnostico(), diagnostico.getIdDiagnostico()));
-
-        if (yaCotizado) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "No se puede editar el diagnostico porque ya existe una cotizacion"
-            );
-        }
+                .filter(c -> Objects.equals(c.getDiagnostico().getIdDiagnostico(), diagnostico.getIdDiagnostico()))
+                .findFirst()
+                .ifPresent(ultimaVersion -> {
+                    if (ultimaVersion.getEstado() == EstadoCotizacion.ENVIADA) {
+                        throw new ResponseStatusException(
+                                HttpStatus.CONFLICT,
+                                "La cotización está enviada; espera la respuesta del cliente antes de editar el diagnóstico"
+                        );
+                    }
+                    if (ultimaVersion.getEstado() == EstadoCotizacion.APROBADA) {
+                        throw new ResponseStatusException(
+                                HttpStatus.CONFLICT,
+                                "La cotización ya fue aprobada; el diagnóstico queda bloqueado"
+                        );
+                    }
+                });
     }
 
     private DiagnosticoResponse mapearResponse(Diagnostico diagnostico) {

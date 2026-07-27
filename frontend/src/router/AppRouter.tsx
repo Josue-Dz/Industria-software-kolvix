@@ -23,6 +23,9 @@ import { DiagnosticoOrdenPage } from '../features/ordenes/pages/DiagnosticoOrden
 import { EvidenciaOrdenPage } from '../features/ordenes/pages/EvidenciaOrdenPage';
 import { DetalleOrdenPage } from '../features/ordenes/pages/DetalleOrdenPage';
 
+// Tecnicos Feature
+import { TecnicosPage } from '../features/tecnicos/pages/TecnicosPage';
+
 // Inventario Feature
 import { InventarioDashboardPage } from '../features/inventario/pages/InventarioDashboardPage';
 import { MovimientosInventarioPage } from '../features/inventario/pages/MovimientosInventarioPage';
@@ -50,7 +53,10 @@ export const AppRouter: React.FC = () => {
         <Route path="/ordenes/nueva" element={<NuevaOrdenPage />} />
         <Route path="/ordenes/diagnostico" element={<DiagnosticoOrdenPage />} />
         <Route path="/ordenes/evidencia" element={<EvidenciaOrdenPage />} />
-        <Route path="/ordenes/detalle" element={<DetalleOrdenPage />} />
+        <Route path="/ordenes/detalle/:id" element={<DetalleOrdenPage />} />
+
+        {/* Tecnicos Routes */}
+        <Route path="/tecnicos" element={<TecnicosPage />} />
 
         {/* Inventario Routes */}
         <Route path="/inventario" element={<InventarioDashboardPage />} />
