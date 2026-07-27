@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  ClipboardList, 
-  Package, 
-  Settings, 
+import {
+  LayoutDashboard,
+  ClipboardList,
+  Users,
+  Package,
+  Settings,
   Headset,
   Wrench,
   Camera,
@@ -22,6 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ userRole = 'admin' }) => {
   const adminNavItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Órdenes', path: '/ordenes', icon: ClipboardList },
+    { label: 'Técnicos', path: '/tecnicos', icon: Users },
     { label: 'Inventario', path: '/inventario', icon: Package },
     { label: 'Configuración', path: '/configuracion', icon: Settings },
     { label: 'Soporte', path: '/soporte', icon: Headset }
@@ -40,7 +42,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ userRole = 'admin' }) => {
       width: '260px',
       backgroundColor: '#1E1B4B',
       color: '#FFFFFF',
-      minHeight: '100vh',
+      height: '100vh',
+      position: 'sticky',
+      top: 0,
       display: 'flex',
       flexDirection: 'column',
       padding: '24px 16px',
@@ -59,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ userRole = 'admin' }) => {
       </div>
 
       {/* Navigation List */}
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;

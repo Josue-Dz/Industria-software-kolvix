@@ -5,6 +5,8 @@
 
 ### Backend: Spring Boot / Maven ###
 backend/target/
+backend/uploads/
+uploads/
 backend/.mvn/wrapper/maven-wrapper.jar
 backend/.apt_generated
 backend/.classpath
@@ -30,6 +32,7 @@ frontend/yarn-debug.log*
 frontend/yarn-error.log*
 frontend/pnpm-debug.log*
 frontend/lerna-debug.log*
+frontend/*.tsbuildinfo
 
 ### Common OS / editor noise ###
 .DS_Store

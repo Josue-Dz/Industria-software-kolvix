@@ -36,6 +36,13 @@ public class EstadoReparacionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(estadoReparacionService.crear(request, empresa));
     }
 
+    // Completa los estados por defecto que falten (idempotente) y devuelve el flujo resultante
+    @PostMapping("/inicializar")
+    public ResponseEntity<List<EstadoReparacionResponse>> inicializar() {
+        Empresa empresa = authService.getUsuarioAutenticado().getEmpresa();
+        return ResponseEntity.ok(estadoReparacionService.asegurarEstadosPorDefecto(empresa));
+    }
+
     @GetMapping("/enlistar")
     public ResponseEntity<List<EstadoReparacionResponse>> listar() {
         return ResponseEntity.ok(estadoReparacionService.listar(empresaIdActual()));

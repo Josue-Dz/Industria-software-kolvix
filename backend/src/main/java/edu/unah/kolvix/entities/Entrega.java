@@ -1,7 +1,6 @@
 package edu.unah.kolvix.entities;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 

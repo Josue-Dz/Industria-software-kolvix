@@ -3,6 +3,7 @@ package edu.unah.kolvix.JwtConfig;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,10 +31,14 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/crear", "/api/auth/login", "/error").permitAll()
+                        // imágenes subidas (evidencias) servidas como estáticos
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         // seguimiento del cliente por código, sin login (según flujo MVP)
                         .requestMatchers("/api/seguimiento/**").permitAll()
                         .requestMatchers("/api/usuarios/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .requestMatchers("/api/tecnicos/**").hasAnyRole("ADMIN", "PROPIETARIO")
+                        // lectura de estados abierta a todo usuario autenticado; escritura solo ADMIN/PROPIETARIO
+                        .requestMatchers(HttpMethod.GET, "/api/estados-reparacion/**").authenticated()
                         .requestMatchers("/api/estados-reparacion/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .requestMatchers("/api/cuentas-pago-taller/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .requestMatchers("/api/marketplace/**").permitAll()

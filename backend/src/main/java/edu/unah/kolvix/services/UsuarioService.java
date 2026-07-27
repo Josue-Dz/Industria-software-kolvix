@@ -4,13 +4,14 @@ import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import edu.unah.kolvix.dtos.empresa.EmpresaRegistroRequest;
 import edu.unah.kolvix.dtos.usuario.UsuarioRequest;
 import edu.unah.kolvix.entities.Empresa;
 import edu.unah.kolvix.entities.Usuario;
 import edu.unah.kolvix.enums.RolUsuario;
 import edu.unah.kolvix.repositories.UsuarioRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service

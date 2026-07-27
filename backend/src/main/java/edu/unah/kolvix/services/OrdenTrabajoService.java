@@ -33,7 +33,6 @@ import edu.unah.kolvix.repositories.EstadoReparacionRepository;
 import edu.unah.kolvix.repositories.HistorialOrdenRepository;
 import edu.unah.kolvix.repositories.OrdenTrabajoRepository;
 import edu.unah.kolvix.repositories.TecnicoRepository;
-import edu.unah.kolvix.repositories.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -47,7 +46,7 @@ public class OrdenTrabajoService {
     private final TecnicoRepository tecnicoRepository;
     private final EstadoReparacionRepository estadoReparacionRepository;
     private final HistorialOrdenRepository historialOrdenRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final AuthService authService;
 
     @Transactional
     public OrdenTrabajoResponse crearOrdenTrabajo(Long empresaId, OrdenTrabajoRequest request) {
@@ -104,6 +103,15 @@ public class OrdenTrabajoService {
     }
 
     @Transactional(readOnly = true)
+    public List<OrdenTrabajoResponse> listarPorEmpresa(Long empresaId) {
+        validarEmpresa(empresaId);
+        return ordenTrabajoRepository.findByEmpresaIdEmpresaOrderByFechaIngresoDesc(empresaId, Pageable.unpaged())
+                .stream()
+                .map(this::mapearResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<OrdenTrabajoResponse> listarPorEmpresaYEstadoPago(Long empresaId, EstadoPagoOrden estadoPago) {
         validarEmpresa(empresaId);
         return ordenTrabajoRepository.findByEmpresaIdEmpresaAndEstadoPagoOrderByFechaIngresoDesc(empresaId, estadoPago)
@@ -118,6 +126,18 @@ public class OrdenTrabajoService {
         tecnicoRepository.findByIdTecnicoAndEmpresaIdEmpresa(tecnicoId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El técnico no existe en la empresa"));
         return ordenTrabajoRepository.findByEmpresaIdEmpresaAndTecnicoIdTecnicoOrderByFechaIngresoDesc(empresaId, tecnicoId, Pageable.unpaged())
+                .stream()
+                .map(this::mapearResponse)
+                .toList();
+    }
+
+    //Listar por orden de reparacion
+    @Transactional(readOnly = true)
+    public List<OrdenTrabajoResponse> listarPorEmpresaYEstadoReparacion(Long empresaId, String estadoReparacion) {
+        validarEmpresa(empresaId);
+        EstadoReparacion estado = estadoReparacionRepository.findByNombreAndEmpresaIdEmpresa(estadoReparacion, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El estado de reparación no existe en la empresa"));
+        return ordenTrabajoRepository.findByEmpresaIdEmpresaAndEstadoIdEstadoOrderByFechaIngresoDesc(empresaId, estado.getIdEstado())
                 .stream()
                 .map(this::mapearResponse)
                 .toList();
@@ -159,8 +179,7 @@ public class OrdenTrabajoService {
         orden.setUpdatedAt(Instant.now());
         ordenTrabajoRepository.save(orden);
 
-        Usuario usuario = usuarioRepository.findById(1L)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No se pudo registrar el historial"));
+        Usuario usuario = authService.getUsuarioAutenticado();
         HistorialOrden historial = new HistorialOrden();
         historial.setOrden(orden);
         historial.setUsuario(usuario);
@@ -218,12 +237,22 @@ public class OrdenTrabajoService {
         return obtenerHistorialOrden(empresaId, orden.getIdOrden());
     }
 
+     @Transactional(readOnly = true)
+    public OrdenTrabajo obtenerOrden(Long empresaId, Long ordenId) {
+        return ordenTrabajoRepository
+                .findByIdOrdenAndEmpresaIdEmpresa(ordenId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Orden de trabajo no encontrada"
+                ));
+    }
+
     private OrdenTrabajo obtenerOrdenEmpresa(Long empresaId, Long idOrden) {
         return ordenTrabajoRepository.findByIdOrdenAndEmpresaIdEmpresa(idOrden, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "La orden no existe en la empresa"));
     }
 
-    private void validarEmpresa(Long empresaId) {
+private void validarEmpresa(Long empresaId) {
         if (!empresaRepository.existsById(empresaId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La empresa no existe");
         }
@@ -296,7 +325,7 @@ public class OrdenTrabajoService {
         return ((nombre != null ? nombre : "") + " " + (apellido != null ? apellido : "")).trim();
     }
 
-    private String nombreCompleto(edu.unah.kolvix.entities.Usuario usuario) {
+    private String nombreCompleto(Usuario usuario) {
         if (usuario == null) {
             return null;
         }

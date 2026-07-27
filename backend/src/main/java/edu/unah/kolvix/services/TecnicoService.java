@@ -7,9 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import edu.unah.kolvix.dtos.usuario.TecnicoRegistroRequest;
 import edu.unah.kolvix.dtos.usuario.TecnicoRequest;
 import edu.unah.kolvix.dtos.usuario.TecnicoResponse;
 import edu.unah.kolvix.dtos.usuario.TecnicoUpdateRequest;
+import edu.unah.kolvix.dtos.usuario.UsuarioRequest;
 import edu.unah.kolvix.entities.Empresa;
 import edu.unah.kolvix.entities.Tecnico;
 import edu.unah.kolvix.entities.Usuario;
@@ -24,6 +26,38 @@ public class TecnicoService {
     
     private final TecnicoRepository tecnicoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioService usuarioService;
+
+    // Registro en un solo paso: crea Usuario (rol TECNICO) + Tecnico en la misma transaccion
+    @Transactional
+    public TecnicoResponse registrar(TecnicoRegistroRequest request, Empresa empresa) {
+        if (tecnicoRepository.existsByEmpresaIdEmpresaAndDni(empresa.getIdEmpresa(), request.dni())) {
+            throw new IllegalArgumentException("Ya existe un técnico con ese DNI en la empresa");
+        }
+
+        Usuario usuario = usuarioService.crear(new UsuarioRequest(
+                request.nombre(),
+                request.apellido(),
+                request.correo(),
+                request.password(),
+                RolUsuario.TECNICO,
+                true), empresa);
+
+        Tecnico tecnico = new Tecnico();
+        tecnico.setEmpresa(empresa);
+        tecnico.setUsuario(usuario);
+        tecnico.setDni(request.dni());
+        tecnico.setRtn(request.rtn());
+        tecnico.setDireccion(request.direccion());
+        tecnico.setTelefono(request.telefono());
+        tecnico.setFechaNacimiento(request.fechaNacimiento());
+        tecnico.setNombreContactoEmergencia(request.nombreContactoEmergencia());
+        tecnico.setTelefonoContactoEmergencia(request.telefonoContactoEmergencia());
+        tecnico.setUrlFotografia(request.urlFotografia());
+        tecnico.setActivo(true);
+
+        return mapearResponse(tecnicoRepository.save(tecnico));
+    }
 
     @Transactional
     public TecnicoResponse crear(TecnicoRequest request, Empresa empresa) {
