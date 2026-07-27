@@ -20,6 +20,11 @@ export const ordenesService = {
     return data;
   },
 
+  async inicializarEstados(): Promise<EstadoReparacionResponse[]> {
+    const { data } = await apiClient.post<EstadoReparacionResponse[]>("/estados-reparacion/inicializar");
+    return data;
+  },
+
   async listarPorEstado(empresaId: number, estadoReparacion: string): Promise<OrdenTrabajoResponse[]> {
     const { data } = await apiClient.get<OrdenTrabajoResponse[]>(
       `/ordenes-trabajo/empresa/${empresaId}/estado-reparacion`,

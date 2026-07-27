@@ -71,7 +71,25 @@ public class EstadoReparacionService {
     // comentada de estados_reparacion). Se llama desde EmpresaService.
     @Transactional
     public void crearEstadosPorDefecto(Empresa empresa) {
-        List<EstadoReparacion> estadosDefault = List.of(
+        estadoReparacionRepository.saveAll(estadosPorDefecto(empresa));
+    }
+
+    // Idempotente: agrega solo los estados por defecto que la empresa no tenga aún
+    // (comparando por nombre). Pensado para empresas creadas antes de la semilla
+    // automática o que borraron parte de su flujo.
+    @Transactional
+    public List<EstadoReparacionResponse> asegurarEstadosPorDefecto(Empresa empresa) {
+        List<EstadoReparacion> faltantes = estadosPorDefecto(empresa).stream()
+                .filter(estado -> !estadoReparacionRepository.existsByEmpresaIdEmpresaAndNombreIgnoreCase(
+                        empresa.getIdEmpresa(), estado.getNombre()))
+                .toList();
+
+        estadoReparacionRepository.saveAll(faltantes);
+        return listar(empresa.getIdEmpresa());
+    }
+
+    private List<EstadoReparacion> estadosPorDefecto(Empresa empresa) {
+        return List.of(
                 construirEstado(empresa, "Solicitud recibida",  (short) 1,  false, true),
                 construirEstado(empresa, "Recepcion",            (short) 2,  false, true),
                 construirEstado(empresa, "Diagnostico",           (short) 3,  false, false),
@@ -84,8 +102,6 @@ public class EstadoReparacionService {
                 construirEstado(empresa, "Entregado",              (short) 10, true,  true),
                 construirEstado(empresa, "Cerrado",                (short) 11, true,  false)
         );
-
-        estadoReparacionRepository.saveAll(estadosDefault);
     }
 
     private EstadoReparacion construirEstado(Empresa empresa, String nombre, short orden,
