@@ -775,3 +775,75 @@ CREATE TRIGGER trg_review_calificacion
     FOR EACH ROW EXECUTE FUNCTION fn_actualizar_calificacion_marketplace();
 
 
+-- ============================================================
+--  DATOS SEMILLA SUGERIDOS - estados estandar por empresa
+-- ============================================================
+
+-- Ejemplo al registrar una empresa nueva (id_empresa = 1):
+--
+-- INSERT INTO estados_reparacion
+--     (id_empresa, nombre, orden, es_estado_final, notificar_cliente)
+-- VALUES
+--     (1, 'Solicitud recibida',     1,  FALSE, TRUE),
+--     (1, 'Recepcion',              2,  FALSE, TRUE),
+--     (1, 'Diagnostico',            3,  FALSE, FALSE),
+--     (1, 'Cotizacion',             4,  FALSE, TRUE),
+--     (1, 'Aprobado',               5,  FALSE, FALSE),
+--     (1, 'Rechazado',              6,  TRUE,  TRUE),
+--     (1, 'En reparacion',          7,  FALSE, FALSE),
+--     (1, 'Control de calidad',     8,  FALSE, FALSE),
+--     (1, 'Listo para entrega',     9,  FALSE, TRUE),
+--     (1, 'Entregado',              10, TRUE,  TRUE),
+--     (1, 'Cerrado',                11, TRUE,  FALSE);
+
+-- Ejemplo de cuenta de cobro global:
+--
+-- INSERT INTO cuentas_cobro
+--     (banco, tipo_cuenta, numero_cuenta, titular, moneda, instrucciones)
+-- VALUES
+--     ('Banco ejemplo', 'AHORRO', '0000-0000-0000', 'Kolvix', 'HNL',
+--      'Enviar comprobante al correo o WhatsApp de soporte.');
+
+-- Ejemplo de cuenta de pago del taller para sus clientes:
+--
+-- INSERT INTO cuentas_pago_taller
+--     (id_empresa, banco, tipo_cuenta, numero_cuenta, titular, moneda, instrucciones)
+-- VALUES
+--     (1, 'Banco ejemplo', 'AHORRO', '1111-2222-3333', 'TechFix', 'HNL',
+--      'Subir el comprobante desde el seguimiento web de la reparacion.');
+
+-- Plantilla sugerida para inspeccion visual interactiva:
+--
+-- INSERT INTO plantillas_inspeccion
+--     (id_categoria, nombre, descripcion, vistas)
+-- VALUES
+--     (
+--         1,
+--         'Smartphone generico',
+--         'Zonas basicas para marcar danos fisicos en recepcion.',
+--         '[
+--             {
+--                 "vista": "FRONTAL",
+--                 "zonas": [
+--                     {"id": "frontal_superior", "nombre": "Frontal superior", "x": 0, "y": 0, "width": 100, "height": 20},
+--                     {"id": "pantalla", "nombre": "Pantalla", "x": 8, "y": 20, "width": 84, "height": 60},
+--                     {"id": "frontal_inferior", "nombre": "Frontal inferior", "x": 0, "y": 80, "width": 100, "height": 20}
+--                 ]
+--             },
+--             {
+--                 "vista": "POSTERIOR",
+--                 "zonas": [
+--                     {"id": "camara", "nombre": "Camara", "x": 8, "y": 5, "width": 25, "height": 20},
+--                     {"id": "tapa_posterior", "nombre": "Tapa posterior", "x": 5, "y": 25, "width": 90, "height": 65}
+--                 ]
+--             }
+--         ]'::jsonb
+--     );
+
+-- Los albumes de evidencia son globales y ya quedan preestablecidos
+-- en la semilla inicial. Al subir una evidencia, solo se referencia
+-- el id_album correspondiente junto con la orden.
+
+-- ============================================================
+--  FIN DEL DDL
+-- ============================================================
