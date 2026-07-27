@@ -31,6 +31,10 @@ import { InventarioDashboardPage } from '../features/inventario/pages/Inventario
 import { MovimientosInventarioPage } from '../features/inventario/pages/MovimientosInventarioPage';
 import { RegistroRepuestosPage } from '../features/inventario/pages/RegistroRepuestosPage';
 
+// Configuracion & Soporte Features
+import { ConfiguracionPage } from '../features/configuracion/pages/ConfiguracionPage';
+import { SoportePage } from '../features/soporte/pages/SoportePage';
+
 export const AppRouter: React.FC = () => {
   return (
     <BrowserRouter>
@@ -62,6 +66,10 @@ export const AppRouter: React.FC = () => {
         <Route path="/inventario" element={<InventarioDashboardPage />} />
         <Route path="/inventario/nuevo" element={<RegistroRepuestosPage />} />
         <Route path="/inventario/movimientos" element={<MovimientosInventarioPage />} />
+
+        {/* Configuracion & Soporte Routes */}
+        <Route path="/configuracion" element={<ConfiguracionPage />} />
+        <Route path="/soporte" element={<SoportePage />} />
 
         {/* Catch-all redirect to Landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
