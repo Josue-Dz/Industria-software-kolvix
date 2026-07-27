@@ -12,4 +12,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findByEmpresaIdEmpresaOrderByFechaReviewDesc(Long empresaId);
 
     Optional<Review> findByOrdenIdOrdenAndEmpresaIdEmpresa(Long ordenId, Long empresaId);
+
+    boolean existsByOrdenIdOrden(Long ordenId);
 }

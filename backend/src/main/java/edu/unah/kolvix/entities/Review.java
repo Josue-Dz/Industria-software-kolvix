@@ -48,4 +48,7 @@ public class Review {
     @JoinColumn(name = "id_empresa", nullable = false)
     private Empresa empresa;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_cliente", nullable = false)   
+    private Cliente cliente;
 }
