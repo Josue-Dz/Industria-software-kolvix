@@ -13,4 +13,6 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
     Optional<Entrega> findByOrdenIdOrdenAndOrdenEmpresaIdEmpresa(Long ordenId, Long empresaId);
 
     Optional<Entrega> findByIdEntregaAndOrdenEmpresaIdEmpresa(Long idEntrega, Long empresaId);
+
+    boolean existsByOrdenIdOrden(Long ordenId);
 }
