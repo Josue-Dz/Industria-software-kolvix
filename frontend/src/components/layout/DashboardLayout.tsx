@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
-import { Bell, User } from 'lucide-react';
+import { NotificationsBell } from './NotificationsBell';
+import { useUsuarioActual } from '../../hooks/useUsuarioActual';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -9,12 +10,29 @@ interface DashboardLayoutProps {
   role?: 'admin' | 'tecnico' | 'cliente';
 }
 
+const ROL_LABEL: Record<string, string> = {
+  ADMIN: 'Administrador',
+  TECNICO: 'Técnico',
+  RECEPCIONISTA: 'Recepcionista',
+  PROPIETARIO: 'Propietario',
+};
+
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   title,
   subtitle,
   role = 'admin'
 }) => {
+  const usuario = useUsuarioActual();
+
+  const nombreCompleto = usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Usuario';
+  const detalleUsuario = usuario
+    ? `${ROL_LABEL[usuario.rol] ?? usuario.rol} · ${usuario.correo}`
+    : 'Sesión no iniciada';
+  const iniciales = usuario
+    ? `${usuario.nombre.charAt(0)}${usuario.apellido.charAt(0)}`.toUpperCase()
+    : '?';
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F8FAFC' }}>
       <Sidebar userRole={role} />
@@ -42,28 +60,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <button style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#F1F5F9',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#475569',
-              position: 'relative'
-            }}>
-              <Bell size={20} />
-              <span style={{
-                position: 'absolute',
-                top: '8px',
-                right: '8px',
-                width: '8px',
-                height: '8px',
-                backgroundColor: '#6366F1',
-                borderRadius: '50%'
-              }} />
-            </button>
+            <NotificationsBell />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{
@@ -75,16 +72,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: '700'
+                fontWeight: '700',
+                fontSize: '14px'
               }}>
-                <User size={20} />
+                {iniciales}
               </div>
               <div style={{ textAlign: 'left' }}>
                 <span style={{ fontSize: '14px', fontWeight: '700', color: '#1E1B4B', display: 'block' }}>
-                  {role === 'tecnico' ? 'Técnico Especialista' : 'Taller Central'}
+                  {nombreCompleto}
                 </span>
                 <span style={{ fontSize: '12px', color: '#64748B' }}>
-                  {role === 'tecnico' ? 'tecnico@kolvix.hn' : 'admin@kolvix.hn'}
+                  {detalleUsuario}
                 </span>
               </div>
             </div>

@@ -3,65 +3,76 @@ import { Link } from 'react-router-dom';
 import { DashboardLayout } from '../../../components/layout/DashboardLayout';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
-import { 
-  Inbox, 
-  Stethoscope, 
-  FileSpreadsheet, 
-  Wrench, 
-  ShieldCheck, 
+import {
+  Inbox,
+  Stethoscope,
+  FileSpreadsheet,
+  Wrench,
+  ShieldCheck,
   PackageCheck,
   AlertTriangle,
   ChevronRight,
   Clock
 } from 'lucide-react';
+import { useDashboardTaller } from '../hooks/useDashboardTaller';
+import { formatoFechaHora, normalizarTexto as normalizar } from '../../../utils/formato';
+import type { OrdenTrabajoResponse } from '../../../api/types';
+
+const esDeHoy = (iso: string | null): boolean => {
+  if (!iso) return false;
+  const fecha = new Date(iso);
+  const hoy = new Date();
+  return fecha.toDateString() === hoy.toDateString();
+};
 
 export const DashboardTallerPage: React.FC = () => {
+  const { ordenes, estados, repuestos, isLoading, error } = useDashboardTaller();
+
+  const nombreEstadoDe = (orden: OrdenTrabajoResponse): string =>
+    orden.nombreEstado || estados.find((e) => e.id === orden.idEstado)?.nombre || 'Sin estado';
+
+  const contarPorEstado = (fragmento: string): number =>
+    ordenes.filter((o) => normalizar(nombreEstadoDe(o)).includes(fragmento)).length;
+
   const kpiCards = [
-    { label: 'Órdenes recibidas hoy', count: 2, icon: Inbox },
-    { label: 'Diagnósticos pendientes', count: 1, icon: Stethoscope },
-    { label: 'Cotizaciones pendientes', count: 2, icon: FileSpreadsheet },
-    { label: 'Reparaciones activas', count: 4, icon: Wrench },
-    { label: 'Control de calidad', count: 1, icon: ShieldCheck },
-    { label: 'Listo de entrega', count: 3, icon: PackageCheck }
+    { label: 'Órdenes recibidas hoy', count: ordenes.filter((o) => esDeHoy(o.fechaIngreso)).length, icon: Inbox },
+    { label: 'Diagnósticos pendientes', count: contarPorEstado('diagnos'), icon: Stethoscope },
+    { label: 'Cotizaciones pendientes', count: contarPorEstado('cotiza'), icon: FileSpreadsheet },
+    { label: 'Reparaciones activas', count: contarPorEstado('reparacion'), icon: Wrench },
+    { label: 'Control de calidad', count: contarPorEstado('calidad'), icon: ShieldCheck },
+    { label: 'Listo para entrega', count: contarPorEstado('listo'), icon: PackageCheck }
   ];
 
-  const recentActivity = [
-    { action: 'Recepción', text: 'OR-2041 recibida Macbook Pro 14', time: 'hace 4 min', color: '#6366F1' },
-    { action: 'Cliente', text: 'aprobó la cotización OR-2041', time: 'hace 4 min', color: '#10B981' },
-    { action: 'L. Soto', text: 'completó diagnóstico OR-2039', time: 'hace 4 min', color: '#3730A3' },
-    { action: 'Entrega', text: 'OR-2037 entregada a David', time: 'hace 2 horas', color: '#10B981' },
-    { action: 'Asignación', text: 'OR-2038 asignada a A. Rivas', time: 'hace 4 min', color: '#F59E0B' }
-  ];
+  const ordenesRecientes = [...ordenes]
+    .sort((a, b) => new Date(b.fechaIngreso ?? 0).getTime() - new Date(a.fechaIngreso ?? 0).getTime());
 
-  const upcomingDeliveries = [
-    { code: 'OR-2038', client: 'Nohely Reyes', device: 'Iphone 13 Pro Max' },
-    { code: 'OR-2039', client: 'José Daniel Nuñez', device: 'Iphone 13 Pro Max' },
-    { code: 'OR-2040', client: 'Ashley Silva', device: 'Macbook Air M2' },
-    { code: 'OR-2041', client: 'Ronny Díaz', device: 'Samsung Galaxy S23' }
-  ];
+  const actividadReciente = ordenesRecientes.slice(0, 5);
 
-  const inventoryAlerts = [
-    { name: 'Batería Samsung Galaxy S21', detail: 'Restantes: 2 unidades' },
-    { name: 'Pantalla Samsung Galaxy S23', detail: 'Restantes: 2 unidades' },
-    { name: 'Centro de carga tipo C', detail: 'Restantes: 2 unidades' }
-  ];
+  const proximasEntregas = ordenes
+    .filter((o) => normalizar(nombreEstadoDe(o)).includes('listo'))
+    .slice(0, 4);
 
-  const recentOrders = [
-    { code: 'OR-2041', client: 'Ronny Díaz', device: 'Samsung Galaxy S23', status: 'Diagnóstico', tech: 'L. Soto', badgeBg: '#EDE9FE', badgeColor: '#3730A3' },
-    { code: 'OR-2040', client: 'Ashley Silva', device: 'Macbook Air M2', status: 'Ingresado', tech: 'J. Pérez', badgeBg: '#E0E7FF', badgeColor: '#4338CA' },
-    { code: 'OR-2039', client: 'José Daniel Nuñez', device: 'Iphone 13 Pro Max', status: 'En reparación', tech: 'A. Rivas', badgeBg: '#FEF3C7', badgeColor: '#D97706' },
-    { code: 'OR-2038', client: 'Nohely Reyes', device: 'Iphone 13 Pro Max', status: 'Listo', tech: 'L. Soto', badgeBg: '#DCFCE7', badgeColor: '#15803D' },
-    { code: 'OR-2037', client: 'David', device: 'Dell G15 5530', status: 'Entregado', tech: 'A. Rivas', badgeBg: '#F1F5F9', badgeColor: '#475569' }
-  ];
+  const alertasInventario = repuestos.filter((r) => r.stockBajo && r.activo).slice(0, 5);
+
+  const colorEstadoDe = (orden: OrdenTrabajoResponse): string =>
+    orden.colorHexEstado || estados.find((e) => e.id === orden.idEstado)?.colorHex || '#3730A3';
 
   return (
-    <DashboardLayout
-      title="Dashboard"
-      subtitle=""
-      role="admin"
-    >
+    <DashboardLayout title="Dashboard" subtitle="" role="admin">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        
+
+        {isLoading && (
+          <Card hoverable={false} style={{ padding: '14px 18px', borderRadius: '12px', backgroundColor: '#EEF2FF', color: '#3730A3', fontWeight: '700' }}>
+            Cargando información del taller...
+          </Card>
+        )}
+
+        {error && (
+          <Card hoverable={false} style={{ padding: '14px 18px', borderRadius: '12px', backgroundColor: '#FEF2F2', color: '#991B1B', fontWeight: '700' }}>
+            {error}
+          </Card>
+        )}
+
         {/* Top 6 KPI Cards Row */}
         <div style={{
           display: 'grid',
@@ -104,7 +115,7 @@ export const DashboardTallerPage: React.FC = () => {
           })}
         </div>
 
-        {/* Middle Section with 3 Equal Columns inside Container */}
+        {/* Middle Section with 3 Equal Columns */}
         <Card hoverable={false} style={{
           padding: '24px',
           borderRadius: '20px',
@@ -116,7 +127,7 @@ export const DashboardTallerPage: React.FC = () => {
             gridTemplateColumns: '1fr 1fr 1fr',
             gap: '24px'
           }}>
-            
+
             {/* Column 1: Actividad reciente */}
             <div style={{ borderRight: '1px dashed #CBD5E1', paddingRight: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
@@ -127,24 +138,29 @@ export const DashboardTallerPage: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {recentActivity.map((act, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                {actividadReciente.map((orden) => (
+                  <div key={orden.idOrden} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                     <div style={{
                       width: '8px',
                       height: '8px',
                       borderRadius: '50%',
-                      backgroundColor: act.color,
+                      backgroundColor: colorEstadoDe(orden),
                       marginTop: '6px',
                       flexShrink: 0
                     }} />
                     <div>
-                      <p style={{ fontSize: '13px', color: '#1E293B', lineHeight: 1.4 }}>
-                        <strong>{act.action}</strong> {act.text}
+                      <p style={{ fontSize: '13px', color: '#1E293B', lineHeight: 1.4, margin: 0 }}>
+                        <strong>{orden.numeroOrden}</strong> {orden.nombreCliente} · {nombreEstadoDe(orden)}
                       </p>
-                      <span style={{ fontSize: '11px', color: '#94A3B8' }}>{act.time}</span>
+                      <span style={{ fontSize: '11px', color: '#94A3B8' }}>
+                        Ingreso: {formatoFechaHora(orden.fechaIngreso)}
+                      </span>
                     </div>
                   </div>
                 ))}
+                {!isLoading && actividadReciente.length === 0 && (
+                  <span style={{ fontSize: '13px', color: '#94A3B8' }}>Aún no hay órdenes registradas.</span>
+                )}
               </div>
             </div>
 
@@ -158,24 +174,29 @@ export const DashboardTallerPage: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {upcomingDeliveries.map((item) => (
-                  <div key={item.code} style={{
-                    border: '1px solid #E2E8F0',
-                    borderRadius: '12px',
-                    padding: '10px 14px',
-                    backgroundColor: '#FFFFFF'
-                  }}>
-                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#3730A3', display: 'block' }}>
-                      {item.code}
-                    </span>
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#1E293B', display: 'block' }}>
-                      {item.client}
-                    </span>
-                    <span style={{ fontSize: '12px', color: '#64748B' }}>
-                      {item.device}
-                    </span>
-                  </div>
+                {proximasEntregas.map((orden) => (
+                  <Link key={orden.idOrden} to={`/ordenes/detalle/${orden.idOrden}`} style={{ textDecoration: 'none' }}>
+                    <div style={{
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '12px',
+                      padding: '10px 14px',
+                      backgroundColor: '#FFFFFF'
+                    }}>
+                      <span style={{ fontSize: '13px', fontWeight: '800', color: '#3730A3', display: 'block' }}>
+                        {orden.numeroOrden}
+                      </span>
+                      <span style={{ fontSize: '13px', fontWeight: '600', color: '#1E293B', display: 'block' }}>
+                        {orden.nombreCliente}
+                      </span>
+                      <span style={{ fontSize: '12px', color: '#64748B' }}>
+                        {orden.dispositivoResumen || 'Sin detalle del dispositivo'}
+                      </span>
+                    </div>
+                  </Link>
                 ))}
+                {!isLoading && proximasEntregas.length === 0 && (
+                  <span style={{ fontSize: '13px', color: '#94A3B8' }}>No hay órdenes listas para entrega.</span>
+                )}
               </div>
             </div>
 
@@ -189,8 +210,8 @@ export const DashboardTallerPage: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-                {inventoryAlerts.map((inv, idx) => (
-                  <div key={idx} style={{
+                {alertasInventario.map((rep) => (
+                  <div key={rep.id} style={{
                     border: '1px solid #FEE2E2',
                     borderRadius: '12px',
                     padding: '10px 14px',
@@ -201,10 +222,10 @@ export const DashboardTallerPage: React.FC = () => {
                   }}>
                     <div>
                       <span style={{ fontSize: '13px', fontWeight: '700', color: '#991B1B', display: 'block' }}>
-                        {inv.name}
+                        {rep.nombre}
                       </span>
                       <span style={{ fontSize: '11px', color: '#B91C1C' }}>
-                        {inv.detail}
+                        Restantes: {rep.stockActual} {rep.stockActual === 1 ? 'unidad' : 'unidades'} (mínimo {rep.stockMinimo})
                       </span>
                     </div>
                     <span style={{
@@ -220,6 +241,9 @@ export const DashboardTallerPage: React.FC = () => {
                     </span>
                   </div>
                 ))}
+                {!isLoading && alertasInventario.length === 0 && (
+                  <span style={{ fontSize: '13px', color: '#94A3B8' }}>Sin alertas: todo el inventario está sobre el mínimo.</span>
+                )}
               </div>
 
               <Link to="/inventario">
@@ -232,15 +256,15 @@ export const DashboardTallerPage: React.FC = () => {
           </div>
         </Card>
 
-        {/* Bottom Section: Últimas órdenes registradas Table */}
+        {/* Bottom Section: Últimas órdenes registradas */}
         <Card hoverable={false} style={{ padding: '24px', borderRadius: '20px', backgroundColor: '#FFFFFF' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1E1B4B', marginBottom: '20px' }}>
             Últimas órdenes registradas
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {recentOrders.map((ord) => (
-              <div key={ord.code} style={{
+            {ordenesRecientes.slice(0, 5).map((orden) => (
+              <div key={orden.idOrden} style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -250,14 +274,14 @@ export const DashboardTallerPage: React.FC = () => {
                 backgroundColor: '#FAFAFD'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1 }}>
-                  <span style={{ fontSize: '14px', fontWeight: '800', color: '#3730A3', width: '90px' }}>
-                    {ord.code}
+                  <span style={{ fontSize: '14px', fontWeight: '800', color: '#3730A3', width: '110px' }}>
+                    {orden.numeroOrden}
                   </span>
                   <span style={{ fontSize: '14px', fontWeight: '700', color: '#1E293B', width: '160px' }}>
-                    {ord.client}
+                    {orden.nombreCliente}
                   </span>
                   <span style={{ fontSize: '14px', color: '#64748B', flex: 1 }}>
-                    {ord.device}
+                    {orden.dispositivoResumen || 'Sin detalle del dispositivo'}
                   </span>
                 </div>
 
@@ -267,20 +291,25 @@ export const DashboardTallerPage: React.FC = () => {
                     borderRadius: '20px',
                     fontSize: '12px',
                     fontWeight: '700',
-                    backgroundColor: ord.badgeBg,
-                    color: ord.badgeColor
+                    backgroundColor: '#F1F5F9',
+                    color: colorEstadoDe(orden)
                   }}>
-                    • {ord.status}
+                    • {nombreEstadoDe(orden)}
                   </span>
-                  <span style={{ fontSize: '13px', color: '#64748B', width: '130px' }}>
-                    Técnico: {ord.tech}
+                  <span style={{ fontSize: '13px', color: '#64748B', width: '150px' }}>
+                    Técnico: {orden.nombreTecnico ?? 'Sin asignar'}
                   </span>
-                  <Link to="/ordenes/detalle" style={{ color: '#94A3B8' }}>
+                  <Link to={`/ordenes/detalle/${orden.idOrden}`} style={{ color: '#94A3B8' }}>
                     <ChevronRight size={20} />
                   </Link>
                 </div>
               </div>
             ))}
+            {!isLoading && ordenes.length === 0 && (
+              <span style={{ fontSize: '13px', color: '#94A3B8' }}>
+                Aún no hay órdenes registradas. Crea la primera desde el módulo de Órdenes.
+              </span>
+            )}
           </div>
         </Card>
 
