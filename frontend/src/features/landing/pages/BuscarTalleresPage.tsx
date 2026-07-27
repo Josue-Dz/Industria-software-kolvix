@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Navbar } from '../../../components/layout/Navbar';
 import { Footer } from '../../../components/layout/Footer';
@@ -6,63 +6,63 @@ import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { Search, MapPin, Clock, Star, Wrench } from 'lucide-react';
+import { marketplaceApi } from '../../../api/services/marketplace';
+import type { PerfilMarketplace, CategoriaDispositivo } from '../../../api/types.ts';
 
 export const BuscarTalleresPage: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState('Todas');
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [categorias, setCategorias] = useState<CategoriaDispositivo[]>([]);
+  const [talleres, setTalleres] = useState<PerfilMarketplace[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = ['Todas', 'Celulares', 'Laptops', 'Tablets', 'Consolas', 'Electrodomésticos'];
+  // Cargar catálogo de categorías una sola vez
+  useEffect(() => {
+    marketplaceApi.catalogoCategorias().then(setCategorias).catch(console.error);
+  }, []);
 
-  const talleres = [
-    {
-      id: 'techfix',
-      name: 'TechFix',
-      category: 'Celulares',
-      rating: 4.8,
-      reviews: 120,
-      location: 'Tegucigalpa',
-      hours: 'Abre a las 8:00 A.M'
-    },
-    {
-      id: 'smart-repair',
-      name: 'Smart Repair',
-      category: 'Laptops',
-      rating: 4.6,
-      reviews: 98,
-      location: 'San Pedro Sula',
-      hours: 'Abre a las 8:00 A.M'
-    },
-    {
-      id: 'fix-center',
-      name: 'Fix Center',
-      category: 'Electrodomésticos',
-      rating: 4.5,
-      reviews: 86,
-      location: 'Tegucigalpa',
-      hours: 'Abre a las 8:00 A.M'
-    },
-    {
-      id: 'servitech',
-      name: 'Servitech',
-      category: 'Consolas',
-      rating: 4.5,
-      reviews: 65,
-      location: 'Tegucigalpa',
-      hours: 'Abre a las 8:00 A.M'
+  // Cargar talleres cuando cambia el filtro de categoría
+useEffect(() => {
+  let ignore = false;
+
+  const cargarTalleres = async () => {
+    setLoading(true);
+    try {
+      const res = selectedCategory
+        ? await marketplaceApi.buscarPorCategoria(selectedCategory)
+        : await marketplaceApi.listarTalleres();
+
+      if (!ignore) {
+        setTalleres(res.content);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (!ignore) {
+        setLoading(false);
+      }
     }
-  ];
+  };
 
-  const filteredTalleres = talleres.filter(t => {
-    const matchesCategory = selectedCategory === 'Todas' || t.category === selectedCategory;
-    const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) || t.location.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
+  cargarTalleres();
+
+  return () => {
+    ignore = true;
+  };
+}, [selectedCategory]);
+
+  const filteredTalleres = talleres.filter((t) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      t.nombreEmpresa.toLowerCase().includes(term) ||
+      (t.direccionEmpresa ?? '').toLowerCase().includes(term)
+    );
   });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#FAFAFD' }}>
       <Navbar />
 
-      {/* Header Banner */}
       <section style={{ backgroundColor: '#3730A3', color: '#FFFFFF', padding: '60px 0', textAlign: 'center' }}>
         <div className="container" style={{ maxWidth: '800px' }}>
           <h1 style={{ fontSize: '36px', fontWeight: '800', color: '#FFFFFF', marginBottom: '12px' }}>
@@ -84,101 +84,94 @@ export const BuscarTalleresPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Filter and Content Section */}
       <section style={{ padding: '48px 0 80px 0', flex: 1 }}>
         <div className="container">
-          {/* Categories and Sort Bar */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '36px',
-            flexWrap: 'wrap',
-            gap: '16px'
-          }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '36px', flexWrap: 'wrap', gap: '16px' }}>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              {categories.map((cat) => (
+              <button
+                onClick={() => setSelectedCategory(null)}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: '20px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  backgroundColor: selectedCategory === null ? '#6366F1' : '#FFFFFF',
+                  color: selectedCategory === null ? '#FFFFFF' : '#475569',
+                  border: selectedCategory === null ? 'none' : '1px solid #E2E8F0',
+                  cursor: 'pointer',
+                }}
+              >
+                Todas
+              </button>
+              {categorias.map((cat) => (
                 <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
                   style={{
                     padding: '8px 20px',
                     borderRadius: '20px',
                     fontSize: '14px',
                     fontWeight: '600',
-                    backgroundColor: selectedCategory === cat ? '#6366F1' : '#FFFFFF',
-                    color: selectedCategory === cat ? '#FFFFFF' : '#475569',
-                    border: selectedCategory === cat ? 'none' : '1px solid #E2E8F0',
+                    backgroundColor: selectedCategory === cat.id ? '#6366F1' : '#FFFFFF',
+                    color: selectedCategory === cat.id ? '#FFFFFF' : '#475569',
+                    border: selectedCategory === cat.id ? 'none' : '1px solid #E2E8F0',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease'
                   }}
                 >
-                  {cat}
+                  {cat.nombre}
                 </button>
               ))}
             </div>
-
-            <select style={{
-              padding: '10px 16px',
-              borderRadius: '12px',
-              border: '1px solid #E2E8F0',
-              backgroundColor: '#FFFFFF',
-              color: '#3730A3',
-              fontWeight: '600',
-              fontSize: '14px'
-            }}>
-              <option>Mejor Calificación</option>
-              <option>Más Cercanos</option>
-            </select>
           </div>
 
-          {/* Talleres Cards Grid */}
-          <div className="grid-3">
-            {filteredTalleres.map((taller) => (
-              <Card key={taller.id} style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', padding: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-                  <div style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '12px',
-                    backgroundColor: '#1E1B4B',
-                    color: '#FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <Wrench size={24} />
+          {loading ? (
+            <p style={{ textAlign: 'center', color: '#64748B' }}>Cargando talleres...</p>
+          ) : filteredTalleres.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#64748B' }}>No se encontraron talleres.</p>
+          ) : (
+            <div className="grid-3">
+              {filteredTalleres.map((taller) => (
+                <Card key={taller.empresaId} style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', padding: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                    <div style={{
+                      width: '48px', height: '48px', borderRadius: '12px',
+                      backgroundColor: '#1E1B4B', color: '#FFFFFF',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Wrench size={24} />
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1E1B4B' }}>{taller.nombreEmpresa}</h3>
+                    </div>
                   </div>
-                  <div>
-                    <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1E1B4B' }}>{taller.name}</h3>
-                    <span style={{ fontSize: '12px', color: '#64748B' }}>{taller.category}</span>
-                  </div>
-                </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', fontSize: '14px', color: '#475569' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Star size={16} color="#F59E0B" fill="#F59E0B" />
-                    <span style={{ fontWeight: '700', color: '#1E1B4B' }}>{taller.rating}</span>
-                    <span style={{ color: '#64748B' }}>({taller.reviews} reseñas)</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', fontSize: '14px', color: '#475569' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Star size={16} color="#F59E0B" fill="#F59E0B" />
+                      <span style={{ fontWeight: '700', color: '#1E1B4B' }}>{taller.calificacionPromedio.toFixed(1)}</span>
+                      <span style={{ color: '#64748B' }}>({taller.totalReviews} reseñas)</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <MapPin size={16} color="#64748B" />
+                      <span>{taller.direccionEmpresa}</span>
+                    </div>
+                    {taller.horarioAtencion && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Clock size={16} color="#64748B" />
+                        <span>{taller.horarioAtencion}</span>
+                      </div>
+                    )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <MapPin size={16} color="#64748B" />
-                    <span>{taller.location}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Clock size={16} color="#64748B" />
-                    <span>{taller.hours}</span>
-                  </div>
-                </div>
 
-                <Link to={`/taller/${taller.id}`}>
-                  <Button variant="accent" style={{ width: '100%', borderRadius: '10px' }}>
-                    Ver perfil del taller
-                  </Button>
-                </Link>
-              </Card>
-            ))}
-          </div>
+                  <Link to={`/taller/${taller.empresaId}`}>
+                    <Button variant="accent" style={{ width: '100%', borderRadius: '10px' }}>
+                      Ver perfil del taller
+                    </Button>
+                  </Link>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

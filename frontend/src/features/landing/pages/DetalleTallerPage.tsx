@@ -1,127 +1,107 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Navbar } from '../../../components/layout/Navbar';
 import { Footer } from '../../../components/layout/Footer';
 import { Card } from '../../../components/ui/Card';
-import { 
-  ArrowLeft, 
-  Wrench, 
-  Star, 
-  MapPin, 
-  Clock, 
-  Phone, 
-  Mail, 
-  CheckCircle2 
-} from 'lucide-react';
+import { ArrowLeft, Wrench, Star, MapPin, Clock, Phone, Mail} from 'lucide-react';
+import { marketplaceApi } from '../../../api/services/marketplace';
+import type { PerfilMarketplace, CategoriaServicio, Review } from '../../../api/types.ts';
 
 export const DetalleTallerPage: React.FC = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
+  const [perfil, setPerfil] = useState<PerfilMarketplace | null>(null);
+  const [categorias, setCategorias] = useState<CategoriaServicio[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const tallerInfo = {
-    name: id ? id.toUpperCase() : 'TECHFIX',
-    rating: 4.8,
-    reviews: 120,
-    location: 'Tegucigalpa',
-    hours: 'Abre 8:00 a.m',
-    description: 'Especialistas en reparación de smartphones y tablets con repuestos originales y garantía escrita en cada servicio.',
-    tags: ['Celulares', 'Tablets'],
-    address: 'Col. Kennedy, Bloque 25, Tegucigalpa',
-    phone: '+504 2200-0000',
-    email: 'info@techfix.hn',
-    schedule: 'Lun a Sáb 8:00 a.m. - 5:00 p.m.',
-    services: [
-      'Cambio de pantalla',
-      'Reparación de placa',
-      'Liberación',
-      'Cambio de batería',
-      'Daño por líquido'
-    ]
-  };
+  useEffect(() => {
+    if (!id) return;
+    const idEmpresa = Number(id);
+
+    Promise.all([
+      marketplaceApi.verPerfil(idEmpresa),
+      marketplaceApi.categoriasDelTaller(idEmpresa),
+      marketplaceApi.reviewsDelTaller(idEmpresa),
+    ])
+      .then(([perfilData, categoriasData, reviewsData]) => {
+        setPerfil(perfilData);
+        setCategorias(categoriasData);
+        setReviews(reviewsData);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return <p style={{ textAlign: 'center', padding: '60px' }}>Cargando taller...</p>;
+  }
+
+  if (!perfil) {
+    return <p style={{ textAlign: 'center', padding: '60px' }}>Taller no encontrado.</p>;
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#FAFAFD' }}>
       <Navbar />
 
-      {/* Header Banner */}
       <section style={{ backgroundColor: '#3730A3', color: '#FFFFFF', padding: '40px 0 60px 0' }}>
         <div className="container">
-          <Link
-            to="/buscar-talleres"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              color: '#EDE9FE',
-              fontSize: '14px',
-              fontWeight: '600',
-              marginBottom: '24px'
-            }}
-          >
+          <Link to="/buscar-talleres" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#EDE9FE', fontSize: '14px', fontWeight: '600', marginBottom: '24px' }}>
             <ArrowLeft size={16} /> Volver
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '16px',
-              backgroundColor: '#6366F1',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFFFFF'
-            }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '16px', backgroundColor: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
               <Wrench size={32} />
             </div>
 
             <div>
               <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#FFFFFF', marginBottom: '8px' }}>
-                {tallerInfo.name}
+                {perfil.nombreEmpresa}
               </h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '14px', color: '#EDE9FE' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Star size={16} color="#F59E0B" fill="#F59E0B" />
-                  <span style={{ fontWeight: '700' }}>{tallerInfo.rating}</span>
-                  <span>({tallerInfo.reviews} reseñas)</span>
+                  <span style={{ fontWeight: '700' }}>{perfil.calificacionPromedio.toFixed(1)}</span>
+                  <span>({perfil.totalReviews} reseñas)</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <MapPin size={16} />
-                  <span>{tallerInfo.location}</span>
+                  <span>{perfil.direccionEmpresa}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Clock size={16} />
-                  <span>{tallerInfo.hours}</span>
-                </div>
+                {perfil.horarioAtencion && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Clock size={16} />
+                    <span>{perfil.horarioAtencion}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Main Detail Content */}
       <section style={{ padding: '48px 0 80px 0', flex: 1 }}>
         <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          
+
           <div className="grid-3" style={{ gridTemplateColumns: '2fr 1fr' }}>
-            {/* Left Card: Sobre el Taller */}
             <Card style={{ backgroundColor: '#FFFFFF', padding: '32px' }}>
               <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1E1B4B', marginBottom: '12px' }}>
                 Sobre el taller
               </h3>
               <p style={{ color: '#64748B', lineHeight: 1.6, marginBottom: '24px' }}>
-                {tallerInfo.description}
+                {perfil.descripcionPublica ?? 'Este taller aún no ha agregado una descripción.'}
               </p>
 
-              <div style={{ display: 'flex', gap: '10px' }}>
-                {tallerInfo.tags.map(tag => (
-                  <span key={tag} className="badge badge-purple">
-                    {tag}
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                {categorias.map((cat) => (
+                  <span key={cat.id} className="badge badge-purple">
+                    {cat.categoriaNombre}
                   </span>
                 ))}
               </div>
             </Card>
 
-            {/* Right Card: Información de contacto */}
             <Card style={{ backgroundColor: '#FFFFFF', padding: '32px' }}>
               <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1E1B4B', marginBottom: '20px' }}>
                 Información de contacto
@@ -130,38 +110,47 @@ export const DetalleTallerPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '14px', color: '#475569' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                   <MapPin size={18} color="#6366F1" style={{ marginTop: '2px' }} />
-                  <span>{tallerInfo.address}</span>
+                  <span>{perfil.direccionEmpresa}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <Phone size={18} color="#6366F1" />
-                  <span>{tallerInfo.phone}</span>
+                  <span>{perfil.telefonoEmpresa}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <Mail size={18} color="#6366F1" />
-                  <span>{tallerInfo.email}</span>
+                  <span>{perfil.correoEmpresa}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Clock size={18} color="#6366F1" />
-                  <span>{tallerInfo.schedule}</span>
-                </div>
+                {perfil.horarioAtencion && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Clock size={18} color="#6366F1" />
+                    <span>{perfil.horarioAtencion}</span>
+                  </div>
+                )}
               </div>
             </Card>
           </div>
 
-          {/* Bottom Card: Servicios Disponibles */}
           <Card style={{ backgroundColor: '#FFFFFF', padding: '32px' }}>
             <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#1E1B4B', marginBottom: '24px' }}>
-              Servicios disponibles
+              Reseñas de clientes
             </h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-              {tallerInfo.services.map(service => (
-                <div key={service} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#1E293B', fontWeight: '600' }}>
-                  <CheckCircle2 size={20} color="#22C55E" />
-                  <span>{service}</span>
-                </div>
-              ))}
-            </div>
+            {reviews.length === 0 ? (
+              <p style={{ color: '#64748B' }}>Este taller aún no tiene reseñas.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {reviews.map((r) => (
+                  <div key={r.id} style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <Star size={16} color="#F59E0B" fill="#F59E0B" />
+                      <span style={{ fontWeight: '700' }}>{r.calificacion} / 5</span>
+                      <span style={{ color: '#64748B', fontSize: '13px' }}>— {r.clienteNombre}</span>
+                    </div>
+                    {r.comentario && <p style={{ color: '#475569' }}>{r.comentario}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
       </section>
