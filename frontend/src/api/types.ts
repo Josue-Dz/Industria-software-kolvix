@@ -344,6 +344,26 @@ export interface MovimientoInventarioResponse {
   fechaMovimiento: string | null;
 }
 
+export type CanalNotificacion = "WHATSAPP" | "EMAIL";
+
+export type EstadoNotificacion = "PENDIENTE" | "ENVIADO" | "FALLIDO" | "CANCELADO";
+
+export interface NotificacionResponse {
+  id: number;
+  empresaId: number;
+  ordenId: number | null;
+  clienteId: number | null;
+  canal: CanalNotificacion;
+  destinatario: string;
+  asunto: string | null;
+  cuerpo: string;
+  estado: EstadoNotificacion;
+  fechaProgramada: string | null;
+  fechaEnvio: string | null;
+  intentos: number;
+  errorEnvio: string | null;
+}
+
 export interface ArchivoResponse {
   url: string;
   nombreOriginal: string;
