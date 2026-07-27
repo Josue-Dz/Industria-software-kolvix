@@ -220,16 +220,67 @@ export const DetalleOrdenPage: React.FC = () => {
     }
   };
 
+  // ---- Estado de reparación (flujo operativo) ----
+  const normalizarNombre = (texto: string) =>
+    texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+
+  const cambiarEstadoOrden = async (estadoId: number, comentario: string) => {
+    if (!user || !orden || orden.idEstado === estadoId) return;
+    const actualizada = await ordenesService.cambiarEstado(user.empresaId, orden.idOrden, {
+      estadoNuevoId: estadoId,
+      comentario,
+    });
+    setOrden(actualizada);
+  };
+
+  // Avanza el flujo automáticamente al completar un hito, buscando el estado por nombre
+  // entre los configurados por la empresa. Nunca retrocede y nunca rompe el hito principal.
+  const avanzarEstadoPorHito = async (candidatos: string[], comentario: string) => {
+    if (!orden) return;
+    const idxDestino = estadosOrdenados.findIndex((e) => candidatos.includes(normalizarNombre(e.nombre)));
+    if (idxDestino < 0 || estadosOrdenados[idxDestino].id === orden.idEstado) return;
+    if (estadoActualIdx >= 0 && idxDestino <= estadoActualIdx) return;
+    try {
+      await cambiarEstadoOrden(estadosOrdenados[idxDestino].id, comentario);
+    } catch {
+      // El hito principal ya se completó; el avance del flujo es secundario.
+    }
+  };
+
+  // Completa en el backend los estados estándar que falten (idempotente) y refresca el timeline.
+  const handleInicializarEstados = async () => {
+    setIsSaving(true);
+    try {
+      const flujo = await ordenesService.inicializarEstados();
+      setEstados(flujo);
+      feedback('Flujo operativo completado con los estados estándar.');
+    } catch {
+      fallo('No se pudo inicializar el flujo de estados.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSeleccionarEstado = async (estado: EstadoReparacionResponse) => {
+    if (!orden || estado.id === orden.idEstado || isSaving) return;
+    if (!window.confirm(`¿Mover la orden al estado "${estado.nombre}"?`)) return;
+    setIsSaving(true);
+    try {
+      await cambiarEstadoOrden(estado.id, 'Estado actualizado desde el flujo operativo');
+      feedback(`La orden pasó al estado "${estado.nombre}".`);
+    } catch {
+      fallo('No se pudo actualizar el estado de la orden.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // ---- Acciones: Información ----
   const handleAvanzarEstado = async () => {
     if (!user || !orden || !siguienteEstado) return;
     setIsSaving(true);
     try {
-      const actualizada = await ordenesService.cambiarEstado(user.empresaId, orden.idOrden, {
-        estadoNuevoId: siguienteEstado.id,
-        comentario: `Avance de estado desde el detalle de la orden`,
-      });
-      setOrden(actualizada);
+      await cambiarEstadoOrden(siguienteEstado.id, 'Avance de estado desde el detalle de la orden');
       feedback(`La orden avanzó al estado "${siguienteEstado.nombre}".`);
     } catch {
       fallo('No se pudo avanzar el estado de la orden.');
@@ -274,12 +325,35 @@ export const DetalleOrdenPage: React.FC = () => {
         }
         await diagnosticosService.crear({ ...base, tecnicoId });
         feedback('Diagnóstico registrado.');
+        await avanzarEstadoPorHito(['diagnostico'], 'Diagnóstico técnico registrado');
       }
       await refrescarDiagnostico();
     } catch {
       fallo('No se pudo guardar el diagnóstico. Revisa el técnico asignado y los datos.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Si hay un borrador PENDIENTE, lo re-guarda para que el backend recalcule los montos
+  // con los repuestos actuales; así el total de la cotización nunca queda desfasado.
+  const sincronizarCotizacionBorrador = async () => {
+    if (!user || !orden || !diagnostico || !cotizacionActual || cotizacionActual.estado !== 'PENDIENTE') return;
+    try {
+      await cotizacionesService.editarBorrador(cotizacionActual.id, {
+        ordenId: orden.idOrden,
+        diagnosticoId: diagnostico.id,
+        usuarioCreadorId: user.id,
+        version: cotizacionActual.version,
+        montoManoObra: cotizacionActual.montoManoObra,
+        montoRepuestos: cotizacionActual.montoRepuestos,
+        montoTotal: cotizacionActual.montoTotal,
+        tiempoEstimadoHoras: diagnostico.tiempoEstimadoHoras,
+        observacionInterna: cotizacionActual.observacionInterna ?? undefined,
+      });
+      await refrescarCotizaciones();
+    } catch {
+      // Secundario: los montos también se recalculan al guardar el borrador manualmente.
     }
   };
 
@@ -295,6 +369,7 @@ export const DetalleOrdenPage: React.FC = () => {
         precioUnitario: Number(selectedPart.precioVenta),
       });
       await refrescarDiagnostico();
+      await sincronizarCotizacionBorrador();
       setIsInventoryModalOpen(false);
       setSelectedPart(null);
       setPartQty('1');
@@ -322,6 +397,7 @@ export const DetalleOrdenPage: React.FC = () => {
         precioUnitario: precio,
       });
       await refrescarDiagnostico();
+      await sincronizarCotizacionBorrador();
       setIsInventoryModalOpen(false);
       setManualName('');
       setManualPrice('');
@@ -339,6 +415,7 @@ export const DetalleOrdenPage: React.FC = () => {
     try {
       await diagnosticosService.eliminarRepuesto(repuestoDiagnosticoId);
       await refrescarDiagnostico();
+      await sincronizarCotizacionBorrador();
       feedback('Repuesto eliminado.');
     } catch {
       fallo('No se pudo eliminar el repuesto.');
@@ -370,6 +447,7 @@ export const DetalleOrdenPage: React.FC = () => {
       });
       await refrescarCotizaciones();
       feedback('Cotización generada.');
+      await avanzarEstadoPorHito(['cotizacion'], 'Cotización generada');
     } catch {
       fallo('No se pudo generar la cotización. Verifica que no exista una versión activa.');
     } finally {
@@ -431,6 +509,9 @@ export const DetalleOrdenPage: React.FC = () => {
       await refrescarCotizaciones();
       setObsCliente('');
       feedback(estado === 'APROBADA' ? 'Cotización marcada como aprobada.' : 'Cotización marcada como rechazada.');
+      if (estado === 'APROBADA') {
+        await avanzarEstadoPorHito(['aprobado', 'aprobada'], 'Cotización aprobada por el cliente');
+      }
     } catch {
       fallo('No se pudo registrar la decisión.');
     } finally {
@@ -938,17 +1019,20 @@ export const DetalleOrdenPage: React.FC = () => {
 
                           {/* Subtotals & Total */}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right', fontSize: '12px', borderTop: '1px solid #E2E8F0', paddingTop: '12px' }}>
+                            {/* Con cotización ENVIADA/APROBADA se muestran los montos congelados de esa
+                                cotización; mientras sea editable, los montos se calculan en vivo con los
+                                repuestos actuales del diagnóstico. */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748B' }}>
                               <span>Subtotal repuestos</span>
-                              <span>{formatMoney(cotizacionActual ? cotizacionActual.montoRepuestos : montoRepuestosDiagnostico)}</span>
+                              <span>{formatMoney(diagnosticoBloqueado && cotizacionActual ? cotizacionActual.montoRepuestos : montoRepuestosDiagnostico)}</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748B' }}>
                               <span>Mano de obra</span>
-                              <span>{formatMoney(cotizacionActual ? cotizacionActual.montoManoObra : Number(manoObra) || 0)}</span>
+                              <span>{formatMoney(diagnosticoBloqueado && cotizacionActual ? cotizacionActual.montoManoObra : Number(manoObra) || 0)}</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: '800', color: '#1E1B4B', marginTop: '6px' }}>
                               <span>TOTAL</span>
-                              <span>{formatMoney(cotizacionActual ? cotizacionActual.montoTotal : (Number(manoObra) || 0) + montoRepuestosDiagnostico)}</span>
+                              <span>{formatMoney(diagnosticoBloqueado && cotizacionActual ? cotizacionActual.montoTotal : (Number(manoObra) || 0) + montoRepuestosDiagnostico)}</span>
                             </div>
                           </div>
 
@@ -1133,16 +1217,30 @@ export const DetalleOrdenPage: React.FC = () => {
 
               {/* Right Column: Flujo Operativo Timeline con estados reales */}
               <Card hoverable={false} style={{ padding: '24px', borderRadius: '20px', backgroundColor: '#FFFFFF', alignSelf: 'start' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1E1B4B', marginBottom: '24px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1E1B4B', margin: 0 }}>
                   Flujo Operativo
                 </h3>
+                <span style={{ fontSize: '11px', color: '#94A3B8', display: 'block', margin: '4px 0 24px 0' }}>
+                  Haz clic en una etapa para mover la orden a ese estado.
+                </span>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
                   {estadosOrdenados.map((estado, idx) => {
                     const completado = estadoActualIdx >= 0 && idx < estadoActualIdx;
                     const activo = estado.id === orden.idEstado;
                     return (
-                      <div key={estado.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', opacity: completado || activo ? 1 : 0.5 }}>
+                      <div
+                        key={estado.id}
+                        onClick={() => void handleSeleccionarEstado(estado)}
+                        title={activo ? 'Estado actual' : `Mover la orden a "${estado.nombre}"`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '16px',
+                          opacity: completado || activo ? 1 : 0.5,
+                          cursor: activo ? 'default' : 'pointer'
+                        }}
+                      >
                         <div style={{
                           width: '40px',
                           height: '40px',
@@ -1170,6 +1268,17 @@ export const DetalleOrdenPage: React.FC = () => {
 
                   {estadosOrdenados.length === 0 && (
                     <span style={{ fontSize: '13px', color: '#94A3B8' }}>No se pudieron cargar los estados.</span>
+                  )}
+
+                  {estadosOrdenados.length > 0 && estadosOrdenados.length < 4 && (
+                    <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <span style={{ fontSize: '12px', color: '#92400E', fontWeight: '600' }}>
+                        Tu empresa tiene un flujo incompleto: faltan las etapas estándar del proceso de reparación.
+                      </span>
+                      <Button variant="outline" size="sm" disabled={isSaving} onClick={handleInicializarEstados}>
+                        Completar flujo estándar
+                      </Button>
+                    </div>
                   )}
                 </div>
               </Card>
