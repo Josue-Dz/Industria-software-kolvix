@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.unah.kolvix.dtos.usuario.CambiarEstadoRequest;
+import edu.unah.kolvix.dtos.usuario.LimiteUsuariosResponse;
 import edu.unah.kolvix.dtos.usuario.UsuarioRequest;
 import edu.unah.kolvix.dtos.usuario.UsuarioResponse;
 import edu.unah.kolvix.entities.Empresa;
@@ -44,6 +45,19 @@ public class UsuarioController {
                 .map(authService::mapearUsuarioResponse)
                 .toList();
         return ResponseEntity.ok(usuarios);
+    }
+
+    // Cupo de usuarios del plan, para mostrarlo en Configuración antes de crear.
+    @GetMapping("/limite")
+    public ResponseEntity<LimiteUsuariosResponse> consultarLimite() {
+        Empresa empresa = authService.getUsuarioAutenticado().getEmpresa();
+        UsuarioService.LimiteUsuarios limite = usuarioService.consultarLimite(empresa);
+        return ResponseEntity.ok(new LimiteUsuariosResponse(
+                limite.usuariosActivos(),
+                limite.maxUsuarios(),
+                limite.ilimitado(),
+                limite.cupoDisponible(),
+                empresa.getPlanSuscripcion() != null ? empresa.getPlanSuscripcion().getNombre() : null));
     }
 
     @PatchMapping("/{id}/estado")

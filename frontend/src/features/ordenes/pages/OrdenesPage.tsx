@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { DashboardLayout } from '../../../components/layout/DashboardLayout';
 import { Card } from '../../../components/ui/Card';
 import { Input } from '../../../components/ui/Input';
-import { Plus, Search, Eye, Edit3, Trash2 } from 'lucide-react';
+import { Plus, Search, Eye, Edit3 } from 'lucide-react';
 import { authService } from '../../../api/services/authService';
 import { ordenesService } from '../../../api/services/ordenesService';
 import { TicketDrawer } from '../components/TicketDrawer';
@@ -19,72 +19,7 @@ export const OrdenesPage: React.FC = () => {
   const [loadError, setLoadError] = useState('');
   const [activeCompanyId, setActiveCompanyId] = useState<number | null>(null);
 
-  const [orders, setOrders] = useState<OrderTicket[]>([
-    {
-      ticketId: 'KLX-2026-F89D',
-      client: 'Nohely Reyes',
-      phone: '+504 9931-2550',
-      device: 'Iphone 13 Pro Max',
-      serial: 'S/N:DNPGD703JQH',
-      tech: 'L.Soto',
-      status: 'Ingresado',
-      total: 'L. 2,050',
-      reportedDamage: 'El teléfono sufrió una caída vertical. Pantalla delantera completamente rota (vidrio fraccionado en la parte central), pero la placa base y FaceID responden al encendido.',
-      diagBase: 'L. 350',
-      partsCost: 'L. 1,400',
-      laborCost: 'L. 300',
-      evidenceNote1: 'Fractura crítica de vidrio.',
-      evidenceNote2: 'Rayón menor previo.'
-    },
-    {
-      ticketId: 'KLX-2026-A234',
-      client: 'Ashley Silva',
-      phone: '+504 9840-2151',
-      device: 'MacBook Air M2',
-      serial: 'S/N:C02YT451Q05D',
-      tech: 'J.Pérez',
-      status: 'Cotización',
-      total: 'L. 1,600',
-      reportedDamage: 'No enciende tras derrame accidental de café sobre el teclado. Teclas pegajosas.',
-      diagBase: 'L. 350',
-      partsCost: 'L. 1,000',
-      laborCost: 'L. 250',
-      evidenceNote1: 'Mancha de sulfatación en puerto USB-C.',
-      evidenceNote2: 'Teclado obstruido.'
-    },
-    {
-      ticketId: 'KLX-2026-N456',
-      client: 'Ronny',
-      phone: '+504 9931-2550',
-      device: 'Samsung Galaxy S23',
-      serial: 'S/N:DNPGD703JQH',
-      tech: 'A.Rivas',
-      status: 'En Reparación',
-      total: 'L. 950',
-      reportedDamage: 'Batería inflada y flex de carga suelto.',
-      diagBase: 'L. 200',
-      partsCost: 'L. 600',
-      laborCost: 'L. 150',
-      evidenceNote1: 'Tapa trasera desprendida por batería inflada.',
-      evidenceNote2: 'Pin de carga sucio.'
-    },
-    {
-      ticketId: 'KLX-2026-N457',
-      client: 'José',
-      phone: '+504 9840-2151',
-      device: 'Iphone 13 Pro Max',
-      serial: 'S/N:DNPGD703JQH',
-      tech: 'L.Soto',
-      status: 'Listo',
-      total: 'L. 1,230',
-      reportedDamage: 'Cambio preventivo de pantalla y auricular sin audio.',
-      diagBase: 'L. 200',
-      partsCost: 'L. 800',
-      laborCost: 'L. 230',
-      evidenceNote1: 'Malla de auricular obstruida.',
-      evidenceNote2: 'Pantalla reemplazada.'
-    }
-  ]);
+  const [orders, setOrders] = useState<OrderTicket[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -110,7 +45,7 @@ export const OrdenesPage: React.FC = () => {
         setOrders(backendOrders.map(mapOrderToTicket));
       } catch {
         if (isMounted) {
-          setLoadError('No se pudieron cargar las ordenes desde el backend. Se muestran datos de ejemplo.');
+          setLoadError('No se pudieron cargar las órdenes. Verifica tu conexión con el servidor.');
         }
       } finally {
         if (isMounted) {
@@ -149,15 +84,6 @@ export const OrdenesPage: React.FC = () => {
       setOrders(prev => prev.map(o => o.ticketId === ticketId ? mapOrderToTicket(updatedOrder) : o));
     } catch {
       setLoadError('No se pudo actualizar el estado en el backend.');
-    }
-  };
-
-  const handleDeleteOrder = (ticketId: string) => {
-    if (window.confirm(`¿Está seguro de eliminar la orden ${ticketId}?`)) {
-      setOrders(prev => prev.filter(o => o.ticketId !== ticketId));
-      if (activeDrawerTicket?.ticketId === ticketId) {
-        setActiveDrawerTicket(null);
-      }
     }
   };
 
@@ -269,6 +195,15 @@ export const OrdenesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
+                {!isLoading && filteredOrders.length === 0 && (
+                  <tr>
+                    <td colSpan={7} style={{ padding: '32px 20px', textAlign: 'center', color: '#64748B', fontWeight: '600' }}>
+                      {orders.length === 0
+                        ? 'Todavía no hay órdenes registradas. Usa "Registrar Nuevo Ingreso" para crear la primera.'
+                        : 'Ninguna orden coincide con la búsqueda o el filtro aplicado.'}
+                    </td>
+                  </tr>
+                )}
                 {filteredOrders.map((ord) => (
                   <tr key={ord.ticketId} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
                     <td style={{ padding: '16px 20px', fontWeight: '700', color: '#475569', whiteSpace: 'nowrap' }}>
@@ -286,46 +221,28 @@ export const OrdenesPage: React.FC = () => {
                       {ord.tech}
                     </td>
                     <td style={{ padding: '16px 20px', whiteSpace: 'nowrap' }}>
+                    {/* El color viene del estado configurado por la empresa (color_hex). */}
                     <select
                     value={ord.status}
                     onChange={(e) => handleStatusChange(ord.ticketId, e.target.value)}
+                    disabled={statusOptions.length === 0}
                     style={{
                       padding: '6px 12px',
                       borderRadius: '20px',
                       fontSize: '13px',
                       fontWeight: '700',
-                      backgroundColor:
-                        ord.status === 'Ingresado' ? '#EDE9FE' :
-                        ord.status === 'Cotización' ? '#E0E7FF' :
-                        ord.status === 'En Reparación' ? '#CBD5E1' :
-                        ord.status === 'Listo' ? '#DCFCE7' : '#F1F5F9',
-                      color:
-                        ord.status === 'Ingresado' ? '#3730A3' :
-                        ord.status === 'Cotización' ? '#4338CA' :
-                        ord.status === 'En Reparación' ? '#1E293B' :
-                        ord.status === 'Listo' ? '#15803D' : '#475569',
+                      backgroundColor: '#F1F5F9',
+                      color: ord.statusColor,
                       border: 'none',
-                      cursor: 'pointer',
+                      cursor: statusOptions.length === 0 ? 'not-allowed' : 'pointer',
                       outline: 'none'
                     }}
                   >
-                    {statusOptions.length > 0 ? (
-                      statusOptions.map((status) => (
-                        <option key={status.id} value={status.nombre}>
-                          • {status.nombre}
-                        </option>
-                      ))
-                    ) : (
-                      /* Fallback si el backend no ha respondido */
-                      <>
-                        <option value="Ingresado">• Ingresado</option>
-                        <option value="Cotización">• Cotización</option>
-                        <option value="En Reparación">• En Reparación</option>
-                        <option value="Listo">• Listo</option>
-                        <option value="Entregado">• Entregado</option>
-                        <option value="Cerrado">• Cerrado</option>
-                      </>
-                    )}
+                    {statusOptions.map((status) => (
+                      <option key={status.id} value={status.nombre}>
+                        • {status.nombre}
+                      </option>
+                    ))}
                   </select>
                     </td>
                     <td style={{ padding: '16px 20px', fontWeight: '700', color: '#1E1B4B', whiteSpace: 'nowrap' }}>
@@ -342,23 +259,9 @@ export const OrdenesPage: React.FC = () => {
                           <Edit3 size={18} />
                         </button>
 
-                        {ord.orderId ? (
-                          <Link to={`/ordenes/detalle/${ord.orderId}`} style={{ color: '#6366F1', display: 'inline-flex' }} title="Ver Cotización y Flujo">
-                            <Eye size={18} />
-                          </Link>
-                        ) : (
-                          <span style={{ color: '#CBD5E1', display: 'inline-flex' }} title="Orden de ejemplo sin detalle">
-                            <Eye size={18} />
-                          </span>
-                        )}
-
-                        <button
-                          onClick={() => handleDeleteOrder(ord.ticketId)}
-                          style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
-                          title="Eliminar Orden"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        <Link to={`/ordenes/detalle/${ord.orderId}`} style={{ color: '#6366F1', display: 'inline-flex' }} title="Ver Cotización y Flujo">
+                          <Eye size={18} />
+                        </Link>
                       </div>
                     </td>
                   </tr>

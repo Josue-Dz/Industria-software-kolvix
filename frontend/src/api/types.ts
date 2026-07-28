@@ -546,7 +546,17 @@ export interface PlanSuscripcionResponse {
   descripcion: string | null;
   montoMensual: number;
   moneda: string;
+  /** Cupo de usuarios activos del plan; null significa ilimitado. */
+  maxUsuarios: number | null;
   activo: boolean;
+}
+
+export interface LimiteUsuariosResponse {
+  usuariosActivos: number;
+  maxUsuarios: number | null;
+  ilimitado: boolean;
+  cupoDisponible: boolean;
+  nombrePlan: string | null;
 }
 
 export type TipoCuenta = "AHORRO" | "CHEQUES" | "OTRO";
