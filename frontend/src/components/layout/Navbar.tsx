@@ -88,11 +88,9 @@ export const Navbar: React.FC = () => {
           >
             Iniciar Sesión
           </Link>
-          <Link to="/login">
-            <Button variant="primary" style={{ backgroundColor: '#3730A3', borderRadius: '10px' }}>
-              Solicitar Demo
-            </Button>
-          </Link>
+                <Link to="/precios">
+        <Button variant="primary">Solicitar Demo</Button>
+      </Link>
         </div>
       </div>
     </header>
