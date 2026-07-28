@@ -2,8 +2,7 @@ export const PRESENTACION_PLAN: Record<string, { caracteristicas: string[]; dest
     BASICO: {
         caracteristicas: [
             'Registro de órdenes',
-            'Gestión básica de clientes',
-            'Reportes básicos',
+            'Gestión básica de clientes'
         ],
         destacado: false,
     },
