@@ -19,9 +19,9 @@ CREATE TABLE planes_suscripcion (
 INSERT INTO planes_suscripcion
     (codigo, nombre, descripcion, monto_mensual, moneda)
 VALUES
-    ('BASICO', 'Basico', 'Plan inicial para talleres pequenos.', 250.00, 'HNL'),
-    ('PROFESIONAL', 'Profesional', 'Plan para talleres con inventario y notificaciones.', 500.00, 'HNL'),
-    ('EMPRESARIAL', 'Empresarial', 'Plan para talleres con mayor volumen operativo.', 1500.00, 'HNL');
+    ('BASICO', 'Basico', 'Plan inicial para talleres pequenos.', 9.99, 'USD'),
+    ('PROFESIONAL', 'Profesional', 'Plan para talleres con inventario y notificaciones.', 24.99, 'USD'),
+    ('EMPRESARIAL', 'Empresarial', 'Plan para talleres con mayor volumen operativo.', 59.99, 'USD');
 
 
 -- ============================================================
