@@ -7,6 +7,7 @@ import {
   ShieldAlert,
   Layers,
   CreditCard,
+  Store,
   Plug,
   Check,
   AlertCircle
@@ -17,6 +18,7 @@ import { UsuariosTab } from '../components/UsuariosTab';
 import { RolesTab } from '../components/RolesTab';
 import { EstadosTab } from '../components/EstadosTab';
 import { SuscripcionTab } from '../components/SuscripcionTab';
+import { MarketplaceTab } from '../components/MarketplaceTab';
 import { IntegracionesTab } from '../components/IntegracionesTab';
 
 const NAV_ITEMS: { id: ConfigTab; label: string; icon: React.ElementType }[] = [
@@ -25,6 +27,7 @@ const NAV_ITEMS: { id: ConfigTab; label: string; icon: React.ElementType }[] = [
   { id: 'roles', label: 'Roles y permisos', icon: ShieldAlert },
   { id: 'estados', label: 'Estados del flujo', icon: Layers },
   { id: 'suscripcion', label: 'Suscripción', icon: CreditCard },
+  { id: 'marketplace', label: 'Marketplace', icon: Store },
   { id: 'integraciones', label: 'Integraciones', icon: Plug },
 ];
 
@@ -142,6 +145,7 @@ export const ConfiguracionPage: React.FC = () => {
             {activeTab === 'roles' && <RolesTab />}
             {activeTab === 'estados' && <EstadosTab c={c} />}
             {activeTab === 'suscripcion' && <SuscripcionTab c={c} />}
+            {activeTab === 'marketplace' && <MarketplaceTab c={c} />}
             {activeTab === 'integraciones' && <IntegracionesTab />}
           </div>
 

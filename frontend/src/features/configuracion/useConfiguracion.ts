@@ -2,14 +2,19 @@ import { useCallback, useEffect, useState } from 'react';
 import { empresaService } from '../../api/services/empresaService';
 import { usuariosService } from '../../api/services/usuariosService';
 import { estadosReparacionService } from '../../api/services/estadosReparacionService';
+import { miTallerService } from '../../api/services/miTallerService';
 import { authService } from '../../api/services/authService';
 import { getApiErrorMessage } from '../../api/apiError';
 import type {
+  CategoriaDispositivoResponse,
+  CategoriaServicio,
   CuentaCobroResponse,
   CuentaPagoTallerResponse,
   EmpresaResponse,
   EstadoReparacionResponse,
   LimiteUsuariosResponse,
+  PerfilMarketplace,
+  PerfilMarketplaceRequest,
   PlanSuscripcionResponse,
   UsuarioResponse,
 } from '../../api/types';
@@ -20,6 +25,7 @@ export type ConfigTab =
   | 'roles'
   | 'estados'
   | 'suscripcion'
+  | 'marketplace'
   | 'integraciones';
 
 // Carga y acciones de la pantalla de configuración. Cada pestaña recibe este
@@ -34,6 +40,10 @@ export const useConfiguracion = () => {
   const [cuentasPago, setCuentasPago] = useState<CuentaPagoTallerResponse[]>([]);
   const [usuarios, setUsuarios] = useState<UsuarioResponse[]>([]);
   const [limiteUsuarios, setLimiteUsuarios] = useState<LimiteUsuariosResponse | null>(null);
+  // perfilMarketplace en null significa que la empresa aún no lo ha creado.
+  const [perfilMarketplace, setPerfilMarketplace] = useState<PerfilMarketplace | null>(null);
+  const [categoriasServicio, setCategoriasServicio] = useState<CategoriaServicio[]>([]);
+  const [catalogoCategorias, setCatalogoCategorias] = useState<CategoriaDispositivoResponse[]>([]);
   const [estados, setEstados] = useState<EstadoReparacionResponse[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -74,7 +84,10 @@ export const useConfiguracion = () => {
         if (!isMounted) return;
         setUsuarioActual(user);
 
-        const [empresaR, planesR, cobroR, pagoR, usuariosR, estadosR, limiteR] = await Promise.allSettled([
+        const [
+          empresaR, planesR, cobroR, pagoR, usuariosR, estadosR, limiteR,
+          perfilR, categoriasR, catalogoR,
+        ] = await Promise.allSettled([
           empresaService.obtener(),
           empresaService.listarPlanes(),
           empresaService.listarCuentasCobro(),
@@ -82,6 +95,9 @@ export const useConfiguracion = () => {
           usuariosService.listar(),
           estadosReparacionService.listar(),
           usuariosService.obtenerLimite(),
+          miTallerService.obtenerPerfil(),
+          miTallerService.listarCategorias(),
+          miTallerService.listarCatalogoCategorias(),
         ]);
 
         if (!isMounted) return;
@@ -97,6 +113,9 @@ export const useConfiguracion = () => {
         if (usuariosR.status === 'fulfilled') setUsuarios(usuariosR.value);
         if (estadosR.status === 'fulfilled') setEstados(estadosR.value);
         if (limiteR.status === 'fulfilled') setLimiteUsuarios(limiteR.value);
+        if (perfilR.status === 'fulfilled') setPerfilMarketplace(perfilR.value);
+        if (categoriasR.status === 'fulfilled') setCategoriasServicio(categoriasR.value);
+        if (catalogoR.status === 'fulfilled') setCatalogoCategorias(catalogoR.value);
       } catch {
         if (isMounted) setLoadError('No se pudo cargar la configuración. Verifica que el backend esté activo.');
       } finally {
@@ -229,6 +248,66 @@ export const useConfiguracion = () => {
     }
   };
 
+  // ---- Perfil de marketplace ----
+  const guardarPerfilMarketplace = async (datos: PerfilMarketplaceRequest) => {
+    setIsSaving(true);
+    try {
+      const guardado = await miTallerService.guardarPerfil(datos);
+      setPerfilMarketplace(guardado);
+      showToast(
+        guardado.marketplaceVisible
+          ? 'Perfil guardado. Tu taller es visible en el marketplace.'
+          : 'Perfil guardado. Tu taller no aparece en el marketplace.'
+      );
+      return true;
+    } catch (error) {
+      showError(getApiErrorMessage(error, 'No se pudo guardar el perfil del marketplace.'));
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // El backend solo permite alternar la visibilidad si el perfil ya existe.
+  const cambiarVisibilidadMarketplace = async (visible: boolean) => {
+    if (!perfilMarketplace) {
+      showError('Primero guarda el perfil de tu taller para publicarlo.');
+      return false;
+    }
+    setIsSaving(true);
+    try {
+      const actualizado = await miTallerService.cambiarVisibilidad(visible);
+      setPerfilMarketplace(actualizado);
+      showToast(visible ? 'Tu taller ya aparece en el marketplace.' : 'Tu taller se ocultó del marketplace.');
+      return true;
+    } catch (error) {
+      showError(getApiErrorMessage(error, 'No se pudo cambiar la visibilidad.'));
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const agregarCategoriaServicio = async (categoriaId: number) => {
+    try {
+      const nueva = await miTallerService.agregarCategoria(categoriaId);
+      setCategoriasServicio(prev => [...prev, nueva]);
+      showToast(`Categoría "${nueva.categoriaNombre}" agregada.`);
+    } catch (error) {
+      showError(getApiErrorMessage(error, 'No se pudo agregar la categoría.'));
+    }
+  };
+
+  const quitarCategoriaServicio = async (categoria: CategoriaServicio) => {
+    try {
+      await miTallerService.quitarCategoria(categoria.id);
+      setCategoriasServicio(prev => prev.filter(c => c.id !== categoria.id));
+      showToast(`Categoría "${categoria.categoriaNombre}" quitada.`);
+    } catch (error) {
+      showError(getApiErrorMessage(error, 'No se pudo quitar la categoría.'));
+    }
+  };
+
   // ---- Estados de reparación ----
   const crearEstado = async (nombre: string, colorHex: string) => {
     if (!nombre.trim()) return false;
@@ -299,11 +378,14 @@ export const useConfiguracion = () => {
     activeTab, setActiveTab,
     usuarioActual, empresa, planes, planActual, cuentasCobro, cuentasPago, usuarios, estadosOrdenados,
     limiteUsuarios,
+    perfilMarketplace, categoriasServicio, catalogoCategorias,
     isLoading, loadError, isSaving, toastMessage, errorMessage,
     guardarEmpresa,
     agregarCuentaPago, cambiarEstadoCuentaPago,
     crearUsuario, cambiarEstadoUsuario,
     crearEstado, actualizarColorEstado, alternarNotificacionEstado,
+    guardarPerfilMarketplace, cambiarVisibilidadMarketplace,
+    agregarCategoriaServicio, quitarCategoriaServicio,
   };
 };
 
