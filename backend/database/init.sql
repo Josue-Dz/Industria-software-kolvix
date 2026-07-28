@@ -772,6 +772,18 @@ CREATE TRIGGER trg_review_calificacion
     AFTER INSERT OR UPDATE OR DELETE ON reviews
     FOR EACH ROW EXECUTE FUNCTION fn_actualizar_calificacion_marketplace();
 
+--Se modifa la tabla planes suscripción para poder agregar límites según el plan que pague
+ALTER TABLE planes_suscripcion
+ADD COLUMN max_usuarios INT
+    CHECK (max_usuarios IS NULL OR max_usuarios > 0);
+
+COMMENT ON COLUMN planes_suscripcion.max_usuarios IS
+    'Cupo de usuarios activos que permite el plan. NULL = ilimitado.';
+
+UPDATE planes_suscripcion SET max_usuarios = 2    WHERE codigo = 'BASICO';
+UPDATE planes_suscripcion SET max_usuarios = 5    WHERE codigo = 'PROFESIONAL';
+UPDATE planes_suscripcion SET max_usuarios = NULL WHERE codigo = 'EMPRESARIAL';
+
 
 -- ============================================================
 -- 
