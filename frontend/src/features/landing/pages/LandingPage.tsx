@@ -4,6 +4,7 @@ import { Navbar } from '../../../components/layout/Navbar';
 import { Footer } from '../../../components/layout/Footer';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
+import { PlanesGrid } from '../components/PlanesGrid';
 import { 
   ClipboardList, 
   Camera, 
@@ -284,6 +285,22 @@ export const LandingPage: React.FC = () => {
               </p>
             </Card>
           </div>
+        </div>
+      </section>
+
+      {/* Planes: mismos datos y tarjetas que /precios, sin duplicar código. */}
+      <section className="section-pad" id="precios">
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <h2 className="section-title">
+              Planes que crecen <span style={{ color: '#6366F1' }}>contigo</span>
+            </h2>
+            <p className="section-subtitle">
+              Empieza con lo esencial y cambia de plan cuando tu taller lo necesite
+            </p>
+          </div>
+
+          <PlanesGrid />
         </div>
       </section>
 

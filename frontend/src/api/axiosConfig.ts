@@ -1,4 +1,4 @@
-import type { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from "axios";
+import type { AxiosInstance, AxiosResponse, AxiosError } from "axios";
 import axios from "axios";
 
 const apiClient: AxiosInstance = axios.create({
@@ -9,23 +9,33 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
-// Interceptor de request
-apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
-// Interceptor de response
+type ManejadorSesionExpirada = () => void;
+
+let alExpirarSesion: ManejadorSesionExpirada | null = null;
+
+export const registrarManejadorSesionExpirada = (manejador: ManejadorSesionExpirada) => {
+  alExpirarSesion = manejador;
+  return () => {
+    if (alExpirarSesion === manejador) {
+      alExpirarSesion = null;
+    }
+  };
+};
+
+
+const RUTAS_SIN_SESION = ["/auth/login", "/auth/me"];
+
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => {
-    const isAuthMe = error.config?.url?.includes("/auth/me");
-    if (error.response?.status === 401 && !isAuthMe) {
-      window.location.href = "/login";
+    const url = error.config?.url ?? "";
+    const esRutaDeSesion = RUTAS_SIN_SESION.some((ruta) => url.includes(ruta));
+
+    if (error.response?.status === 401 && !esRutaDeSesion) {
+      alExpirarSesion?.();
     }
+
     return Promise.reject(error);
   }
 );

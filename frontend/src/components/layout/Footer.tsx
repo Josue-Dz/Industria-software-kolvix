@@ -74,8 +74,9 @@ export const Footer: React.FC = () => {
               Producto
             </h4>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', color: '#CBD5E1' }}>
-              <li><a href="#beneficios" style={{ transition: 'color 0.2s' }}>Características</a></li>
-              <li><a href="#precios">Precios</a></li>
+              {/* Secciones de la landing: con "/#seccion" funcionan desde cualquier página. */}
+              <li><Link to="/#beneficios">Características</Link></li>
+              <li><Link to="/#precios">Precios</Link></li>
             </ul>
           </div>
 

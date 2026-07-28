@@ -17,6 +17,12 @@ export const authService = {
     sessionStorage.removeItem(AUTH_USER_KEY);
   },
 
+  // Borra el rastro local de la sesión. Se usa cuando el backend ya rechazó la
+  // cookie (401) y no tiene sentido pedirle otra vez que cierre sesión.
+  limpiarSesion(): void {
+    sessionStorage.removeItem(AUTH_USER_KEY);
+  },
+
 
 registrarEmpresa: async (data: EmpresaRegistroRequest): Promise<RegistroEmpresaResponse> => {
   const { data: response } = await apiClient.post('/auth/crear', data);
