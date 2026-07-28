@@ -8,6 +8,8 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import jakarta.annotation.PostConstruct;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
@@ -20,7 +22,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins(frontendUrl)
+                .allowedOriginPatterns(frontendUrl)
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
@@ -31,5 +33,10 @@ public class WebConfig implements WebMvcConfigurer {
         String rutaUploads = Paths.get(uploadsDir).toAbsolutePath().normalize().toUri().toString();
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(rutaUploads);
+    }
+
+    @PostConstruct
+    public void init() {
+        System.out.println("FRONTEND_URL configurado: " + frontendUrl);
     }
 }

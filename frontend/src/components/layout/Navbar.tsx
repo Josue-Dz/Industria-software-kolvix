@@ -24,7 +24,7 @@ export const Navbar: React.FC = () => {
         {/* Brand Logo */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
           <img
-            src="/src/assets/logos/Logo 1.png"
+            src="./src/assets/logos/Logo 1.png"
             alt="Kolvix Logo"
             style={{ height: '36px', objectFit: 'contain' }}
           />
