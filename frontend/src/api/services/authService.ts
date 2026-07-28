@@ -1,5 +1,7 @@
 import apiClient from "../axiosConfig";
-import type { AuthResponse, LoginRequest, UsuarioResponse } from "../types";
+import type { AuthResponse, LoginRequest, UsuarioResponse, EmpresaRegistroRequest,
+  RegistroEmpresaResponse
+ } from "../types";
 
 const AUTH_USER_KEY = "kolvix:user";
 
@@ -14,6 +16,12 @@ export const authService = {
     await apiClient.post("/auth/logout");
     sessionStorage.removeItem(AUTH_USER_KEY);
   },
+
+
+registrarEmpresa: async (data: EmpresaRegistroRequest): Promise<RegistroEmpresaResponse> => {
+  const { data: response } = await apiClient.post('/auth/crear', data);
+  return response;
+},
 
   async getCurrentUser(): Promise<UsuarioResponse> {
     const { data } = await apiClient.get<UsuarioResponse>("/auth/me");

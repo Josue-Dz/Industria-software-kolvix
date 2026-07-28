@@ -468,3 +468,65 @@ export interface SeguimientoOrden {
   review: import('./types').Review | null;
   puedeCalificar: boolean;
 }
+
+export interface EmpresaRegistroRequest {
+  nombre: string;
+  rtn: string;
+  telefono: string;
+  correo: string;
+  direccion: string;
+  codigoPlan: string;
+  nombreAdministrador: string;
+  apellidoAdministrador: string;
+  correoAdministrador: string;
+  password: string;
+}
+
+export interface EmpresaResponse {
+  id: number;
+  nombre: string;
+  rtn: string | null;
+  telefono: string;
+  correo: string;
+  direccion: string;
+  codigoPlan: string;
+  nombrePlan: string;
+  activo: boolean;
+  fechaRegistro: string;
+}
+
+export interface UsuarioResponse {
+  id: number;
+  empresaId: number;
+  nombre: string;
+  apellido: string;
+  correo: string;
+  rol: string;
+  activo: boolean;
+  debeCambiarPassword: boolean;
+  ultimoAcceso: string | null;
+}
+
+export interface RegistroEmpresaResponse {
+  empresa: EmpresaResponse;
+  admin: UsuarioResponse;
+}
+
+export interface EntregaRequest {
+  ordenId: number;
+  usuarioEntregaId: number;
+  identidadVerificada: boolean;
+  urlComprobanteEntrega?: string;
+  observaciones?: string;
+}
+
+export interface EntregaResponse {
+  id: number;
+  ordenId: number;
+  usuarioEntregaId: number;
+  usuarioEntregaNombre: string;
+  identidadVerificada: boolean;
+  urlComprobanteEntrega: string | null;
+  observaciones: string | null;
+  fechaEntrega: string;
+}

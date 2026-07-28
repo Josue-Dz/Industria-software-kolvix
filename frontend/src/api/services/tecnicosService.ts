@@ -18,4 +18,9 @@ export const tecnicosService = {
     const { data } = await apiClient.patch<TecnicoResponse>(`/tecnicos/${idTecnico}/estado`, { activo });
     return data;
   },
+
+    obtenerMiPerfil: async (): Promise<TecnicoResponse> => {
+    const { data } = await apiClient.get('/tecnicos/me');
+    return data;
+ },
 };

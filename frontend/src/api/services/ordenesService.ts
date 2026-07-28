@@ -70,4 +70,10 @@ export const ordenesService = {
     );
     return data;
   },
+
+  listarPorEmpresaYTecnico: async (empresaId: number, tecnicoId: number): Promise<OrdenTrabajoResponse[]> => {
+    const { data } = await apiClient.get(`/ordenes-trabajo/empresa/${empresaId}/tecnico/${tecnicoId}`);
+    return data;
+  },
+  
 };

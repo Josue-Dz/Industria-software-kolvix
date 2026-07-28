@@ -7,6 +7,9 @@ import { evidenciasService } from '../../../api/services/evidenciasService';
 import { repuestosService } from '../../../api/services/repuestosService';
 import { tecnicosService } from '../../../api/services/tecnicosService';
 import { normalizarTexto } from '../../../utils/formato';
+import { entregasService } from '../../../api/services/entregasService';
+import type { EntregaResponse } from '../../../api/types';
+
 import type {
   AlbumEvidenciaResponse,
   ComplejidadDiagnostico,
@@ -40,6 +43,11 @@ export const useDetalleOrden = (ordenId: number) => {
   const [actionError, setActionError] = useState('');
   const [actionOk, setActionOk] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [entrega, setEntrega] = useState<EntregaResponse | null>(null);
+  const [isEntregaModalOpen, setIsEntregaModalOpen] = useState(false);
+  const [entregaIdentidadVerificada, setEntregaIdentidadVerificada] = useState(false);
+  const [entregaComprobante, setEntregaComprobante] = useState('');
+  const [entregaObservaciones, setEntregaObservaciones] = useState('');
 
   // Formulario de diagnóstico
   const [diagTecnicoId, setDiagTecnicoId] = useState('');
@@ -120,7 +128,7 @@ export const useDetalleOrden = (ordenId: number) => {
         if (!isMounted) return;
         setOrden(ordenData);
 
-        const [estadosR, diagR, cotR, eviR, albR, tecR, invR] = await Promise.allSettled([
+        const [estadosR, diagR, cotR, eviR, albR, tecR, invR, entR] = await Promise.allSettled([
           ordenesService.listarEstados(),
           diagnosticosService.obtenerPorOrden(ordenId),
           cotizacionesService.listarPorOrden(ordenId),
@@ -128,7 +136,9 @@ export const useDetalleOrden = (ordenId: number) => {
           evidenciasService.listarAlbumes(),
           tecnicosService.listar(),
           repuestosService.listar(),
+          entregasService.obtenerPorOrden(currentUser.empresaId, ordenId), 
         ]);
+
 
         if (!isMounted) return;
 
@@ -144,6 +154,7 @@ export const useDetalleOrden = (ordenId: number) => {
         if (albR.status === 'fulfilled') setAlbumes(albR.value);
         if (tecR.status === 'fulfilled') setTecnicos(tecR.value);
         if (invR.status === 'fulfilled') setInventario(invR.value);
+        if (entR.status === 'fulfilled') setEntrega(entR.value);
       } catch {
         if (isMounted) setLoadError('No se pudo cargar la orden. Verifica que exista y que el backend esté activo.');
       } finally {
@@ -293,6 +304,37 @@ export const useDetalleOrden = (ordenId: number) => {
       setIsSaving(false);
     }
   };
+
+  const handleRegistrarEntrega = async () => {
+  if (!user || !orden) return;
+  if (!entregaIdentidadVerificada) {
+    fallo('Debes verificar la identidad del cliente antes de registrar la entrega.');
+    return;
+  }
+
+  setIsSaving(true);
+  try {
+    const nuevaEntrega = await entregasService.registrar(user.empresaId, {
+      ordenId: orden.idOrden,
+      usuarioEntregaId: user.id,
+      identidadVerificada: entregaIdentidadVerificada,
+      urlComprobanteEntrega: entregaComprobante.trim() || undefined,
+      observaciones: entregaObservaciones.trim() || undefined,
+    });
+    setEntrega(nuevaEntrega);
+    setIsEntregaModalOpen(false);
+
+    // Refresca la orden para traer fechaEntrega actualizada
+    const ordenActualizada = await ordenesService.obtenerPorId(user.empresaId, orden.idOrden);
+    setOrden(ordenActualizada);
+
+    feedback('Entrega registrada correctamente.');
+  } catch {
+    fallo('No se pudo registrar la entrega. Verifica los datos.');
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   // Si hay un borrador PENDIENTE, lo re-guarda para que el backend recalcule los montos
   // con los repuestos actuales; así el total de la cotización nunca queda desfasado.
@@ -558,6 +600,13 @@ export const useDetalleOrden = (ordenId: number) => {
     handleDecisionCotizacion,
     handleSeleccionarFoto,
     handleArchivoSeleccionado,
+    // Entrega
+    entrega,
+    isEntregaModalOpen, setIsEntregaModalOpen,
+    entregaIdentidadVerificada, setEntregaIdentidadVerificada,
+    entregaComprobante, setEntregaComprobante,
+    entregaObservaciones, setEntregaObservaciones,
+    handleRegistrarEntrega,
   };
 };
 

@@ -26,4 +26,5 @@ public interface TecnicoRepository extends JpaRepository<Tecnico, Long>{
 
     boolean existsByUsuarioIdUsuario(Long idUsuario);
 
+    Optional<Tecnico> findByUsuarioIdUsuario(Long idUsuario); 
 }

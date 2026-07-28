@@ -9,7 +9,8 @@ public record SeguimientoOrdenResponse(
         List<HistorialEventoResponse> historial,
         List<CuentaPagoTallerResponse> cuentasPago,
         ReviewResponse review,       // null si aún no tiene reseña
-        boolean puedeCalificar        // true si está entregada y no tiene reseña
+        boolean puedeCalificar,  // true si está entregada y no tiene reseña
+        boolean mostrarCuentasPago      
 ) {
     
 }
