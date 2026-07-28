@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams} from 'react-router-dom';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Building2, Mail, Lock, User, Phone, MapPin, ArrowLeft } from 'lucide-react';
 import { authService } from '../../../api/services/authService';
 
+
 const PLANES = [
-  { codigo: 'BASICO', nombre: 'Básico', precio: 'L 250/mes' },
-  { codigo: 'PROFESIONAL', nombre: 'Profesional', precio: 'L 500/mes' },
-  { codigo: 'EMPRESARIAL', nombre: 'Empresarial', precio: 'L 1,500/mes' },
+  { codigo: 'BASICO', nombre: 'Básico', precio: '$ 9.99/mes' },
+  { codigo: 'PROFESIONAL', nombre: 'Profesional', precio: '$ 24.99/mes' },
+  { codigo: 'EMPRESARIAL', nombre: 'Empresarial', precio: '$ 59.99/mes' },
 ];
 
 export const RegistroPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const planPreseleccionado = searchParams.get('plan');
+  const codigosValidos = ['BASICO', 'PROFESIONAL', 'EMPRESARIAL'];
 
   const [form, setForm] = useState({
     nombre: '',
@@ -21,7 +26,9 @@ export const RegistroPage: React.FC = () => {
     telefono: '',
     correo: '',
     direccion: '',
-    codigoPlan: 'BASICO',
+    codigoPlan: planPreseleccionado && codigosValidos.includes(planPreseleccionado)
+      ? planPreseleccionado
+      : 'BASICO',
     nombreAdministrador: '',
     apellidoAdministrador: '',
     correoAdministrador: '',

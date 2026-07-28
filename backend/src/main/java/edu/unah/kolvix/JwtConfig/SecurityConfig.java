@@ -37,11 +37,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/usuarios/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .requestMatchers("/api/tecnicos/me").hasAnyRole("ADMIN", "PROPIETARIO", "TECNICO")
                         .requestMatchers("/api/tecnicos/**").hasAnyRole("ADMIN", "PROPIETARIO")
-                        // lectura de estados abierta a todo usuario autenticado; escritura solo
-                        // ADMIN/PROPIETARIO
+                        // lectura de estados abierta a todo usuario autenticado (incluye TECNICO
+                        // y RECEPCIONISTA); escritura solo ADMIN/PROPIETARIO
                         .requestMatchers(HttpMethod.GET, "/api/estados-reparacion/**").authenticated()
                         .requestMatchers("/api/estados-reparacion/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .requestMatchers("/api/cuentas-pago-taller/**").hasAnyRole("ADMIN", "PROPIETARIO")
+                        .requestMatchers("/api/mi-taller/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         // datos de la empresa: cualquiera autenticado los consulta, solo
                         // ADMIN/PROPIETARIO los modifica
                         .requestMatchers(HttpMethod.GET, "/api/empresa/**").authenticated()
