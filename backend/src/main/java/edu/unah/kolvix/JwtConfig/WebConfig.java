@@ -8,8 +8,6 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import jakarta.annotation.PostConstruct;
-
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
@@ -35,8 +33,4 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations(rutaUploads);
     }
 
-    @PostConstruct
-    public void init() {
-        System.out.println("FRONTEND_URL configurado: " + frontendUrl);
-    }
 }
