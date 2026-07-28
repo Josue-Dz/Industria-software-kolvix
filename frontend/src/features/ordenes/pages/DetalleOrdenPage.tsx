@@ -12,6 +12,7 @@ import { EvidenciaTab } from '../detalle/EvidenciaTab';
 import { FlujoOperativoCard } from '../detalle/FlujoOperativoCard';
 import { InventarioModal } from '../detalle/InventarioModal';
 import type { SubTab } from '../detalle/shared';
+import { EntregaModal } from '../detalle/EntregaModal';
 
 export const DetalleOrdenPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -100,6 +101,7 @@ export const DetalleOrdenPage: React.FC = () => {
 
         {/* MODAL: Inventario del Taller */}
         {d.isInventoryModalOpen && d.diagnostico && <InventarioModal d={d} />}
+        {d.isEntregaModalOpen && <EntregaModal d={d} />}
 
       </div>
     </DashboardLayout>

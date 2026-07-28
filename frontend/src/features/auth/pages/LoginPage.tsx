@@ -121,15 +121,10 @@ export const LoginPage: React.FC = () => {
             </p>
           )}
 
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isSubmitting}
-            onClick={() => navigate('/dashboard/tecnico')}
-            style={{ width: '100%', padding: '12px', borderRadius: '12px' }}
-          >
-            Ingresar como Técnico
-          </Button>
+          <p style={{ textAlign: 'center', fontSize: '13px', color: '#64748B', marginTop: '12px' }}>
+        ¿No tienes cuenta? <Link to="/registro" style={{ color: '#6366F1', fontWeight: '600' }}>Registra tu taller</Link>
+        </p>
+
         </form>
       </div>
     </div>

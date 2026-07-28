@@ -8,6 +8,8 @@ import { DetalleTallerPage } from '../features/landing/pages/DetalleTallerPage';
 
 // Auth Feature
 import { LoginPage } from '../features/auth/pages/LoginPage';
+import { RegistroPage } from '../features/auth/pages/RegistroPage';
+
 
 // Clientes Feature
 import { ConsultaReparacionPage } from '../features/clientes/pages/ConsultaReparacionPage';
@@ -47,6 +49,7 @@ export const AppRouter: React.FC = () => {
 
         {/* Auth Route */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/registro" element={<RegistroPage />} />
 
         {/* Admin / Taller Dashboard Routes */}
         <Route path="/dashboard" element={<DashboardTallerPage />} />

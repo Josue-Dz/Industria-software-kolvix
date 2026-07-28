@@ -30,30 +30,42 @@ public class SeguimientoService {
     private final ReviewRepository reviewRepository;
 
     public SeguimientoOrdenResponse consultar(String codigoSeguimiento) {
-        OrdenTrabajo orden = ordenTrabajoRepository.findByCodigoSeguimiento(codigoSeguimiento)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orden no encontrada"));
+    OrdenTrabajo orden = ordenTrabajoRepository.findByCodigoSeguimiento(codigoSeguimiento)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orden no encontrada"));
 
-        Long empresaId = orden.getEmpresa().getIdEmpresa();
+    Long empresaId = orden.getEmpresa().getIdEmpresa();
 
-        OrdenTrabajoResponse ordenResponse = mapearOrden(orden);
+    OrdenTrabajoResponse ordenResponse = mapearOrden(orden);
 
-        List<HistorialEventoResponse> historial = historialOrdenRepository
-                .findByOrdenIdOrdenAndOrdenEmpresaIdEmpresaOrderByFechaAsc(orden.getIdOrden(), empresaId)
-                .stream()
-                .map(this::mapearHistorial)
-                .toList();
+    List<HistorialEventoResponse> historial = historialOrdenRepository
+            .findByOrdenIdOrdenAndOrdenEmpresaIdEmpresaOrderByFechaAsc(orden.getIdOrden(), empresaId)
+            .stream()
+            .map(this::mapearHistorial)
+            .toList();
 
-        List<CuentaPagoTallerResponse> cuentasPago = cuentaPagoTallerService.listarActivas(empresaId);
+    boolean entregada = orden.getFechaEntrega() != null;
 
-        Review review = reviewRepository.findByOrdenIdOrdenAndEmpresaIdEmpresa(orden.getIdOrden(), empresaId)
-                .orElse(null);
+    boolean listaParaEntrega = orden.getEstado() != null
+            && "Listo para entrega".equalsIgnoreCase(orden.getEstado().getNombre());
 
-        ReviewResponse reviewResponse = review != null ? mapearReview(review) : null;
+    // Las cuentas solo se muestran mientras el cliente aún no ha retirado el
+    // equipo (pendiente de pagar). Una vez registrada la entrega real, se
+    // asume que el pago ya se resolvió y se le da paso a la reseña.
+    boolean mostrarCuentasPago = listaParaEntrega && !entregada;
 
-        boolean puedeCalificar = orden.getFechaEntrega() != null && review == null;
+    List<CuentaPagoTallerResponse> cuentasPago = mostrarCuentasPago
+            ? cuentaPagoTallerService.listarActivas(empresaId)
+            : List.of();
 
-        return new SeguimientoOrdenResponse(ordenResponse, historial, cuentasPago, reviewResponse, puedeCalificar);
-    }
+    Review review = reviewRepository.findByOrdenIdOrdenAndEmpresaIdEmpresa(orden.getIdOrden(), empresaId)
+            .orElse(null);
+
+    ReviewResponse reviewResponse = review != null ? mapearReview(review) : null;
+
+    boolean puedeCalificar = entregada && review == null;
+
+    return new SeguimientoOrdenResponse(ordenResponse, historial, cuentasPago, reviewResponse, puedeCalificar, mostrarCuentasPago);
+}
 
     private OrdenTrabajoResponse mapearOrden(OrdenTrabajo orden) {
         return new OrdenTrabajoResponse(

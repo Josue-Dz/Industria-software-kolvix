@@ -159,4 +159,12 @@ public class TecnicoService {
                 tecnico.isActivo()
         );
     }
+
+    public TecnicoResponse obtenerPorUsuario(Long idUsuario) {
+    Tecnico tecnico = tecnicoRepository.findByUsuarioIdUsuario(idUsuario)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Este usuario no tiene un registro de técnico asociado"));
+    return mapearResponse(tecnico);
+    }
+
 }

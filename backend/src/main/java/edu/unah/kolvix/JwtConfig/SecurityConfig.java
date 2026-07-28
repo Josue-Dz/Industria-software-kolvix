@@ -36,6 +36,7 @@ public class SecurityConfig {
                         // seguimiento del cliente por código, sin login (según flujo MVP)
                         .requestMatchers("/api/seguimiento/**").permitAll()
                         .requestMatchers("/api/usuarios/**").hasAnyRole("ADMIN", "PROPIETARIO")
+                        .requestMatchers("/api/tecnicos/me").hasAnyRole("ADMIN", "PROPIETARIO", "TECNICO")
                         .requestMatchers("/api/tecnicos/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         // lectura de estados abierta a todo usuario autenticado; escritura solo ADMIN/PROPIETARIO
                         .requestMatchers(HttpMethod.GET, "/api/estados-reparacion/**").authenticated()
