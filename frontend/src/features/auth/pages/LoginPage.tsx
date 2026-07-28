@@ -66,7 +66,7 @@ export const LoginPage: React.FC = () => {
         {/* Kolvix Brand Logo */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
           <img
-            src="/src/assets/logos/Logo 1.png"
+            src="/logos/Logo 1.png"
             alt="Kolvix Logo"
             style={{ height: '48px', objectFit: 'contain' }}
           />

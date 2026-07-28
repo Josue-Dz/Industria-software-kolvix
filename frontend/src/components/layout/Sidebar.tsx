@@ -53,7 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ userRole = 'admin' }) => {
       {/* Brand Header */}
       <div style={{ padding: '0 12px 24px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <img
-          src="/src/assets/logos/Logo 4.png"
+          src="/logos/Logo 4.png"
           alt="Kolvix Logo"
           style={{ height: '32px', objectFit: 'contain', alignSelf: 'flex-start' }}
         />
