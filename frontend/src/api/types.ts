@@ -389,6 +389,14 @@ export interface PerfilMarketplace {
   fechaActualizacion: string;
 }
 
+export interface PerfilMarketplaceRequest {
+  descripcionPublica?: string;
+  horarioAtencion?: string;
+  latitud?: number | null;
+  longitud?: number | null;
+  marketplaceVisible: boolean;
+}
+
 export interface CategoriaServicio {
   id: number;
   empresaId: number;
