@@ -486,9 +486,10 @@ export interface EmpresaResponse {
   id: number;
   nombre: string;
   rtn: string | null;
-  telefono: string;
+  // teléfono y dirección son opcionales en la base de datos
+  telefono: string | null;
   correo: string;
-  direccion: string;
+  direccion: string | null;
   codigoPlan: string;
   nombrePlan: string;
   activo: boolean;
@@ -529,4 +530,72 @@ export interface EntregaResponse {
   urlComprobanteEntrega: string | null;
   observaciones: string | null;
   fechaEntrega: string;
+}
+
+export interface EmpresaUpdateRequest {
+  nombre: string;
+  rtn?: string;
+  telefono?: string;
+  correo: string;
+  direccion?: string;
+}
+
+export interface PlanSuscripcionResponse {
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+  montoMensual: number;
+  moneda: string;
+  activo: boolean;
+}
+
+export type TipoCuenta = "AHORRO" | "CHEQUES" | "OTRO";
+
+export interface CuentaCobroResponse {
+  id: number;
+  banco: string;
+  tipoCuenta: TipoCuenta;
+  numeroCuenta: string;
+  titular: string;
+  moneda: string;
+  instrucciones: string | null;
+  activo: boolean;
+}
+
+export interface CuentaPagoTallerRequest {
+  banco: string;
+  tipoCuenta: TipoCuenta;
+  numeroCuenta: string;
+  titular: string;
+  moneda: string;
+  instrucciones?: string;
+  activo: boolean;
+}
+
+export interface CuentaPagoTallerResponse {
+  id: number;
+  banco: string;
+  tipoCuenta: TipoCuenta;
+  numeroCuenta: string;
+  titular: string;
+  moneda: string;
+  instrucciones: string | null;
+  activo: boolean;
+}
+
+export interface UsuarioRequest {
+  nombre: string;
+  apellido: string;
+  correo: string;
+  password: string;
+  rol: UserRole;
+  activo: boolean;
+}
+
+export interface EstadoReparacionRequest {
+  nombre: string;
+  colorHex: string;
+  orden: number;
+  estadoFinal: boolean;
+  notificarCliente: boolean;
 }

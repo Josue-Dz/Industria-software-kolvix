@@ -1,6 +1,5 @@
 package edu.unah.kolvix.JwtConfig;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -38,10 +37,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/usuarios/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .requestMatchers("/api/tecnicos/me").hasAnyRole("ADMIN", "PROPIETARIO", "TECNICO")
                         .requestMatchers("/api/tecnicos/**").hasAnyRole("ADMIN", "PROPIETARIO")
-                        // lectura de estados abierta a todo usuario autenticado; escritura solo ADMIN/PROPIETARIO
+                        // lectura de estados abierta a todo usuario autenticado; escritura solo
+                        // ADMIN/PROPIETARIO
                         .requestMatchers(HttpMethod.GET, "/api/estados-reparacion/**").authenticated()
                         .requestMatchers("/api/estados-reparacion/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .requestMatchers("/api/cuentas-pago-taller/**").hasAnyRole("ADMIN", "PROPIETARIO")
+                        // datos de la empresa: cualquiera autenticado los consulta, solo
+                        // ADMIN/PROPIETARIO los modifica
+                        .requestMatchers(HttpMethod.GET, "/api/empresa/**").authenticated()
+                        .requestMatchers("/api/empresa/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .requestMatchers("/api/marketplace/**").permitAll()
                         .requestMatchers("/api/catalogos/**").permitAll()
                         .requestMatchers("/api/reviews/**").permitAll()
@@ -50,8 +54,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) ->
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED)))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(
+                        (request, response, authException) -> response.setStatus(HttpServletResponse.SC_UNAUTHORIZED)))
                 .build();
     }
 }
