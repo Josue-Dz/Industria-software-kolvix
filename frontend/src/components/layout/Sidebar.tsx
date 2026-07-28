@@ -1,5 +1,6 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth/useAuth';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -19,6 +20,19 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ userRole = 'admin' }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { cerrarSesion } = useAuth();
+  const [cerrando, setCerrando] = useState(false);
+
+  const handleCerrarSesion = async () => {
+    setCerrando(true);
+    try {
+      await cerrarSesion();
+      navigate('/login', { replace: true });
+    } finally {
+      setCerrando(false);
+    }
+  };
 
   const adminNavItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -93,8 +107,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ userRole = 'admin' }) => {
 
       {/* Logout Footer */}
       <div style={{ paddingTop: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-        <Link
-          to="/login"
+        <button
+          onClick={handleCerrarSesion}
+          disabled={cerrando}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -104,12 +119,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ userRole = 'admin' }) => {
             fontSize: '14px',
             fontWeight: '600',
             color: '#F87171',
+            backgroundColor: 'transparent',
+            border: 'none',
+            width: '100%',
+            textAlign: 'left',
+            cursor: cerrando ? 'wait' : 'pointer',
             transition: 'background-color 0.2s'
           }}
         >
           <LogOut size={18} />
-          <span>Cerrar Sesión</span>
-        </Link>
+          <span>{cerrando ? 'Cerrando...' : 'Cerrar Sesión'}</span>
+        </button>
       </div>
     </aside>
   );

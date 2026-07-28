@@ -3,9 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from '../ui/Button';
 
-const ENLACES: { to: string; label: string; hash?: boolean }[] = [
+const ENLACES: { to: string; label: string }[] = [
   { to: '/', label: 'Inicio' },
-  { to: '#beneficios', label: 'Beneficios', hash: true },
+  { to: '/#beneficios', label: 'Beneficios' },
+  { to: '/#precios', label: 'Precios' },
   { to: '/consultar-reparacion', label: 'Consultar Reparación' },
   { to: '/buscar-talleres', label: 'Buscar Talleres' },
 ];
@@ -17,15 +18,16 @@ export const Navbar: React.FC = () => {
   const cerrarMenu = () => setMenuAbierto(false);
 
   const enlaces = ENLACES.map((enlace) => {
-    const activo = !enlace.hash && location.pathname === enlace.to;
-    const className = `navbar-link${activo ? ' is-active' : ''}`;
+    // Los enlaces con ancla no marcan página activa: apuntan a una sección.
+    const activo = !enlace.to.includes('#') && location.pathname === enlace.to;
 
-    return enlace.hash ? (
-      <a key={enlace.to} href={enlace.to} className={className} onClick={cerrarMenu}>
-        {enlace.label}
-      </a>
-    ) : (
-      <Link key={enlace.to} to={enlace.to} className={className} onClick={cerrarMenu}>
+    return (
+      <Link
+        key={enlace.to}
+        to={enlace.to}
+        className={`navbar-link${activo ? ' is-active' : ''}`}
+        onClick={cerrarMenu}
+      >
         {enlace.label}
       </Link>
     );

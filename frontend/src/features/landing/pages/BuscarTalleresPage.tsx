@@ -63,12 +63,12 @@ useEffect(() => {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#FAFAFD' }}>
       <Navbar />
 
-      <section style={{ backgroundColor: '#3730A3', color: '#FFFFFF', padding: '60px 0', textAlign: 'center' }}>
+      <section className="public-hero">
         <div className="container" style={{ maxWidth: '800px' }}>
-          <h1 style={{ fontSize: '36px', fontWeight: '800', color: '#FFFFFF', marginBottom: '12px' }}>
+          <h1 className="public-hero-title">
             Encuentra el taller ideal para tu equipo
           </h1>
-          <p style={{ fontSize: '16px', color: '#EDE9FE', marginBottom: '32px' }}>
+          <p className="public-hero-text" style={{ marginBottom: '32px' }}>
             Busca por ubicación, categoría y reputación
           </p>
 
@@ -84,7 +84,7 @@ useEffect(() => {
         </div>
       </section>
 
-      <section style={{ padding: '48px 0 80px 0', flex: 1 }}>
+      <section className="section-pad" style={{ flex: 1 }}>
         <div className="container">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '36px', flexWrap: 'wrap', gap: '16px' }}>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>

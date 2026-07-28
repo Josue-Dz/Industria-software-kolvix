@@ -1,5 +1,6 @@
 package edu.unah.kolvix.services;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -42,29 +43,38 @@ private final UsuarioRepository usuarioRepository;
         return new AuthResponse(mapearUsuarioResponse(usuario));
     }
 
+    // En producción (HTTPS) la cookie debe viajar solo por conexión segura. Se
+    // deja configurable para no romper las pruebas locales por HTTP:
+    // kolvix.security.cookie-secure=true en el despliegue.
+    @Value("${kolvix.security.cookie-secure:false}")
+    private boolean cookieSegura;
+
+    private static final long DURACION_SESION_SEGUNDOS = 10 * 60 * 60;
+
     // Reutilizado por EmpresaService al registrar al admin
     public void generarTokenYCookie(Usuario usuario, HttpServletResponse response) {
         String token = jwtService.getToken(usuario);
-        ResponseCookie cookie = ResponseCookie.from("token", token)
-            .httpOnly(true)
-            .secure(false) // Changed to false for local HTTP testing
-            .sameSite("Lax") // Changed to Lax for HTTP compatibility
-            .path("/")
-            .maxAge(10 * 60 * 60)
-            .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-}
+        response.addHeader(HttpHeaders.SET_COOKIE, construirCookie(token, DURACION_SESION_SEGUNDOS));
+    }
 
     public void logout(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from("token", "")
-            .httpOnly(true)
-            .secure(false)
-            .sameSite("Lax")
-            .path("/")
-            .maxAge(0)
-            .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-}
+        // maxAge 0 borra la cookie en el navegador. Los atributos deben coincidir
+        // con los de la cookie original o el navegador no la reemplaza.
+        response.addHeader(HttpHeaders.SET_COOKIE, construirCookie("", 0));
+    }
+
+    private String construirCookie(String valor, long maxAgeSegundos) {
+        return ResponseCookie.from("token", valor)
+                // httpOnly evita que un script inyectado pueda leer el token.
+                .httpOnly(true)
+                .secure(cookieSegura)
+                // Lax protege contra CSRF en peticiones desde otros sitios.
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(maxAgeSegundos)
+                .build()
+                .toString();
+    }
 
     public UsuarioResponse getMyProfile() {
         Usuario usuario = getUsuarioAutenticado();
