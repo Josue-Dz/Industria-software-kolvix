@@ -99,7 +99,7 @@ export const RegistroPage: React.FC = () => {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-            <img src="/src/assets/logos/Logo 1.png" alt="Kolvix Logo" style={{ height: '48px', objectFit: 'contain' }} />
+            <img src="/logos/Logo 1.png" alt="Kolvix Logo" style={{ height: '48px', objectFit: 'contain' }} />
           </div>
           <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#1E1B4B', marginBottom: '8px' }}>
             Registra tu taller

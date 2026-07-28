@@ -22,7 +22,7 @@ export const Footer: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <img
-                src="/src/assets/logos/Logo 4.png"
+                src="/logos/Logo 4.png"
                 alt="Kolvix Logo"
                 style={{ height: '36px', objectFit: 'contain' }}
               />
