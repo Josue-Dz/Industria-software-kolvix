@@ -11,13 +11,7 @@ export const Footer: React.FC = () => {
       marginTop: 'auto'
     }}>
       <div className="container">
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '2fr 1fr 1fr 1fr',
-          gap: '40px',
-          paddingBottom: '48px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-        }}>
+        <div className="footer-grid">
           {/* Brand & Socials */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
