@@ -175,10 +175,10 @@ export const OrdenesPage: React.FC = () => {
       subtitle=""
       role="admin"
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative', width: '100%' }}>
         
         {/* Top Tabs */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <button style={{
             padding: '10px 24px',
             borderRadius: '12px',
@@ -224,8 +224,8 @@ export const OrdenesPage: React.FC = () => {
 
         {/* Search and Filter Box */}
         <Card hoverable={false} style={{ padding: '20px', borderRadius: '16px', backgroundColor: '#FFFFFF' }}>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ flex: 1, maxWidth: '500px' }}>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '280px', maxWidth: '500px' }}>
               <Input
                 placeholder="Buscar cliente, ticket, modelo..."
                 value={searchTerm}
@@ -248,119 +248,127 @@ export const OrdenesPage: React.FC = () => {
                 {statusOptions.map(status => (
                   <option key={status.id} value={status.nombre}>{status.nombre}</option>
                 ))}
-                <option>Ingresado</option>
-                <option>Cotización</option>
-                <option>En Reparación</option>
-                <option>Listo</option>
-                <option>Entregado</option>
               </select>
             </div>
           </div>
         </Card>
 
-        {/* Orders Table matching ESTADOS DE LA ORDENES.png */}
-        <Card hoverable={false} style={{ padding: 0, overflow: 'hidden', borderRadius: '16px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#EDE9FE', color: '#3730A3', borderBottom: '1px solid #E2E8F0' }}>
-                <th style={{ padding: '16px 20px', fontWeight: '800' }}>TICKET ID</th>
-                <th style={{ padding: '16px 20px', fontWeight: '800' }}>CLIENTE</th>
-                <th style={{ padding: '16px 20px', fontWeight: '800' }}>DISPOSITIVO</th>
-                <th style={{ padding: '16px 20px', fontWeight: '800' }}>TÉCNICO</th>
-                <th style={{ padding: '16px 20px', fontWeight: '800' }}>ESTADO ACTUAL</th>
-                <th style={{ padding: '16px 20px', fontWeight: '800' }}>MONTO TOTAL</th>
-                <th style={{ padding: '16px 20px', fontWeight: '800', textAlign: 'center' }}>ACCIONES</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.map((ord) => (
-                <tr key={ord.ticketId} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-                  <td style={{ padding: '16px 20px', fontWeight: '700', color: '#475569' }}>
-                    {ord.ticketId}
-                  </td>
-                  <td style={{ padding: '16px 20px' }}>
-                    <span style={{ fontWeight: '800', color: '#1E1B4B', display: 'block' }}>{ord.client}</span>
-                    <span style={{ fontSize: '12px', color: '#64748B' }}>{ord.phone}</span>
-                  </td>
-                  <td style={{ padding: '16px 20px' }}>
-                    <span style={{ fontWeight: '700', color: '#1E293B', display: 'block' }}>{ord.device}</span>
-                    <span style={{ fontSize: '11px', color: '#94A3B8' }}>{ord.serial}</span>
-                  </td>
-                  <td style={{ padding: '16px 20px', fontWeight: '600', color: '#475569' }}>
-                    {ord.tech}
-                  </td>
-                  <td style={{ padding: '16px 20px' }}>
-                    <select
-                      value={ord.status}
-                      onChange={(e) => handleStatusChange(ord.ticketId, e.target.value)}
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: '20px',
-                        fontSize: '13px',
-                        fontWeight: '700',
-                        backgroundColor: ord.status === 'Ingresado' ? '#EDE9FE' :
-                                         ord.status === 'Cotización' ? '#E0E7FF' :
-                                         ord.status === 'En Reparación' ? '#CBD5E1' :
-                                         ord.status === 'Listo' ? '#DCFCE7' : '#F1F5F9',
-                        color: ord.status === 'Ingresado' ? '#3730A3' :
-                               ord.status === 'Cotización' ? '#4338CA' :
-                               ord.status === 'En Reparación' ? '#1E293B' :
-                               ord.status === 'Listo' ? '#15803D' : '#475569',
-                        border: 'none',
-                        cursor: 'pointer',
-                        outline: 'none'
-                      }}
-                    >
-                      {statusOptions.map(status => (
-                        <option key={status.id} value={status.nombre}>- {status.nombre}</option>
-                      ))}
-                      <option value="Ingresado">• Ingresado</option>
-                      <option value="Cotización">• Cotización</option>
-                      <option value="En Reparación">• En Reparación</option>
-                      <option value="Listo">• Listo</option>
-                      <option value="Entregado">• Entregado</option>
-                    </select>
-                  </td>
-                  <td style={{ padding: '16px 20px', fontWeight: '700', color: '#1E1B4B' }}>
-                    {ord.total}
-                  </td>
-                  <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                    <div style={{ display: 'inline-flex', gap: '12px', alignItems: 'center' }}>
-                      {/* Pencil Icon opens exact Detalles Generales del Ticket Drawer */}
-                      <button
-                        onClick={() => setActiveDrawerTicket(ord)}
-                        style={{ color: '#6366F1', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
-                        title="Ver Detalles Generales (Lápiz)"
-                      >
-                        <Edit3 size={18} />
-                      </button>
-
-                      {ord.orderId ? (
-                        <Link to={`/ordenes/detalle/${ord.orderId}`} style={{ color: '#6366F1' }} title="Ver Cotización y Flujo">
-                          <Eye size={18} />
-                        </Link>
-                      ) : (
-                        <span style={{ color: '#CBD5E1' }} title="Orden de ejemplo sin detalle">
-                          <Eye size={18} />
-                        </span>
-                      )}
-
-                      <button
-                        onClick={() => handleDeleteOrder(ord.ticketId)}
-                        style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
-                        title="Eliminar Orden"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
+        {/* Orders Table Wrapper con Overflow X Habilitado */}
+        <Card hoverable={false} style={{ padding: 0, borderRadius: '16px', overflow: 'hidden' }}>
+          <div style={{ width: '100%', overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px', minWidth: '850px' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#EDE9FE', color: '#3730A3', borderBottom: '1px solid #E2E8F0' }}>
+                  <th style={{ padding: '16px 20px', fontWeight: '800', whiteSpace: 'nowrap' }}>TICKET ID</th>
+                  <th style={{ padding: '16px 20px', fontWeight: '800', whiteSpace: 'nowrap' }}>CLIENTE</th>
+                  <th style={{ padding: '16px 20px', fontWeight: '800', whiteSpace: 'nowrap' }}>DISPOSITIVO</th>
+                  <th style={{ padding: '16px 20px', fontWeight: '800', whiteSpace: 'nowrap' }}>TÉCNICO</th>
+                  <th style={{ padding: '16px 20px', fontWeight: '800', whiteSpace: 'nowrap' }}>ESTADO ACTUAL</th>
+                  <th style={{ padding: '16px 20px', fontWeight: '800', whiteSpace: 'nowrap' }}>MONTO TOTAL</th>
+                  <th style={{ padding: '16px 20px', fontWeight: '800', textAlign: 'center', whiteSpace: 'nowrap' }}>ACCIONES</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredOrders.map((ord) => (
+                  <tr key={ord.ticketId} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
+                    <td style={{ padding: '16px 20px', fontWeight: '700', color: '#475569', whiteSpace: 'nowrap' }}>
+                      {ord.ticketId}
+                    </td>
+                    <td style={{ padding: '16px 20px' }}>
+                      <span style={{ fontWeight: '800', color: '#1E1B4B', display: 'block', whiteSpace: 'nowrap' }}>{ord.client}</span>
+                      <span style={{ fontSize: '12px', color: '#64748B', whiteSpace: 'nowrap' }}>{ord.phone}</span>
+                    </td>
+                    <td style={{ padding: '16px 20px' }}>
+                      <span style={{ fontWeight: '700', color: '#1E293B', display: 'block', whiteSpace: 'nowrap' }}>{ord.device}</span>
+                      <span style={{ fontSize: '11px', color: '#94A3B8', whiteSpace: 'nowrap' }}>{ord.serial}</span>
+                    </td>
+                    <td style={{ padding: '16px 20px', fontWeight: '600', color: '#475569', whiteSpace: 'nowrap' }}>
+                      {ord.tech}
+                    </td>
+                    <td style={{ padding: '16px 20px', whiteSpace: 'nowrap' }}>
+                    <select
+                    value={ord.status}
+                    onChange={(e) => handleStatusChange(ord.ticketId, e.target.value)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      backgroundColor:
+                        ord.status === 'Ingresado' ? '#EDE9FE' :
+                        ord.status === 'Cotización' ? '#E0E7FF' :
+                        ord.status === 'En Reparación' ? '#CBD5E1' :
+                        ord.status === 'Listo' ? '#DCFCE7' : '#F1F5F9',
+                      color:
+                        ord.status === 'Ingresado' ? '#3730A3' :
+                        ord.status === 'Cotización' ? '#4338CA' :
+                        ord.status === 'En Reparación' ? '#1E293B' :
+                        ord.status === 'Listo' ? '#15803D' : '#475569',
+                      border: 'none',
+                      cursor: 'pointer',
+                      outline: 'none'
+                    }}
+                  >
+                    {statusOptions.length > 0 ? (
+                      statusOptions.map((status) => (
+                        <option key={status.id} value={status.nombre}>
+                          • {status.nombre}
+                        </option>
+                      ))
+                    ) : (
+                      /* Fallback si el backend no ha respondido */
+                      <>
+                        <option value="Ingresado">• Ingresado</option>
+                        <option value="Cotización">• Cotización</option>
+                        <option value="En Reparación">• En Reparación</option>
+                        <option value="Listo">• Listo</option>
+                        <option value="Entregado">• Entregado</option>
+                        <option value="Cerrado">• Cerrado</option>
+                      </>
+                    )}
+                  </select>
+                    </td>
+                    <td style={{ padding: '16px 20px', fontWeight: '700', color: '#1E1B4B', whiteSpace: 'nowrap' }}>
+                      {ord.total}
+                    </td>
+                    <td style={{ padding: '16px 20px', textAlign: 'center', whiteSpace: 'nowrap', minWidth: '130px' }}>
+                      <div style={{ display: 'inline-flex', gap: '12px', alignItems: 'center', justifyContent: 'center' }}>
+                        {/* Pencil Icon */}
+                        <button
+                          onClick={() => setActiveDrawerTicket(ord)}
+                          style={{ color: '#6366F1', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+                          title="Ver Detalles Generales (Lápiz)"
+                        >
+                          <Edit3 size={18} />
+                        </button>
+
+                        {ord.orderId ? (
+                          <Link to={`/ordenes/detalle/${ord.orderId}`} style={{ color: '#6366F1', display: 'inline-flex' }} title="Ver Cotización y Flujo">
+                            <Eye size={18} />
+                          </Link>
+                        ) : (
+                          <span style={{ color: '#CBD5E1', display: 'inline-flex' }} title="Orden de ejemplo sin detalle">
+                            <Eye size={18} />
+                          </span>
+                        )}
+
+                        <button
+                          onClick={() => handleDeleteOrder(ord.ticketId)}
+                          style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+                          title="Eliminar Orden"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Card>
 
-        {/* RIGHT SLIDING DRAWER: Detalles generales del ticket */}
+        {/* RIGHT SLIDING DRAWER */}
         {activeDrawerTicket && (
           <TicketDrawer
             ticket={activeDrawerTicket}

@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LandingPage } from '../features/landing/pages/LandingPage';
 import { BuscarTalleresPage } from '../features/landing/pages/BuscarTalleresPage';
 import { DetalleTallerPage } from '../features/landing/pages/DetalleTallerPage';
+import { PreciosPage } from '../features/landing/pages/PreciosPage';
 
 // Auth Feature
 import { LoginPage } from '../features/auth/pages/LoginPage';
@@ -46,6 +47,7 @@ export const AppRouter: React.FC = () => {
         <Route path="/buscar-talleres" element={<BuscarTalleresPage />} />
         <Route path="/taller/:id" element={<DetalleTallerPage />} />
         <Route path="/consultar-reparacion" element={<ConsultaReparacionPage />} />
+        <Route path="/precios" element={<PreciosPage />} />
 
         {/* Auth Route */}
         <Route path="/login" element={<LoginPage />} />

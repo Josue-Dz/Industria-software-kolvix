@@ -39,9 +39,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/tecnicos/me").hasAnyRole("ADMIN", "PROPIETARIO", "TECNICO")
                         .requestMatchers("/api/tecnicos/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         // lectura de estados abierta a todo usuario autenticado; escritura solo ADMIN/PROPIETARIO
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/estados-reparacion/**")
+                        .hasAnyRole("ADMIN", "PROPIETARIO", "TECNICO")
+                        .requestMatchers("/api/estados-reparacion/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .requestMatchers(HttpMethod.GET, "/api/estados-reparacion/**").authenticated()
                         .requestMatchers("/api/estados-reparacion/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .requestMatchers("/api/cuentas-pago-taller/**").hasAnyRole("ADMIN", "PROPIETARIO")
+                        .requestMatchers("/api/mi-taller/**").hasAnyRole("ADMIN", "PROPIETARIO")
                         .requestMatchers("/api/marketplace/**").permitAll()
                         .requestMatchers("/api/catalogos/**").permitAll()
                         .requestMatchers("/api/reviews/**").permitAll()
