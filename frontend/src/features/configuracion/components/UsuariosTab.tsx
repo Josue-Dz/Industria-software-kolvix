@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
-import { Plus } from 'lucide-react';
+import { Plus, AlertTriangle } from 'lucide-react';
 import type { ConfiguracionController } from '../useConfiguracion';
 import type { UserRole } from '../../../api/types';
 
@@ -17,7 +17,7 @@ const ROLES: { valor: UserRole; etiqueta: string }[] = [
 const etiquetaRol = (rol: UserRole) => ROLES.find(r => r.valor === rol)?.etiqueta ?? rol;
 
 export const UsuariosTab: React.FC<{ c: ConfiguracionController }> = ({ c }) => {
-  const { usuarios, usuarioActual, isSaving, crearUsuario, cambiarEstadoUsuario } = c;
+  const { usuarios, usuarioActual, isSaving, limiteUsuarios, crearUsuario, cambiarEstadoUsuario } = c;
 
   const [showForm, setShowForm] = useState(false);
   const [nombre, setNombre] = useState('');
@@ -27,6 +27,14 @@ export const UsuariosTab: React.FC<{ c: ConfiguracionController }> = ({ c }) => 
   const [rol, setRol] = useState<UserRole>('RECEPCIONISTA');
 
   const activos = usuarios.filter(u => u.activo).length;
+
+  // El backend es quien decide; aquí solo se anticipa el bloqueo en la interfaz.
+  const cupoLleno = limiteUsuarios ? !limiteUsuarios.cupoDisponible : false;
+  const textoCupo = !limiteUsuarios
+    ? `${activos} ${activos === 1 ? 'activo' : 'activos'}`
+    : limiteUsuarios.ilimitado
+      ? `${limiteUsuarios.usuariosActivos} activos · usuarios ilimitados`
+      : `${limiteUsuarios.usuariosActivos} de ${limiteUsuarios.maxUsuarios} usuarios activos`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,15 +56,42 @@ export const UsuariosTab: React.FC<{ c: ConfiguracionController }> = ({ c }) => 
             Usuarios del sistema
           </h3>
           <p style={{ fontSize: '13px', color: '#64748B', margin: '4px 0 0 0' }}>
-            {usuarios.length} {usuarios.length === 1 ? 'cuenta registrada' : 'cuentas registradas'} · {activos} {activos === 1 ? 'activa' : 'activas'}
+            {usuarios.length} {usuarios.length === 1 ? 'cuenta registrada' : 'cuentas registradas'} · {textoCupo}
+            {limiteUsuarios?.nombrePlan && ` · Plan ${limiteUsuarios.nombrePlan}`}
           </p>
         </div>
         {!showForm && (
-          <Button variant="primary" icon={<Plus size={16} />} onClick={() => setShowForm(true)}>
+          <Button
+            variant="primary"
+            icon={<Plus size={16} />}
+            disabled={cupoLleno}
+            title={cupoLleno ? 'Alcanzaste el límite de usuarios de tu plan' : undefined}
+            onClick={() => setShowForm(true)}
+          >
             Crear usuario
           </Button>
         )}
       </div>
+
+      {cupoLleno && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '10px',
+          backgroundColor: '#FFFBEB',
+          border: '1px solid #FDE68A',
+          borderRadius: '12px',
+          padding: '14px 16px',
+          marginBottom: '20px'
+        }}>
+          <AlertTriangle size={18} color="#B45309" style={{ flexShrink: 0, marginTop: '1px' }} />
+          <p style={{ fontSize: '13px', color: '#92400E', margin: 0, lineHeight: 1.5 }}>
+            Alcanzaste el límite de {limiteUsuarios?.maxUsuarios} usuarios activos
+            {limiteUsuarios?.nombrePlan ? ` del plan ${limiteUsuarios.nombrePlan}` : ''}.
+            Desactiva un usuario para liberar un cupo o cambia de plan en la pestaña Suscripción.
+          </p>
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit} style={{

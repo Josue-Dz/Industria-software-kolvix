@@ -54,6 +54,11 @@ public class UsuarioService {
             throw new IllegalArgumentException("El correo ya está registrado");
         }
 
+        // Un usuario creado como inactivo no ocupa cupo todavía.
+        if (request.activo()) {
+            validarCupoDisponible(empresa);
+        }
+
         boolean sinPassword = request.password() == null || request.password().isBlank();
         String passwordFinal = sinPassword ? generarPasswordTemporal() : request.password();
 
@@ -89,8 +94,52 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByIdUsuarioAndEmpresaIdEmpresa(idUsuario, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El usuario no existe en esta empresa"));
 
+        // Reactivar vuelve a ocupar un cupo del plan; desactivar siempre se permite.
+        if (activo && !usuario.isActivo()) {
+            validarCupoDisponible(usuario.getEmpresa());
+        }
+
         usuario.setActivo(activo);
         return usuarioRepository.save(usuario);
+    }
+
+    // Cupo de usuarios activos según el plan contratado por la empresa.
+    @Transactional(readOnly = true)
+    public LimiteUsuarios consultarLimite(Empresa empresa) {
+        Integer maxUsuarios = empresa.getPlanSuscripcion() != null
+                ? empresa.getPlanSuscripcion().getMaxUsuarios()
+                : null;
+        int activos = usuarioRepository.countByEmpresaIdEmpresaAndActivoTrue(empresa.getIdEmpresa());
+        return new LimiteUsuarios(activos, maxUsuarios);
+    }
+
+    private void validarCupoDisponible(Empresa empresa) {
+        LimiteUsuarios limite = consultarLimite(empresa);
+        if (limite.ilimitado() || limite.cupoDisponible()) {
+            return;
+        }
+
+        String nombrePlan = empresa.getPlanSuscripcion() != null
+                ? empresa.getPlanSuscripcion().getNombre()
+                : "actual";
+
+        throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "El plan %s permite %d usuarios activos y ya se alcanzó el límite. "
+                        .formatted(nombrePlan, limite.maxUsuarios())
+                        + "Desactiva un usuario o cambia de plan para agregar más.");
+    }
+
+    // Resultado del cálculo de cupo; maxUsuarios en null significa ilimitado.
+    public record LimiteUsuarios(int usuariosActivos, Integer maxUsuarios) {
+
+        public boolean ilimitado() {
+            return maxUsuarios == null;
+        }
+
+        public boolean cupoDisponible() {
+            return ilimitado() || usuariosActivos < maxUsuarios;
+        }
     }
 
     private String generarPasswordTemporal() {

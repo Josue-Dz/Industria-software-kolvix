@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { X, Camera } from 'lucide-react';
 import type { OrderTicket } from '../ordenTicket';
 
@@ -88,68 +89,55 @@ export const TicketDrawer: React.FC<TicketDrawerProps> = ({ ticket, onClose, onM
           </div>
         </div>
 
-        {/* Evidencia y Desgaste Físico Registrado */}
-        <div style={{ marginBottom: '24px' }}>
-          <span style={{ fontSize: '12px', fontWeight: '800', color: '#1E1B4B', display: 'block', marginBottom: '12px' }}>
-            EVIDENCIA Y DESGASTE FÍSICO REGISTRADO
-          </span>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px', alignItems: 'center' }}>
-            <div style={{
-              height: '180px',
-              borderRadius: '12px',
-              backgroundColor: '#EDE9FE',
-              border: '1px solid #E2E8F0',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              color: '#3730A3'
-            }}>
-              <Camera size={32} />
-              <span style={{ fontSize: '12px', fontWeight: '700' }}>Evidencia del Equipo</span>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px' }}>
-              <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: '8px' }}>
-                <span style={{ color: '#94A3B8', fontSize: '11px', display: 'block' }}>(50 %, 45%)</span>
-                <strong style={{ color: '#1E1B4B' }}>{ticket.evidenceNote1}</strong>
-              </div>
-
-              <div>
-                <span style={{ color: '#94A3B8', fontSize: '11px', display: 'block' }}>(20 %, 78%)</span>
-                <strong style={{ color: '#1E1B4B' }}>{ticket.evidenceNote2}</strong>
-              </div>
+        {/* Observaciones */}
+        {ticket.observaciones && (
+          <div style={{ marginBottom: '24px' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#1E1B4B', display: 'block', marginBottom: '8px' }}>
+              OBSERVACIONES
+            </span>
+            <div style={{ backgroundColor: '#F8FAFC', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0', color: '#475569', fontSize: '13px', lineHeight: 1.5 }}>
+              {ticket.observaciones}
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Estructura de precios */}
+        {/* Datos de la orden */}
         <div style={{ marginBottom: '24px' }}>
           <span style={{ fontSize: '12px', fontWeight: '800', color: '#1E1B4B', display: 'block', marginBottom: '8px' }}>
-            Estructura de precios:
+            DATOS DE LA ORDEN
           </span>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', color: '#475569' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Precio Diagnostico Base:</span>
-              <strong style={{ color: '#1E1B4B' }}>{ticket.diagBase}</strong>
+              <span>Estado actual:</span>
+              <strong style={{ color: ticket.statusColor }}>{ticket.status}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Costo de Repuestos Consumidos:</span>
-              <strong style={{ color: '#1E1B4B' }}>{ticket.partsCost}</strong>
+              <span>Técnico asignado:</span>
+              <strong style={{ color: '#1E1B4B' }}>{ticket.tech}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Costo de mano de Obra / Reparación:</span>
-              <strong style={{ color: '#1E1B4B' }}>{ticket.laborCost}</strong>
+              <span>Fecha de ingreso:</span>
+              <strong style={{ color: '#1E1B4B' }}>
+                {ticket.fechaIngreso ? new Date(ticket.fechaIngreso).toLocaleDateString('es-HN') : '—'}
+              </strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: '800', color: '#3730A3', borderTop: '1px solid #E2E8F0', paddingTop: '8px', marginTop: '4px' }}>
-              <span>Monto total a liquidar (con cotización aprobada):</span>
+              <span>Estado de pago:</span>
               <span>{ticket.total}</span>
             </div>
           </div>
         </div>
+
+        {/* El desglose económico y la evidencia fotográfica viven en el detalle de la orden. */}
+        {ticket.orderId && (
+          <Link
+            to={`/ordenes/detalle/${ticket.orderId}`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '700', color: '#3730A3' }}
+          >
+            <Camera size={16} /> Ver diagnóstico, cotización y evidencia
+          </Link>
+        )}
       </div>
 
       {/* Bottom Action Buttons */}

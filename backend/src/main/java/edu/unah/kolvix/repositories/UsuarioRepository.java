@@ -25,4 +25,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     boolean existsByCorreoIgnoreCase(String correo);
 
+    // Usuarios que consumen cupo del plan: solo los activos.
+    int countByEmpresaIdEmpresaAndActivoTrue(Long empresaId);
+
 }

@@ -35,6 +35,10 @@ public class PlanSuscripcion {
     @Column(name = "moneda", nullable = false, length = 3)
     private String moneda = "HNL";
 
+    // Cupo de usuarios activos que permite el plan. NULL = ilimitado.
+    @Column(name = "max_usuarios")
+    private Integer maxUsuarios;
+
     @Column(name = "activo", nullable = false)
     private boolean activo = true;
 

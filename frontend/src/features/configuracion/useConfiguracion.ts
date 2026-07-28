@@ -9,6 +9,7 @@ import type {
   CuentaPagoTallerResponse,
   EmpresaResponse,
   EstadoReparacionResponse,
+  LimiteUsuariosResponse,
   PlanSuscripcionResponse,
   UsuarioResponse,
 } from '../../api/types';
@@ -32,6 +33,7 @@ export const useConfiguracion = () => {
   const [cuentasCobro, setCuentasCobro] = useState<CuentaCobroResponse[]>([]);
   const [cuentasPago, setCuentasPago] = useState<CuentaPagoTallerResponse[]>([]);
   const [usuarios, setUsuarios] = useState<UsuarioResponse[]>([]);
+  const [limiteUsuarios, setLimiteUsuarios] = useState<LimiteUsuariosResponse | null>(null);
   const [estados, setEstados] = useState<EstadoReparacionResponse[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -72,13 +74,14 @@ export const useConfiguracion = () => {
         if (!isMounted) return;
         setUsuarioActual(user);
 
-        const [empresaR, planesR, cobroR, pagoR, usuariosR, estadosR] = await Promise.allSettled([
+        const [empresaR, planesR, cobroR, pagoR, usuariosR, estadosR, limiteR] = await Promise.allSettled([
           empresaService.obtener(),
           empresaService.listarPlanes(),
           empresaService.listarCuentasCobro(),
           empresaService.listarCuentasPago(),
           usuariosService.listar(),
           estadosReparacionService.listar(),
+          usuariosService.obtenerLimite(),
         ]);
 
         if (!isMounted) return;
@@ -93,6 +96,7 @@ export const useConfiguracion = () => {
         if (pagoR.status === 'fulfilled') setCuentasPago(pagoR.value);
         if (usuariosR.status === 'fulfilled') setUsuarios(usuariosR.value);
         if (estadosR.status === 'fulfilled') setEstados(estadosR.value);
+        if (limiteR.status === 'fulfilled') setLimiteUsuarios(limiteR.value);
       } catch {
         if (isMounted) setLoadError('No se pudo cargar la configuración. Verifica que el backend esté activo.');
       } finally {
@@ -175,6 +179,16 @@ export const useConfiguracion = () => {
   };
 
   // ---- Usuarios ----
+  // El cupo depende de cuántos usuarios activos hay, así que se recalcula en el
+  // backend después de cada alta o cambio de estado.
+  const refrescarLimite = async () => {
+    try {
+      setLimiteUsuarios(await usuariosService.obtenerLimite());
+    } catch {
+      // El cupo es informativo: si falla, el backend igual bloquea al crear.
+    }
+  };
+
   const crearUsuario = async (datos: {
     nombre: string;
     apellido: string;
@@ -193,6 +207,7 @@ export const useConfiguracion = () => {
         activo: true,
       });
       setUsuarios(prev => [...prev, nuevo]);
+      await refrescarLimite();
       showToast(`Usuario ${nuevo.nombre} ${nuevo.apellido} creado.`);
       return true;
     } catch (error) {
@@ -207,6 +222,7 @@ export const useConfiguracion = () => {
     try {
       const actualizado = await usuariosService.cambiarEstado(usuario.id, !usuario.activo);
       setUsuarios(prev => prev.map(u => u.id === actualizado.id ? actualizado : u));
+      await refrescarLimite();
       showToast(actualizado.activo ? 'Usuario activado.' : 'Usuario desactivado.');
     } catch (error) {
       showError(getApiErrorMessage(error, 'No se pudo cambiar el estado del usuario.'));
@@ -282,6 +298,7 @@ export const useConfiguracion = () => {
   return {
     activeTab, setActiveTab,
     usuarioActual, empresa, planes, planActual, cuentasCobro, cuentasPago, usuarios, estadosOrdenados,
+    limiteUsuarios,
     isLoading, loadError, isSaving, toastMessage, errorMessage,
     guardarEmpresa,
     agregarCuentaPago, cambiarEstadoCuentaPago,

@@ -1,9 +1,14 @@
 import apiClient from "../axiosConfig";
-import type { UsuarioRequest, UsuarioResponse } from "../types";
+import type { LimiteUsuariosResponse, UsuarioRequest, UsuarioResponse } from "../types";
 
 export const usuariosService = {
   async listar(): Promise<UsuarioResponse[]> {
     const { data } = await apiClient.get<UsuarioResponse[]>("/usuarios");
+    return data;
+  },
+
+  async obtenerLimite(): Promise<LimiteUsuariosResponse> {
+    const { data } = await apiClient.get<LimiteUsuariosResponse>("/usuarios/limite");
     return data;
   },
 

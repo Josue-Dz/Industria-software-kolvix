@@ -104,6 +104,7 @@ public class EmpresaService {
                         plan.getDescripcion(),
                         plan.getMontoMensual(),
                         plan.getMoneda(),
+                        plan.getMaxUsuarios(),
                         plan.isActivo()
                 ))
                 .toList();
