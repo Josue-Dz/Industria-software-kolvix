@@ -39,7 +39,6 @@ export const ConfiguracionPage: React.FC = () => {
     <DashboardLayout
       title="Configuración"
       subtitle={empresa ? `${empresa.nombre} · Plan ${empresa.nombrePlan}` : ''}
-      role="admin"
     >
       {/* Aviso flotante de resultado de la última acción */}
       {(toastMessage || errorMessage) && (

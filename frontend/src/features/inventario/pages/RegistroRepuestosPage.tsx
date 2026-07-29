@@ -44,7 +44,7 @@ export const RegistroRepuestosPage: React.FC = () => {
   };
 
   return (
-    <DashboardLayout title="Inventario" subtitle="" role="admin">
+    <DashboardLayout title="Inventario" subtitle="">
       <div style={{ maxWidth: '960px', margin: '0 auto' }}>
         <Card hoverable={false} style={{ padding: '32px', borderRadius: '20px', backgroundColor: '#FFFFFF' }}>
 

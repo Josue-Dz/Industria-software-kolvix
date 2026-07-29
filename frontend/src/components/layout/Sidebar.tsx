@@ -9,8 +9,6 @@ import {
   Settings,
   Headset,
   Wrench,
-  Camera,
-  Stethoscope,
   LogOut
 } from 'lucide-react';
 
@@ -45,8 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ userRole = 'admin' }) => {
 
   const tecnicoNavItems = [
     { label: 'Mis Trabajos', path: '/dashboard/tecnico', icon: Wrench },
-    { label: 'Diagnóstico', path: '/ordenes/diagnostico', icon: Stethoscope },
-    { label: 'Evidencia', path: '/ordenes/evidencia', icon: Camera }
+    { label: 'Soporte', path: '/soporte', icon: Headset }
   ];
 
   const navItems = userRole === 'tecnico' ? tecnicoNavItems : adminNavItems;

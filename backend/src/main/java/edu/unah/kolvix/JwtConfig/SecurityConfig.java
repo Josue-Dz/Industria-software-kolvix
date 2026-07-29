@@ -29,32 +29,41 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/crear", "/api/auth/login", "/error").permitAll()
-                        // imágenes subidas (evidencias) servidas como estáticos
+                        .requestMatchers("/api/auth/crear", "/api/auth/login", "/error").   
+                                        permitAll()
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
-                        // seguimiento del cliente por código, sin login (según flujo MVP)
                         .requestMatchers("/api/seguimiento/**").permitAll()
-                        .requestMatchers("/api/usuarios/**").hasAnyRole("ADMIN", "PROPIETARIO")
-                        .requestMatchers("/api/tecnicos/me").hasAnyRole("ADMIN", "PROPIETARIO", "TECNICO")
-                        .requestMatchers("/api/tecnicos/**").hasAnyRole("ADMIN", "PROPIETARIO")
-                        // lectura de estados abierta a todo usuario autenticado (incluye TECNICO
-                        // y RECEPCIONISTA); escritura solo ADMIN/PROPIETARIO
-                        .requestMatchers(HttpMethod.GET, "/api/estados-reparacion/**").authenticated()
-                        .requestMatchers("/api/estados-reparacion/**").hasAnyRole("ADMIN", "PROPIETARIO")
-                        .requestMatchers("/api/cuentas-pago-taller/**").hasAnyRole("ADMIN", "PROPIETARIO")
-                        .requestMatchers("/api/mi-taller/**").hasAnyRole("ADMIN", "PROPIETARIO")
-                        // datos de la empresa: cualquiera autenticado los consulta, solo
-                        // ADMIN/PROPIETARIO los modifica
+                        .requestMatchers("/api/usuarios/**").hasAnyRole("ADMIN",           
+                                        "PROPIETARIO")
+                        .requestMatchers("/api/tecnicos/me").hasAnyRole("ADMIN",        
+                                        "PROPIETARIO", "TECNICO")
+                        .requestMatchers("/api/tecnicos/**").hasAnyRole("ADMIN", 
+                                        "PROPIETARIO")
+                        .requestMatchers(HttpMethod.GET, "/api/estados-reparacion/**").
+                                        authenticated()
+                        .requestMatchers("/api/estados-reparacion/**").hasAnyRole("ADMIN", 
+                                        "PROPIETARIO")
+                        .requestMatchers("/api/cuentas-pago-taller/**").hasAnyRole("ADMIN", 
+                                        "PROPIETARIO")
+                        .requestMatchers(HttpMethod.GET, "/api/cotizaciones/**").
+                                        authenticated()
+                        .requestMatchers("/api/cotizaciones/**").hasAnyRole("ADMIN", 
+                                        "PROPIETARIO", "RECEPCIONISTA")
+                        .requestMatchers("/api/mi-taller/**").hasAnyRole("ADMIN", 
+                                        "PROPIETARIO")
                         .requestMatchers(HttpMethod.GET, "/api/empresa/**").authenticated()
-                        .requestMatchers("/api/empresa/**").hasAnyRole("ADMIN", "PROPIETARIO")
+                        .requestMatchers("/api/empresa/**").hasAnyRole("ADMIN", 
+                                        "PROPIETARIO")
                         .requestMatchers("/api/marketplace/**").permitAll()
                         .requestMatchers("/api/catalogos/**").permitAll()
                         .requestMatchers("/api/reviews/**").permitAll()
-                        .requestMatchers("/api/mi-taller/categorias-servicio/**").hasAnyRole("ADMIN", "PROPIETARIO")
+                        .requestMatchers("/api/mi-taller/categorias-servicio/**").hasAnyRole
+                                        ("ADMIN", "PROPIETARIO")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter,       
+                                UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(
                         (request, response, authException) -> response.setStatus(HttpServletResponse.SC_UNAUTHORIZED)))
                 .build();

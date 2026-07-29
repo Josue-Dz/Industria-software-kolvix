@@ -134,7 +134,12 @@ export const useDetalleOrden = (ordenId: number) => {
           cotizacionesService.listarPorOrden(ordenId),
           evidenciasService.listarPorOrden(ordenId),
           evidenciasService.listarAlbumes(),
-          tecnicosService.listar(),
+          // El listado completo de técnicos es solo para ADMIN/PROPIETARIO. Un
+          // técnico recibiría 403 y se quedaría sin poder elegirse a sí mismo,
+          // así que para ese rol se consulta únicamente su propio perfil.
+          currentUser.rol === 'TECNICO'
+            ? tecnicosService.obtenerMiPerfil().then((perfil) => [perfil])
+            : tecnicosService.listar(),
           repuestosService.listar(),
           entregasService.obtenerPorOrden(currentUser.empresaId, ordenId), 
         ]);
@@ -152,7 +157,14 @@ export const useDetalleOrden = (ordenId: number) => {
         }
         if (eviR.status === 'fulfilled') setEvidencias(eviR.value);
         if (albR.status === 'fulfilled') setAlbumes(albR.value);
-        if (tecR.status === 'fulfilled') setTecnicos(tecR.value);
+        if (tecR.status === 'fulfilled') {
+          setTecnicos(tecR.value);
+          // Al ser el único técnico posible, se deja elegido de entrada: sin esto
+          // el campo quedaría vacío y deshabilitado, y no podría guardar.
+          if (currentUser.rol === 'TECNICO' && tecR.value.length === 1) {
+            setDiagTecnicoId(String(tecR.value[0].idTecnico));
+          }
+        }
         if (invR.status === 'fulfilled') setInventario(invR.value);
         if (entR.status === 'fulfilled') setEntrega(entR.value);
       } catch {
@@ -340,6 +352,9 @@ export const useDetalleOrden = (ordenId: number) => {
   // con los repuestos actuales; así el total de la cotización nunca queda desfasado.
   const sincronizarCotizacionBorrador = async () => {
     if (!user || !orden || !diagnostico || !cotizacionActual || cotizacionActual.estado !== 'PENDIENTE') return;
+    // El técnico no puede editar cotizaciones (el backend responde 403): sus
+    // montos los recalcula quien la administre al guardar el borrador.
+    if (user.rol === 'TECNICO') return;
     try {
       await cotizacionesService.editarBorrador(cotizacionActual.id, {
         ordenId: orden.idOrden,
@@ -561,6 +576,8 @@ export const useDetalleOrden = (ordenId: number) => {
     // Datos
     activeSubTab, setActiveSubTab,
     orden, diagnostico, cotizaciones, cotizacionActual, evidencias, albumes, tecnicos,
+    // Un técnico solo puede diagnosticar a su propio nombre.
+    esTecnico: user?.rol === 'TECNICO',
     estadosOrdenados, estadoActualIdx, siguienteEstado,
     montoRepuestosDiagnostico, diagnosticoBloqueado,
     isLoading, loadError, actionError, actionOk, isSaving, isUploading,

@@ -4,7 +4,7 @@ import { DashboardLayout } from '../../../components/layout/DashboardLayout';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Wrench} from 'lucide-react';
-import { authService } from '../../../api/services/authService';
+import { useAuth } from '../../../auth/useAuth';
 import { tecnicosService } from '../../../api/services/tecnicosService';
 import { ordenesService } from '../../../api/services/ordenesService';
 import type { OrdenTrabajoResponse } from '../../../api/types';
@@ -18,33 +18,37 @@ const esDeHoy = (iso: string | null): boolean => {
 };
 
 export const DashboardTecnicoPage: React.FC = () => {
+  const { usuario } = useAuth();
   const [ordenes, setOrdenes] = useState<OrdenTrabajoResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const empresaId = usuario?.empresaId;
+
   useEffect(() => {
+    if (!empresaId) return;
+
     let ignore = false;
 
     const cargar = async () => {
       setLoading(true);
       setError(null);
       try {
-        
-        const perfil = await authService.getCurrentUser();
+        // El usuario ya viene del contexto de sesión; aquí solo falta su ficha
+        // de técnico para saber qué órdenes tiene asignadas.
         const tecnico = await tecnicosService.obtenerMiPerfil();
-        const misOrdenes = await ordenesService.listarPorEmpresaYTecnico(perfil.empresaId, tecnico.idTecnico);
+        const misOrdenes = await ordenesService.listarPorEmpresaYTecnico(empresaId, tecnico.idTecnico);
         if (!ignore) setOrdenes(misOrdenes);
       } catch {
-        // 2. Omitida la variable 'err' sin usar
         if (!ignore) setError('No se pudieron cargar tus órdenes asignadas.');
       } finally {
         if (!ignore) setLoading(false);
       }
     };
 
-    cargar();
+    void cargar();
     return () => { ignore = true; };
-  }, []);
+  }, [empresaId]);
 
   const asignadasHoy = ordenes.filter((o) => esDeHoy(o.fechaIngreso)).length;
   const enProceso = ordenes.filter((o) => normalizar(o.nombreEstado ?? '').includes('reparacion')).length;
@@ -54,7 +58,6 @@ export const DashboardTecnicoPage: React.FC = () => {
     <DashboardLayout
       title="Mis Órdenes Asignadas"
       subtitle="Visualiza y actualiza los trabajos técnicos asignados a tu usuario."
-      role="tecnico"
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
 

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import edu.unah.kolvix.dtos.cliente.DispositivoRequest;
 import edu.unah.kolvix.dtos.cliente.DispositivoResponse;
+import edu.unah.kolvix.services.AccesoEmpresa;
 import edu.unah.kolvix.services.DispositivoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,15 +25,17 @@ import lombok.RequiredArgsConstructor;
 public class DispositivoController {
 
     private final DispositivoService dispositivoService;
+    private final AccesoEmpresa accesoEmpresa;
 
     @PostMapping
     public ResponseEntity<DispositivoResponse> crearDispositivo(@Valid @RequestBody DispositivoRequest request) {
+        accesoEmpresa.validarClientePropio(request.idCliente());
         return ResponseEntity.status(HttpStatus.CREATED).body(dispositivoService.crearDispositivo(request));
     }
 
-    //Creo que seria mejor tambier mandar el id de empresa tambien, porque no tiene sentido que puede ver los dispositivos de un cliente que no pertenece a su empresa, pero eso lo dejo a criterio de los demas, ya que no se especifica en el requerimiento
     @GetMapping("/cliente/{idCliente}")
     public ResponseEntity<List<DispositivoResponse>> listarDispositivosPorCliente(@PathVariable Long idCliente) {
+        accesoEmpresa.validarClientePropio(idCliente);
         return ResponseEntity.ok(dispositivoService.listarDispositivosPorCliente(idCliente));
     }
 
@@ -40,6 +43,7 @@ public class DispositivoController {
     public ResponseEntity<DispositivoResponse> editarDispositivo(
             @PathVariable Long idDispositivo,
             @Valid @RequestBody DispositivoRequest request) {
+        accesoEmpresa.validarDispositivoPropio(idDispositivo);
         return ResponseEntity.ok(dispositivoService.editarDispositivo(idDispositivo, request));
     }
 }

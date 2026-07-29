@@ -41,7 +41,7 @@ export const DetalleOrdenPage: React.FC = () => {
   );
 
   return (
-    <DashboardLayout title="Órdenes" subtitle="" role="admin">
+    <DashboardLayout title="Órdenes" subtitle="">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
 
         {d.isLoading && (
@@ -65,7 +65,9 @@ export const DetalleOrdenPage: React.FC = () => {
               <div style={{ display: 'flex', gap: '12px' }}>
                 {tabButton('info', <Info size={18} />, 'Información')}
                 {tabButton('diag', <Stethoscope size={18} />, 'Diagnóstico')}
-                {tabButton('cot', <FileText size={18} />, 'Cotización')}
+                {/* La cotización es comercial: el técnico ve solo si fue
+                    aprobada, desde la pestaña Información. */}
+                {!d.esTecnico && tabButton('cot', <FileText size={18} />, 'Cotización')}
                 {tabButton('evi', <Camera size={18} />, 'Evidencia')}
               </div>
             </Card>
@@ -88,7 +90,7 @@ export const DetalleOrdenPage: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {activeSubTab === 'info' && <InfoTab d={d} orden={orden} />}
                 {activeSubTab === 'diag' && <DiagnosticoTab d={d} orden={orden} />}
-                {activeSubTab === 'cot' && <CotizacionTab d={d} orden={orden} />}
+                {activeSubTab === 'cot' && !d.esTecnico && <CotizacionTab d={d} orden={orden} />}
                 {activeSubTab === 'evi' && <EvidenciaTab d={d} />}
               </div>
 

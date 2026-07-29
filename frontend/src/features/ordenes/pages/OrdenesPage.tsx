@@ -99,7 +99,6 @@ export const OrdenesPage: React.FC = () => {
     <DashboardLayout
       title="Órdenes"
       subtitle=""
-      role="admin"
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative', width: '100%' }}>
         

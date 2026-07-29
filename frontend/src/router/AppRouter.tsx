@@ -23,8 +23,6 @@ import { DashboardTecnicoPage } from '../features/dashboard/pages/DashboardTecni
 // Ordenes Feature
 import { OrdenesPage } from '../features/ordenes/pages/OrdenesPage';
 import { NuevaOrdenPage } from '../features/ordenes/pages/NuevaOrdenPage';
-import { DiagnosticoOrdenPage } from '../features/ordenes/pages/DiagnosticoOrdenPage';
-import { EvidenciaOrdenPage } from '../features/ordenes/pages/EvidenciaOrdenPage';
 import { DetalleOrdenPage } from '../features/ordenes/pages/DetalleOrdenPage';
 
 // Tecnicos Feature
@@ -46,6 +44,9 @@ import { RutaSoloInvitados } from '../auth/RutaSoloInvitados';
 
 const ROLES_ADMIN: UserRole[] = ['ADMIN', 'PROPIETARIO'];
 
+// El panel de taller no aplica al tecnico, que tiene el suyo propio.
+const ROLES_TALLER: UserRole[] = ['ADMIN', 'PROPIETARIO', 'RECEPCIONISTA'];
+
 export const AppRouter: React.FC = () => {
   return (
     <BrowserRouter>
@@ -64,13 +65,11 @@ export const AppRouter: React.FC = () => {
           <Route path="/registro" element={<RutaSoloInvitados><RegistroPage /></RutaSoloInvitados>} />
 
           {/* ---- Rutas privadas: ---- */}
-          <Route path="/dashboard" element={<RutaProtegida><DashboardTallerPage /></RutaProtegida>} />
-          <Route path="/dashboard/tecnico" element={<RutaProtegida><DashboardTecnicoPage /></RutaProtegida>} />
+          <Route path="/dashboard" element={<RutaProtegida roles={ROLES_TALLER}><DashboardTallerPage /></RutaProtegida>} />
+          <Route path="/dashboard/tecnico" element={<RutaProtegida roles={['TECNICO']}><DashboardTecnicoPage /></RutaProtegida>} />
 
           <Route path="/ordenes" element={<RutaProtegida><OrdenesPage /></RutaProtegida>} />
           <Route path="/ordenes/nueva" element={<RutaProtegida><NuevaOrdenPage /></RutaProtegida>} />
-          <Route path="/ordenes/diagnostico" element={<RutaProtegida><DiagnosticoOrdenPage /></RutaProtegida>} />
-          <Route path="/ordenes/evidencia" element={<RutaProtegida><EvidenciaOrdenPage /></RutaProtegida>} />
           <Route path="/ordenes/detalle/:id" element={<RutaProtegida><DetalleOrdenPage /></RutaProtegida>} />
 
           <Route path="/inventario" element={<RutaProtegida><InventarioDashboardPage /></RutaProtegida>} />
