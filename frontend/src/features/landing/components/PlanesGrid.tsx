@@ -3,8 +3,6 @@ import { PlanCard } from './PlanCard';
 import { catalogosService } from '../../../api/services/catalogosService';
 import type { PlanSuscripcionResponse } from '../../../api/types';
 
-// Carga los planes desde el backend y los muestra en una rejilla que se adapta
-// al ancho disponible. La usan la landing y la página de precios.
 export const PlanesGrid: React.FC = () => {
   const [planes, setPlanes] = useState<PlanSuscripcionResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
