@@ -1,13 +1,17 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import type { UserRole } from '../api/types';
 
 // Landing Feature
 import { LandingPage } from '../features/landing/pages/LandingPage';
 import { BuscarTalleresPage } from '../features/landing/pages/BuscarTalleresPage';
 import { DetalleTallerPage } from '../features/landing/pages/DetalleTallerPage';
+import { PreciosPage } from '../features/landing/pages/PreciosPage';
 
 // Auth Feature
 import { LoginPage } from '../features/auth/pages/LoginPage';
+import { RegistroPage } from '../features/auth/pages/RegistroPage';
+
 
 // Clientes Feature
 import { ConsultaReparacionPage } from '../features/clientes/pages/ConsultaReparacionPage';
@@ -35,45 +39,60 @@ import { RegistroRepuestosPage } from '../features/inventario/pages/RegistroRepu
 import { ConfiguracionPage } from '../features/configuracion/pages/ConfiguracionPage';
 import { SoportePage } from '../features/soporte/pages/SoportePage';
 
+import { ScrollToHash } from './ScrollToHash';
+import { AuthProvider } from '../auth/AuthProvider';
+import { RutaProtegida } from '../auth/RutaProtegida';
+import { RutaSoloInvitados } from '../auth/RutaSoloInvitados';
+
+const ROLES_ADMIN: UserRole[] = ['ADMIN', 'PROPIETARIO'];
+
 export const AppRouter: React.FC = () => {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public Landing & Marketplace Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/buscar-talleres" element={<BuscarTalleresPage />} />
-        <Route path="/taller/:id" element={<DetalleTallerPage />} />
-        <Route path="/consultar-reparacion" element={<ConsultaReparacionPage />} />
+      <AuthProvider>
+        <ScrollToHash />
+        <Routes>
+          {/* ---- Rutas públicas ---- */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/buscar-talleres" element={<BuscarTalleresPage />} />
+          <Route path="/taller/:id" element={<DetalleTallerPage />} />
+          <Route path="/consultar-reparacion" element={<ConsultaReparacionPage />} />
+          <Route path="/precios" element={<PreciosPage />} />
 
-        {/* Auth Route */}
-        <Route path="/login" element={<LoginPage />} />
+          {/* ---- Solo para visitantes sin sesión ---- */}
+          <Route path="/login" element={<RutaSoloInvitados><LoginPage /></RutaSoloInvitados>} />
+          <Route path="/registro" element={<RutaSoloInvitados><RegistroPage /></RutaSoloInvitados>} />
 
-        {/* Admin / Taller Dashboard Routes */}
-        <Route path="/dashboard" element={<DashboardTallerPage />} />
-        <Route path="/dashboard/tecnico" element={<DashboardTecnicoPage />} />
+          {/* ---- Rutas privadas: ---- */}
+          <Route path="/dashboard" element={<RutaProtegida><DashboardTallerPage /></RutaProtegida>} />
+          <Route path="/dashboard/tecnico" element={<RutaProtegida><DashboardTecnicoPage /></RutaProtegida>} />
 
-        {/* Ordenes Routes */}
-        <Route path="/ordenes" element={<OrdenesPage />} />
-        <Route path="/ordenes/nueva" element={<NuevaOrdenPage />} />
-        <Route path="/ordenes/diagnostico" element={<DiagnosticoOrdenPage />} />
-        <Route path="/ordenes/evidencia" element={<EvidenciaOrdenPage />} />
-        <Route path="/ordenes/detalle/:id" element={<DetalleOrdenPage />} />
+          <Route path="/ordenes" element={<RutaProtegida><OrdenesPage /></RutaProtegida>} />
+          <Route path="/ordenes/nueva" element={<RutaProtegida><NuevaOrdenPage /></RutaProtegida>} />
+          <Route path="/ordenes/diagnostico" element={<RutaProtegida><DiagnosticoOrdenPage /></RutaProtegida>} />
+          <Route path="/ordenes/evidencia" element={<RutaProtegida><EvidenciaOrdenPage /></RutaProtegida>} />
+          <Route path="/ordenes/detalle/:id" element={<RutaProtegida><DetalleOrdenPage /></RutaProtegida>} />
 
-        {/* Tecnicos Routes */}
-        <Route path="/tecnicos" element={<TecnicosPage />} />
+          <Route path="/inventario" element={<RutaProtegida><InventarioDashboardPage /></RutaProtegida>} />
+          <Route path="/inventario/nuevo" element={<RutaProtegida><RegistroRepuestosPage /></RutaProtegida>} />
+          <Route path="/inventario/movimientos" element={<RutaProtegida><MovimientosInventarioPage /></RutaProtegida>} />
 
-        {/* Inventario Routes */}
-        <Route path="/inventario" element={<InventarioDashboardPage />} />
-        <Route path="/inventario/nuevo" element={<RegistroRepuestosPage />} />
-        <Route path="/inventario/movimientos" element={<MovimientosInventarioPage />} />
+          <Route path="/soporte" element={<RutaProtegida><SoportePage /></RutaProtegida>} />
 
-        {/* Configuracion & Soporte Routes */}
-        <Route path="/configuracion" element={<ConfiguracionPage />} />
-        <Route path="/soporte" element={<SoportePage />} />
+          {/* ---- Privadas restringidas por rol ---- */}
+          <Route
+            path="/tecnicos"
+            element={<RutaProtegida roles={ROLES_ADMIN}><TecnicosPage /></RutaProtegida>}
+          />
+          <Route
+            path="/configuracion"
+            element={<RutaProtegida roles={ROLES_ADMIN}><ConfiguracionPage /></RutaProtegida>}
+          />
 
-        {/* Catch-all redirect to Landing */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Cualquier otra ruta vuelve a la landing */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 };

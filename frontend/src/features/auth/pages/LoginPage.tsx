@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
-import { authService } from '../../../api/services/authService';
+import { useAuth } from '../../../auth/useAuth';
+import { rutaInicialPorRol } from '../../../auth/authContext';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -11,6 +12,11 @@ export const LoginPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginError, setLoginError] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const { iniciarSesion } = useAuth();
+
+  // Ruta que el usuario intentaba abrir antes de que lo mandaran al login.
+  const desde = (location.state as { desde?: string } | null)?.desde;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,10 +24,10 @@ export const LoginPage: React.FC = () => {
     setLoginError('');
 
     try {
-      const user = await authService.login({ correo: email, password });
-      navigate(user.rol === 'TECNICO' ? '/dashboard/tecnico' : '/dashboard');
+      const user = await iniciarSesion({ correo: email, password });
+      navigate(desde ?? rutaInicialPorRol(user.rol), { replace: true });
     } catch {
-      setLoginError('No se pudo iniciar sesion. Revisa tus credenciales o que el backend este activo.');
+      setLoginError('No se pudo iniciar sesion. Revisa tus credenciales.');
     } finally {
       setIsSubmitting(false);
     }
@@ -66,7 +72,7 @@ export const LoginPage: React.FC = () => {
         {/* Kolvix Brand Logo */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
           <img
-            src="/src/assets/logos/Logo 1.png"
+            src="/logos/Logo 1.png"
             alt="Kolvix Logo"
             style={{ height: '48px', objectFit: 'contain' }}
           />
@@ -121,15 +127,10 @@ export const LoginPage: React.FC = () => {
             </p>
           )}
 
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isSubmitting}
-            onClick={() => navigate('/dashboard/tecnico')}
-            style={{ width: '100%', padding: '12px', borderRadius: '12px' }}
-          >
-            Ingresar como Técnico
-          </Button>
+          <p style={{ textAlign: 'center', fontSize: '13px', color: '#64748B', marginTop: '12px' }}>
+        ¿No tienes cuenta? <Link to="/registro" style={{ color: '#6366F1', fontWeight: '600' }}>Registra tu taller</Link>
+        </p>
+
         </form>
       </div>
     </div>

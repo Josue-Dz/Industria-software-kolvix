@@ -8,6 +8,7 @@ public record PlanSuscripcionResponse(
         String descripcion,
         BigDecimal montoMensual,
         String moneda,
+        Integer maxUsuarios,
         boolean activo
 ) {
 }

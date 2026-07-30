@@ -11,18 +11,12 @@ export const Footer: React.FC = () => {
       marginTop: 'auto'
     }}>
       <div className="container">
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '2fr 1fr 1fr 1fr',
-          gap: '40px',
-          paddingBottom: '48px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-        }}>
+        <div className="footer-grid">
           {/* Brand & Socials */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <img
-                src="/src/assets/logos/Logo 4.png"
+                src="/logos/Logo 4.png"
                 alt="Kolvix Logo"
                 style={{ height: '36px', objectFit: 'contain' }}
               />
@@ -80,8 +74,9 @@ export const Footer: React.FC = () => {
               Producto
             </h4>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', color: '#CBD5E1' }}>
-              <li><a href="#beneficios" style={{ transition: 'color 0.2s' }}>Características</a></li>
-              <li><a href="#precios">Precios</a></li>
+              {/* Secciones de la landing: con "/#seccion" funcionan desde cualquier página. */}
+              <li><Link to="/#beneficios">Características</Link></li>
+              <li><Link to="/#precios">Precios</Link></li>
             </ul>
           </div>
 

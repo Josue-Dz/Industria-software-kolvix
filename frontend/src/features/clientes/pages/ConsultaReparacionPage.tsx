@@ -4,7 +4,7 @@ import { Footer } from '../../../components/layout/Footer';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
-import { Search, CheckCircle, Star } from 'lucide-react';
+import { Search, CheckCircle, Star, CreditCard } from 'lucide-react';
 import { seguimientoApi } from '../../../api/services/seguimiento';
 import type { SeguimientoOrden } from '../../../api/types.ts';
 
@@ -14,7 +14,6 @@ export const ConsultaReparacionPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // estado del formulario de reseña
   const [calificacion, setCalificacion] = useState(5);
   const [comentario, setComentario] = useState('');
   const [enviandoReview, setEnviandoReview] = useState(false);
@@ -58,21 +57,21 @@ export const ConsultaReparacionPage: React.FC = () => {
       setEnviandoReview(false);
     }
   };
-
+  
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#FAFAFD' }}>
       <Navbar />
 
-      <section style={{ backgroundColor: '#3730A3', color: '#FFFFFF', padding: '60px 0', textAlign: 'center' }}>
+      <section className="public-hero">
         <div className="container" style={{ maxWidth: '720px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#FFFFFF', marginBottom: '12px' }}>
+          <h1 className="public-hero-title">
             Consultar Estado de Reparación
           </h1>
-          <p style={{ fontSize: '15px', color: '#EDE9FE', marginBottom: '28px' }}>
+          <p className="public-hero-text" style={{ marginBottom: '28px' }}>
             Revisa en tiempo real el progreso de tu equipo en el taller
           </p>
 
-          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '12px', backgroundColor: '#FFFFFF', padding: '8px 12px', borderRadius: '16px' }}>
+          <form onSubmit={handleSearch} className="search-inline">
             <div style={{ flex: 1 }}>
               <Input
                 placeholder="Ingresa tu código de seguimiento"
@@ -92,20 +91,22 @@ export const ConsultaReparacionPage: React.FC = () => {
       </section>
 
       {data && (
-        <section style={{ padding: '48px 0 80px 0', flex: 1 }}>
+        <section className="section-pad" style={{ flex: 1 }}>
           <div className="container" style={{ maxWidth: '840px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <Card style={{ backgroundColor: '#FFFFFF', padding: '32px', border: '1px solid #E2E8F0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: '24px', borderBottom: '1px solid #E2E8F0' }}>
+
+            {/* Header de la orden */}
+            <Card className="public-card" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
+              <div className="orden-header">
                 <div>
                   <span className="badge badge-purple" style={{ marginBottom: '8px' }}>
                     {data.orden.nombreEstado}
                   </span>
-                  <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#1E1B4B' }}>
+                  <h2 style={{ fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: '800', color: '#1E1B4B' }}>
                     Orden #{data.orden.numeroOrden}
                   </h2>
                   <p style={{ fontSize: '14px', color: '#64748B' }}>{data.orden.nombreCliente}</p>
                 </div>
-                <div style={{ textAlign: 'right' }}>
+                <div>
                   <span style={{ fontSize: '13px', color: '#64748B', display: 'block' }}>Fecha de Ingreso</span>
                   <span style={{ fontSize: '14px', fontWeight: '700', color: '#1E1B4B' }}>
                     {new Date(data.orden.fechaIngreso).toLocaleDateString('es-HN')}
@@ -113,7 +114,7 @@ export const ConsultaReparacionPage: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', padding: '24px 0', borderBottom: '1px solid #E2E8F0' }}>
+              <div className="info-grid-3">
                 <div>
                   <span style={{ fontSize: '12px', color: '#64748B', display: 'block' }}>Dispositivo</span>
                   <span style={{ fontSize: '15px', fontWeight: '700', color: '#1E1B4B' }}>{data.orden.dispositivoResumen}</span>
@@ -132,52 +133,53 @@ export const ConsultaReparacionPage: React.FC = () => {
                   </span>
                 </div>
               </div>
-
-              <div style={{ paddingTop: '32px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1E1B4B', marginBottom: '24px' }}>
-                  Progreso de la reparación
-                </h3>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  {data.historial.length === 0 ? (
-                    <p style={{ color: '#64748B' }}>Aún no hay eventos registrados para esta orden.</p>
-                  ) : (
-                    data.historial.map((evento) => (
-                      <div key={evento.id} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                        <div style={{
-                          width: '36px', height: '36px', borderRadius: '50%',
-                          backgroundColor: evento.estadoNuevoColorHex, color: '#FFFFFF',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold',
-                        }}>
-                          <CheckCircle size={20} />
-                        </div>
-                        <div>
-                          <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#1E1B4B' }}>{evento.estadoNuevoNombre}</h4>
-                          {evento.comentario && <p style={{ fontSize: '13px', color: '#64748B' }}>{evento.comentario}</p>}
-                          <span style={{ fontSize: '12px', color: '#94A3B8' }}>
-                            {new Date(evento.fecha).toLocaleString('es-HN')}
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
             </Card>
 
-            {data.cuentasPago.length > 0 && (
-              <Card style={{ backgroundColor: '#FFFFFF', padding: '32px', border: '1px solid #E2E8F0' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1E1B4B', marginBottom: '16px' }}>
-                  Cuentas para realizar tu pago
-                </h3>
+            {/* Cuentas de pago — destacado, justo después del header */}
+            {data.cuentasPago && data.cuentasPago.length > 0 && (
+              <Card className="public-card" style={{
+                backgroundColor: '#EEF2FF',
+                border: '2px solid #6366F1',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                  <div style={{
+                    width: '40px', height: '40px', borderRadius: '10px',
+                    backgroundColor: '#6366F1', color: '#FFFFFF',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <CreditCard size={22} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1E1B4B', margin: 0 }}>
+                      Tu equipo está listo — realiza tu pago
+                    </h3>
+                    <p style={{ fontSize: '13px', color: '#4338CA', margin: 0 }}>
+                      Usa una de estas cuentas para completar el pago antes de retirar tu equipo
+                    </p>
+                  </div>
+                </div>
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {data.cuentasPago.map((cuenta) => (
-                    <div key={cuenta.id} style={{ padding: '12px', backgroundColor: '#F8FAFC', borderRadius: '8px' }}>
-                      <p style={{ fontWeight: '700', color: '#1E1B4B' }}>{cuenta.banco} — {cuenta.tipoCuenta}</p>
-                      <p style={{ fontSize: '14px', color: '#475569' }}>Cuenta: {cuenta.numeroCuenta}</p>
-                      <p style={{ fontSize: '14px', color: '#475569' }}>Titular: {cuenta.titular}</p>
+                    <div key={cuenta.id} style={{
+                      padding: '14px 16px',
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: '10px',
+                      border: '1px solid #C7D2FE',
+                    }}>
+                      <p style={{ fontWeight: '700', color: '#1E1B4B', margin: 0 }}>
+                        {cuenta.banco} — {cuenta.tipoCuenta}
+                      </p>
+                      <p style={{ fontSize: '14px', color: '#475569', margin: '2px 0' }}>
+                        Cuenta: <strong>{cuenta.numeroCuenta}</strong>
+                      </p>
+                      <p style={{ fontSize: '14px', color: '#475569', margin: '2px 0' }}>
+                        Titular: {cuenta.titular}
+                      </p>
                       {cuenta.instrucciones && (
-                        <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px' }}>{cuenta.instrucciones}</p>
+                        <p style={{ fontSize: '13px', color: '#64748B', marginTop: '6px' }}>
+                          {cuenta.instrucciones}
+                        </p>
                       )}
                     </div>
                   ))}
@@ -185,8 +187,41 @@ export const ConsultaReparacionPage: React.FC = () => {
               </Card>
             )}
 
+            {/* Timeline de progreso */}
+            <Card className="public-card" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1E1B4B', marginBottom: '24px' }}>
+                Progreso de la reparación
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {data.historial.length === 0 ? (
+                  <p style={{ color: '#64748B' }}>Aún no hay eventos registrados para esta orden.</p>
+                ) : (
+                  data.historial.map((evento) => (
+                    <div key={evento.id} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                      <div style={{
+                        width: '36px', height: '36px', borderRadius: '50%',
+                        backgroundColor: evento.estadoNuevoColorHex, color: '#FFFFFF',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold',
+                      }}>
+                        <CheckCircle size={20} />
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#1E1B4B' }}>{evento.estadoNuevoNombre}</h4>
+                        {evento.comentario && <p style={{ fontSize: '13px', color: '#64748B' }}>{evento.comentario}</p>}
+                        <span style={{ fontSize: '12px', color: '#94A3B8' }}>
+                          {new Date(evento.fecha).toLocaleString('es-HN')}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+
+            {/* Formulario de reseña */}
             {data.puedeCalificar && (
-              <Card style={{ backgroundColor: '#FFFFFF', padding: '32px', border: '1px solid #E2E8F0' }}>
+              <Card className="public-card" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1E1B4B', marginBottom: '16px' }}>
                   ¿Cómo fue tu experiencia?
                 </h3>
@@ -199,11 +234,7 @@ export const ConsultaReparacionPage: React.FC = () => {
                         onClick={() => setCalificacion(n)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                       >
-                        <Star
-                          size={28}
-                          color="#F59E0B"
-                          fill={n <= calificacion ? '#F59E0B' : 'none'}
-                        />
+                        <Star size={28} color="#F59E0B" fill={n <= calificacion ? '#F59E0B' : 'none'} />
                       </button>
                     ))}
                   </div>
@@ -221,8 +252,9 @@ export const ConsultaReparacionPage: React.FC = () => {
               </Card>
             )}
 
+            {/* Reseña ya enviada */}
             {data.review && (
-              <Card style={{ backgroundColor: '#FFFFFF', padding: '32px', border: '1px solid #E2E8F0' }}>
+              <Card className="public-card" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1E1B4B', marginBottom: '12px' }}>
                   Tu reseña
                 </h3>

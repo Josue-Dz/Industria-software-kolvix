@@ -389,6 +389,14 @@ export interface PerfilMarketplace {
   fechaActualizacion: string;
 }
 
+export interface PerfilMarketplaceRequest {
+  descripcionPublica?: string;
+  horarioAtencion?: string;
+  latitud?: number | null;
+  longitud?: number | null;
+  marketplaceVisible: boolean;
+}
+
 export interface CategoriaServicio {
   id: number;
   empresaId: number;
@@ -467,4 +475,145 @@ export interface SeguimientoOrden {
   cuentasPago: CuentaPagoTaller[];
   review: import('./types').Review | null;
   puedeCalificar: boolean;
+}
+
+export interface EmpresaRegistroRequest {
+  nombre: string;
+  rtn: string;
+  telefono: string;
+  correo: string;
+  direccion: string;
+  codigoPlan: string;
+  nombreAdministrador: string;
+  apellidoAdministrador: string;
+  correoAdministrador: string;
+  password: string;
+}
+
+export interface EmpresaResponse {
+  id: number;
+  nombre: string;
+  rtn: string | null;
+  // teléfono y dirección son opcionales en la base de datos
+  telefono: string | null;
+  correo: string;
+  direccion: string | null;
+  codigoPlan: string;
+  nombrePlan: string;
+  activo: boolean;
+  fechaRegistro: string;
+}
+
+export interface UsuarioResponse {
+  id: number;
+  empresaId: number;
+  nombre: string;
+  apellido: string;
+  correo: string;
+  rol: string;
+  activo: boolean;
+  debeCambiarPassword: boolean;
+  ultimoAcceso: string | null;
+}
+
+export interface RegistroEmpresaResponse {
+  empresa: EmpresaResponse;
+  admin: UsuarioResponse;
+}
+
+export interface EntregaRequest {
+  ordenId: number;
+  usuarioEntregaId: number;
+  identidadVerificada: boolean;
+  urlComprobanteEntrega?: string;
+  observaciones?: string;
+}
+
+export interface EntregaResponse {
+  id: number;
+  ordenId: number;
+  usuarioEntregaId: number;
+  usuarioEntregaNombre: string;
+  identidadVerificada: boolean;
+  urlComprobanteEntrega: string | null;
+  observaciones: string | null;
+  fechaEntrega: string;
+}
+
+export interface EmpresaUpdateRequest {
+  nombre: string;
+  rtn?: string;
+  telefono?: string;
+  correo: string;
+  direccion?: string;
+}
+
+export interface PlanSuscripcionResponse {
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+  montoMensual: number;
+  moneda: string;
+  /** Cupo de usuarios activos del plan; null significa ilimitado. */
+  maxUsuarios: number | null;
+  activo: boolean;
+}
+
+export interface LimiteUsuariosResponse {
+  usuariosActivos: number;
+  maxUsuarios: number | null;
+  ilimitado: boolean;
+  cupoDisponible: boolean;
+  nombrePlan: string | null;
+}
+
+export type TipoCuenta = "AHORRO" | "CHEQUES" | "OTRO";
+
+export interface CuentaCobroResponse {
+  id: number;
+  banco: string;
+  tipoCuenta: TipoCuenta;
+  numeroCuenta: string;
+  titular: string;
+  moneda: string;
+  instrucciones: string | null;
+  activo: boolean;
+}
+
+export interface CuentaPagoTallerRequest {
+  banco: string;
+  tipoCuenta: TipoCuenta;
+  numeroCuenta: string;
+  titular: string;
+  moneda: string;
+  instrucciones?: string;
+  activo: boolean;
+}
+
+export interface CuentaPagoTallerResponse {
+  id: number;
+  banco: string;
+  tipoCuenta: TipoCuenta;
+  numeroCuenta: string;
+  titular: string;
+  moneda: string;
+  instrucciones: string | null;
+  activo: boolean;
+}
+
+export interface UsuarioRequest {
+  nombre: string;
+  apellido: string;
+  correo: string;
+  password: string;
+  rol: UserRole;
+  activo: boolean;
+}
+
+export interface EstadoReparacionRequest {
+  nombre: string;
+  colorHex: string;
+  orden: number;
+  estadoFinal: boolean;
+  notificarCliente: boolean;
 }

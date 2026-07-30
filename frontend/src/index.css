@@ -241,3 +241,344 @@ input, select, textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   Landing y páginas públicas: diseño responsive
+   Estas clases existen porque las páginas usan estilos en línea,
+   que no admiten media queries.
+   ============================================================ */
+
+/* --- Secciones --- */
+.section-pad {
+  padding: 60px 0 80px 0;
+}
+
+/* El navbar fijo mide 76px: sin este margen taparía el título de la sección
+   al llegar desde un enlace con ancla. */
+#beneficios,
+#precios {
+  scroll-margin-top: 92px;
+}
+
+.section-title {
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 800;
+  color: #1E1B4B;
+  line-height: 1.25;
+}
+
+.section-subtitle {
+  color: #64748B;
+  font-size: clamp(14px, 2.2vw, 16px);
+  margin-top: 8px;
+}
+
+/* --- Hero --- */
+.hero-section {
+  padding: 80px 0 60px 0;
+  overflow: hidden;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.hero-title {
+  font-size: clamp(30px, 5.2vw, 48px);
+  font-weight: 800;
+  color: #1E1B4B;
+  line-height: 1.15;
+  letter-spacing: -1px;
+}
+
+.hero-text {
+  font-size: clamp(15px, 2.2vw, 16px);
+  color: #64748B;
+  line-height: 1.6;
+  max-width: 540px;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .hero-section {
+    padding: 48px 0 40px 0;
+  }
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .hero-text {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .section-pad {
+    padding: 40px 0 48px 0;
+  }
+}
+
+/* En pantallas angostas los botones ocupan todo el ancho: son más fáciles de tocar. */
+@media (max-width: 480px) {
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero-actions > a {
+    width: 100%;
+  }
+  .hero-actions .btn {
+    width: 100%;
+  }
+}
+
+/* --- Navbar pública --- */
+.navbar {
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-inner {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.navbar-link {
+  font-size: 15px;
+  color: #475569;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.navbar-link.is-active {
+  color: #3730A3;
+  font-weight: 700;
+}
+
+.navbar-desktop {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-desktop-links {
+  gap: 32px;
+}
+
+.navbar-desktop-actions {
+  gap: 16px;
+}
+
+.navbar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #3730A3;
+  padding: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-mobile {
+  display: none;
+}
+
+/* El menú horizontal no cabe con el logo y los botones: se cambia por uno desplegable. */
+@media (max-width: 940px) {
+  .navbar-desktop {
+    display: none;
+  }
+  .navbar-toggle {
+    display: inline-flex;
+  }
+  .navbar-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 0 20px 0;
+    border-top: 1px solid #E2E8F0;
+  }
+  .navbar-mobile .navbar-link {
+    padding: 12px 4px;
+    font-size: 16px;
+  }
+  .navbar-mobile .btn {
+    width: 100%;
+  }
+}
+
+/* --- Footer --- */
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 900px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 560px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+/* --- Encabezado morado de las páginas públicas --- */
+.public-hero {
+  background-color: #3730A3;
+  color: #FFFFFF;
+  padding: 60px 0;
+  text-align: center;
+}
+
+.public-hero-title {
+  font-size: clamp(26px, 4.6vw, 36px);
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+
+.public-hero-text {
+  font-size: clamp(14px, 2.2vw, 16px);
+  color: #EDE9FE;
+}
+
+/* --- Tarjetas de contenido público --- */
+.public-card {
+  padding: 32px;
+}
+
+/* --- Buscador en línea (input + botón) --- */
+.search-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #FFFFFF;
+  padding: 8px 12px;
+  border-radius: 16px;
+}
+
+/* --- Cabecera de la orden en seguimiento --- */
+.orden-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+/* --- Bloque de tres datos (dispositivo / problema / estado) --- */
+.info-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding-top: 24px;
+}
+
+/* --- Planes de suscripción ---
+   auto-fit reparte las columnas según el ancho disponible: 3 en escritorio,
+   2 en tablet y 1 en teléfono, sin necesidad de media queries. */
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+
+/* --- Detalle público del taller --- */
+.taller-hero-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.taller-hero-title {
+  font-size: clamp(24px, 4.4vw, 32px);
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+/* Calificación, dirección y horario: se acomodan en varias líneas si no caben. */
+.taller-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: #EDE9FE;
+}
+
+.detalle-taller-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .detalle-taller-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-hero {
+    padding: 40px 0;
+  }
+  .public-card {
+    padding: 20px;
+  }
+  .info-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Con poco ancho el botón no cabe junto al campo: se coloca debajo. */
+@media (max-width: 560px) {
+  .search-inline {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+    border-radius: 14px;
+  }
+  .search-inline .btn {
+    width: 100%;
+  }
+}
+
+/* Más espacio útil en teléfonos pequeños. */
+@media (max-width: 480px) {
+  .container {
+    padding: 0 16px;
+  }
+}

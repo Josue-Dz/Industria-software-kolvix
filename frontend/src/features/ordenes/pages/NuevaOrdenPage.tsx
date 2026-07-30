@@ -266,7 +266,7 @@ export const NuevaOrdenPage: React.FC = () => {
                 <div className="grid-2">
                   <Input
                     label="NOMBRE DE CLIENTE *"
-                    placeholder="Ej. Nohely"
+                    placeholder="Nombre del cliente"
                     value={clientName}
                     onChange={(e) => setClientName(e.target.value)}
                     disabled={isExistingClient}

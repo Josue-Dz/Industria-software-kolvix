@@ -71,6 +71,12 @@ public class TecnicoController {
         return ResponseEntity.ok(tecnicoService.cambiarEstado(id, empresaIdActual(), request.activo()));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<TecnicoResponse> obtenerMiPerfilTecnico() {
+    Usuario usuario = authService.getUsuarioAutenticado();
+    return ResponseEntity.ok(tecnicoService.obtenerPorUsuario(usuario.getIdUsuario()));
+    }
+
     private Long empresaIdActual() {
         Usuario usuario = authService.getUsuarioAutenticado();
         return usuario.getEmpresa().getIdEmpresa();

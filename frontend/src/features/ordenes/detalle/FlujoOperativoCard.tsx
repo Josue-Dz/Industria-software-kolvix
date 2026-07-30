@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Truck } from 'lucide-react';
 import type { DetalleOrdenController } from './useDetalleOrden';
 import type { OrdenTrabajoResponse } from '../../../api/types';
 
@@ -11,7 +11,17 @@ interface FlujoOperativoCardProps {
 }
 
 export const FlujoOperativoCard: React.FC<FlujoOperativoCardProps> = ({ d, orden }) => {
-  const { estadosOrdenados, estadoActualIdx, isSaving, handleSeleccionarEstado, handleInicializarEstados } = d;
+  const {
+    estadosOrdenados, estadoActualIdx, isSaving,
+    handleSeleccionarEstado, handleInicializarEstados,
+    entrega, setIsEntregaModalOpen,
+  } = d;
+
+  // Se puede registrar la entrega cuando el estado actual de la orden es
+  // "Entregado" y aún no existe un registro de entrega para ella.
+  const estadoActual = estadosOrdenados[estadoActualIdx];
+  const puedeRegistrarEntrega =
+  estadoActual?.nombre?.toLowerCase() === 'entregado' && !entrega && !orden.fechaEntrega;
 
   return (
     <Card hoverable={false} style={{ padding: '24px', borderRadius: '20px', backgroundColor: '#FFFFFF', alignSelf: 'start' }}>
@@ -32,31 +42,24 @@ export const FlujoOperativoCard: React.FC<FlujoOperativoCardProps> = ({ d, orden
               onClick={() => void handleSeleccionarEstado(estado)}
               title={activo ? 'Estado actual' : `Mover la orden a "${estado.nombre}"`}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
+                display: 'flex', alignItems: 'center', gap: '16px',
                 opacity: completado || activo ? 1 : 0.5,
-                cursor: activo ? 'default' : 'pointer'
+                cursor: activo ? 'default' : 'pointer',
               }}
             >
               <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
+                width: '40px', height: '40px', borderRadius: '50%',
                 backgroundColor: activo ? '#1E1B4B' : completado ? '#A78BFA' : '#EDE9FE',
                 color: activo || completado ? '#FFFFFF' : '#3730A3',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '800',
-                flexShrink: 0
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: '800', flexShrink: 0,
               }}>
                 {completado ? <CheckCircle size={20} /> : idx + 1}
               </div>
               <span style={{
                 fontSize: '15px',
                 fontWeight: activo ? '800' : '700',
-                color: activo ? '#1E1B4B' : completado ? '#3730A3' : '#64748B'
+                color: activo ? '#1E1B4B' : completado ? '#3730A3' : '#64748B',
               }}>
                 {estado.nombre}
               </span>
@@ -76,6 +79,31 @@ export const FlujoOperativoCard: React.FC<FlujoOperativoCardProps> = ({ d, orden
             <Button variant="outline" size="sm" disabled={isSaving} onClick={handleInicializarEstados}>
               Completar flujo estándar
             </Button>
+          </div>
+        )}
+
+        {/* Registro de entrega */}
+        {puedeRegistrarEntrega && (
+          <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '16px' }}>
+            <Button
+              variant="primary"
+              style={{ width: '100%', backgroundColor: '#3730A3' }}
+              icon={<Truck size={16} />}
+              onClick={() => setIsEntregaModalOpen(true)}
+            >
+              Registrar entrega
+            </Button>
+          </div>
+        )}
+
+        {entrega && (
+          <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: '#166534' }}>
+              ✓ Entregado el {new Date(entrega.fechaEntrega).toLocaleString('es-HN')}
+            </span>
+            <span style={{ fontSize: '12px', color: '#64748B' }}>
+              Por: {entrega.usuarioEntregaNombre}
+            </span>
           </div>
         )}
       </div>
