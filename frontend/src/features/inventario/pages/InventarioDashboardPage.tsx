@@ -34,7 +34,7 @@ export const InventarioDashboardPage: React.FC = () => {
   });
 
   return (
-    <DashboardLayout title="Inventario" subtitle="" role="admin">
+    <DashboardLayout title="Inventario" subtitle="">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
         {/* Top Actions Bar */}

@@ -7,7 +7,6 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
   title: string;
   subtitle?: string;
-  role?: 'admin' | 'tecnico' | 'cliente';
 }
 
 const ROL_LABEL: Record<string, string> = {
@@ -20,10 +19,11 @@ const ROL_LABEL: Record<string, string> = {
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   title,
-  subtitle,
-  role = 'admin'
+  subtitle
 }) => {
   const usuario = useUsuarioActual();
+
+  const rolPanel = usuario?.rol === 'TECNICO' ? 'tecnico' : 'admin';
 
   const nombreCompleto = usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Usuario';
   const detalleUsuario = usuario
@@ -35,7 +35,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F8FAFC' }}>
-      <Sidebar userRole={role} />
+      <Sidebar userRole={rolPanel} />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Top Header */}

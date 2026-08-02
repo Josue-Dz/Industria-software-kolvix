@@ -19,7 +19,9 @@ import edu.unah.kolvix.dtos.orden.CambioEstadoOrdenRequest;
 import edu.unah.kolvix.dtos.orden.CambioEstadoPagoRequest;
 import edu.unah.kolvix.dtos.orden.OrdenTrabajoRequest;
 import edu.unah.kolvix.dtos.orden.OrdenTrabajoResponse;
+import edu.unah.kolvix.entities.Usuario;
 import edu.unah.kolvix.enums.EstadoPagoOrden;
+import edu.unah.kolvix.services.AccesoOrdenes;
 import edu.unah.kolvix.services.OrdenTrabajoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,16 +32,19 @@ import lombok.RequiredArgsConstructor;
 public class OrdenTrabajoController {
 
     private final OrdenTrabajoService ordenTrabajoService;
+    private final AccesoOrdenes accesoOrdenes;
 
     @PostMapping("/empresa/{empresaId}")
     public ResponseEntity<OrdenTrabajoResponse> crearOrdenTrabajo(
             @PathVariable Long empresaId,
             @Valid @RequestBody OrdenTrabajoRequest request) {
+        accesoOrdenes.validarEmpresa(empresaId);
         return ResponseEntity.status(HttpStatus.CREATED).body(ordenTrabajoService.crearOrdenTrabajo(empresaId, request));
     }
     @GetMapping("/empresa/{empresaId}")
     public ResponseEntity<List<OrdenTrabajoResponse>> listarPorEmpresa(@PathVariable Long empresaId) {
-        return ResponseEntity.ok(ordenTrabajoService.listarPorEmpresa(empresaId));
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        return ResponseEntity.ok(accesoOrdenes.filtrarPropias(usuario, ordenTrabajoService.listarPorEmpresa(empresaId)));
     }
 
     //Filtrar ordenes por empresa,estado de pago y estado de reparacion
@@ -47,21 +52,27 @@ public class OrdenTrabajoController {
     public ResponseEntity<List<OrdenTrabajoResponse>> listarPorEmpresaYEstadoReparacion(
             @PathVariable Long empresaId,
             @RequestParam String estadoReparacion) {
-        return ResponseEntity.ok(ordenTrabajoService.listarPorEmpresaYEstadoReparacion(empresaId, estadoReparacion));
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        return ResponseEntity.ok(accesoOrdenes.filtrarPropias(usuario,
+                ordenTrabajoService.listarPorEmpresaYEstadoReparacion(empresaId, estadoReparacion)));
     }
 
     @GetMapping("/empresa/{empresaId}/estado-pago")
     public ResponseEntity<List<OrdenTrabajoResponse>> listarPorEmpresaYEstadoPago(
             @PathVariable Long empresaId,
             @RequestParam EstadoPagoOrden estadoPago) {
-        return ResponseEntity.ok(ordenTrabajoService.listarPorEmpresaYEstadoPago(empresaId, estadoPago));
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        return ResponseEntity.ok(accesoOrdenes.filtrarPropias(usuario,
+                ordenTrabajoService.listarPorEmpresaYEstadoPago(empresaId, estadoPago)));
     }
 
     @GetMapping("/empresa/{empresaId}/tecnico/{tecnicoId}")
     public ResponseEntity<List<OrdenTrabajoResponse>> listarPorEmpresaYTecnico(
             @PathVariable Long empresaId,
             @PathVariable Long tecnicoId) {
-        return ResponseEntity.ok(ordenTrabajoService.listarPorEmpresaYTecnico(empresaId, tecnicoId));
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        Long tecnicoConsultable = accesoOrdenes.resolverTecnicoConsultable(usuario, tecnicoId);
+        return ResponseEntity.ok(ordenTrabajoService.listarPorEmpresaYTecnico(empresaId, tecnicoConsultable));
     }
 
     
@@ -70,14 +81,20 @@ public class OrdenTrabajoController {
     public ResponseEntity<OrdenTrabajoResponse> obtenerPorId(
             @PathVariable Long empresaId,
             @PathVariable Long idOrden) {
-        return ResponseEntity.ok(ordenTrabajoService.obtenerPorId(empresaId, idOrden));
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        OrdenTrabajoResponse orden = ordenTrabajoService.obtenerPorId(empresaId, idOrden);
+        accesoOrdenes.validarOrdenPropia(usuario, orden);
+        return ResponseEntity.ok(orden);
     }
 
     @GetMapping("/empresa/{empresaId}/numero/{numeroOrden}")
     public ResponseEntity<OrdenTrabajoResponse> obtenerPorNumero(
             @PathVariable Long empresaId,
             @PathVariable String numeroOrden) {
-        return ResponseEntity.ok(ordenTrabajoService.obtenerPorNumero(empresaId, numeroOrden));
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        OrdenTrabajoResponse orden = ordenTrabajoService.obtenerPorNumero(empresaId, numeroOrden);
+        accesoOrdenes.validarOrdenPropia(usuario, orden);
+        return ResponseEntity.ok(orden);
     }
 
     @PatchMapping("/empresa/{empresaId}/{idOrden}/estado-pago")
@@ -85,6 +102,8 @@ public class OrdenTrabajoController {
             @PathVariable Long empresaId,
             @PathVariable Long idOrden,
             @Valid @RequestBody CambioEstadoPagoRequest request) {
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        accesoOrdenes.validarOrdenPropia(usuario, ordenTrabajoService.obtenerPorId(empresaId, idOrden));
         return ResponseEntity.ok(ordenTrabajoService.cambiarEstadoPago(empresaId, idOrden, request));
     }
 
@@ -93,6 +112,8 @@ public class OrdenTrabajoController {
             @PathVariable Long empresaId,
             @PathVariable Long idOrden,
             @Valid @RequestBody CambioEstadoOrdenRequest request) {
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        accesoOrdenes.validarOrdenPropia(usuario, ordenTrabajoService.obtenerPorId(empresaId, idOrden));
         return ResponseEntity.ok(ordenTrabajoService.cambiarEstadoReparacion(empresaId, idOrden, request));
     }
 
@@ -100,6 +121,8 @@ public class OrdenTrabajoController {
     public ResponseEntity<edu.unah.kolvix.dtos.orden.HistorialOrdenResponse> obtenerUltimoEvento(
             @PathVariable Long empresaId,
             @PathVariable Long idOrden) {
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        accesoOrdenes.validarOrdenPropia(usuario, ordenTrabajoService.obtenerPorId(empresaId, idOrden));
         return ResponseEntity.ok(ordenTrabajoService.obtenerUltimoEvento(empresaId, idOrden));
     }
 
@@ -107,6 +130,8 @@ public class OrdenTrabajoController {
     public ResponseEntity<List<edu.unah.kolvix.dtos.orden.HistorialOrdenResponse>> obtenerHistorialOrden(
             @PathVariable Long empresaId,
             @PathVariable Long idOrden) {
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        accesoOrdenes.validarOrdenPropia(usuario, ordenTrabajoService.obtenerPorId(empresaId, idOrden));
         return ResponseEntity.ok(ordenTrabajoService.obtenerHistorialOrden(empresaId, idOrden));
     }
 
@@ -114,6 +139,8 @@ public class OrdenTrabajoController {
     public ResponseEntity<edu.unah.kolvix.dtos.orden.HistorialOrdenResponse> obtenerUltimoEventoPorNumero(
             @PathVariable Long empresaId,
             @PathVariable String numeroOrden) {
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        accesoOrdenes.validarOrdenPropia(usuario, ordenTrabajoService.obtenerPorNumero(empresaId, numeroOrden));
         return ResponseEntity.ok(ordenTrabajoService.obtenerUltimoEventoPorNumero(empresaId, numeroOrden));
     }
 
@@ -121,6 +148,8 @@ public class OrdenTrabajoController {
     public ResponseEntity<List<edu.unah.kolvix.dtos.orden.HistorialOrdenResponse>> obtenerHistorialPorNumero(
             @PathVariable Long empresaId,
             @PathVariable String numeroOrden) {
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        accesoOrdenes.validarOrdenPropia(usuario, ordenTrabajoService.obtenerPorNumero(empresaId, numeroOrden));
         return ResponseEntity.ok(ordenTrabajoService.obtenerHistorialPorNumero(empresaId, numeroOrden));
     }
 
@@ -129,6 +158,12 @@ public class OrdenTrabajoController {
             @PathVariable Long empresaId,
             @PathVariable Long idOrden,
             @Valid @RequestBody AsignarTecnicoRequest request) {
+        Usuario usuario = accesoOrdenes.validarEmpresa(empresaId);
+        if (accesoOrdenes.idTecnicoDe(usuario) != null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "Un tecnico no puede reasignar ordenes");
+        }
         return ResponseEntity.ok(ordenTrabajoService.cambiarTecnico(empresaId, idOrden, request));
     }
 }

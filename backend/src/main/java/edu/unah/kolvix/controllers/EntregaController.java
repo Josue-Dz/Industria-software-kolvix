@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import edu.unah.kolvix.dtos.orden.EntregaRequest;
 import edu.unah.kolvix.dtos.orden.EntregaResponse;
+import edu.unah.kolvix.services.AccesoEmpresa;
 import edu.unah.kolvix.services.EntregaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +23,13 @@ import lombok.RequiredArgsConstructor;
 public class EntregaController {
     
     private final EntregaService entregaService;
+    private final AccesoEmpresa accesoEmpresa;
 
     @PostMapping
     public ResponseEntity<EntregaResponse> registrar(
             @PathVariable Long empresaId,
             @Valid @RequestBody EntregaRequest request) {
+        accesoEmpresa.validarEmpresa(empresaId);
         return ResponseEntity.status(HttpStatus.CREATED).body(entregaService.registrarEntrega(empresaId, request));
     }
 
@@ -34,6 +37,7 @@ public class EntregaController {
     public ResponseEntity<EntregaResponse> obtener(
             @PathVariable Long empresaId,
             @PathVariable Long ordenId) {
+        accesoEmpresa.validarEmpresa(empresaId);
         return ResponseEntity.ok(entregaService.obtenerPorOrden(empresaId, ordenId));
     }
 }

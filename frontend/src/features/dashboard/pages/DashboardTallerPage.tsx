@@ -58,7 +58,7 @@ export const DashboardTallerPage: React.FC = () => {
     orden.colorHexEstado || estados.find((e) => e.id === orden.idEstado)?.colorHex || '#3730A3';
 
   return (
-    <DashboardLayout title="Dashboard" subtitle="" role="admin">
+    <DashboardLayout title="Dashboard" subtitle="">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
         {isLoading && (

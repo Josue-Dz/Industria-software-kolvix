@@ -2,6 +2,7 @@ import React from 'react';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { formatMoney, ESTADO_COTIZACION_LABEL } from './shared';
+import { AutorizacionReparacion } from './AutorizacionReparacion';
 import type { DetalleOrdenController } from './useDetalleOrden';
 import type { OrdenTrabajoResponse } from '../../../api/types';
 
@@ -11,7 +12,7 @@ interface InfoTabProps {
 }
 
 export const InfoTab: React.FC<InfoTabProps> = ({ d, orden }) => {
-  const { cotizacionActual, siguienteEstado, isSaving, handleAvanzarEstado } = d;
+  const { cotizacionActual, siguienteEstado, isSaving, esTecnico, handleAvanzarEstado } = d;
 
   return (
     <Card hoverable={false} style={{ padding: '24px', borderRadius: '16px', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -47,6 +48,11 @@ export const InfoTab: React.FC<InfoTabProps> = ({ d, orden }) => {
         </div>
       )}
 
+      {/* Al técnico se le informa solo si puede empezar a reparar; el desglose
+          económico corresponde a los roles comerciales. */}
+      {esTecnico ? (
+        <AutorizacionReparacion estado={cotizacionActual?.estado ?? null} />
+      ) : (
       <div>
         <span style={{ fontSize: '13px', fontWeight: '800', color: '#1E1B4B', display: 'block', marginBottom: '12px' }}>
           Estructura de precios:
@@ -72,6 +78,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ d, orden }) => {
           </p>
         )}
       </div>
+      )}
 
       {siguienteEstado && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import edu.unah.kolvix.dtos.cliente.ClienteRequest;
 import edu.unah.kolvix.dtos.cliente.ClienteResponse;
+import edu.unah.kolvix.services.AccesoEmpresa;
 import edu.unah.kolvix.services.ClienteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,17 +25,20 @@ import lombok.RequiredArgsConstructor;
 public class ClienteController {
 
     private final ClienteService clienteService;
+    private final AccesoEmpresa accesoEmpresa;
 
     // Crear un nuevo cliente para una empresa específica a través de su ID de empresa
     @PostMapping("/empresa/{empresaId}")
     public ResponseEntity<ClienteResponse> crearCliente(
             @PathVariable Long empresaId,
             @Valid @RequestBody ClienteRequest request) {
+        accesoEmpresa.validarEmpresa(empresaId);
         return ResponseEntity.status(HttpStatus.CREATED).body(clienteService.crearCliente(empresaId, request));
     }
 
     @GetMapping("/empresa/{empresaId}")
     public ResponseEntity<List<ClienteResponse>> getClientesEmpresa(@PathVariable Long empresaId) {
+        accesoEmpresa.validarEmpresa(empresaId);
         return ResponseEntity.ok(clienteService.listarClientesPorEmpresa(empresaId));
     }
 
@@ -45,6 +49,7 @@ public class ClienteController {
             @PathVariable Long idCliente,
             @PathVariable Long empresaId,
             @Valid @RequestBody ClienteRequest request) {
+        accesoEmpresa.validarEmpresa(empresaId);
         return ResponseEntity.ok(clienteService.editarCliente(idCliente, empresaId, request));
     }
 }

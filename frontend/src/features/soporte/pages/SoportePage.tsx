@@ -4,12 +4,11 @@ import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Mail, Phone, Video, HelpCircle } from 'lucide-react';
 
-// Canales de soporte reales de Kolvix. Deja en blanco los que aún no existan:
-// la tarjeta correspondiente no se muestra hasta que tengan un valor.
+
 const CONTACTO_SOPORTE = {
-  whatsapp: '',          // Ej. '+504 9999-9999'
-  correo: '',            // Ej. 'soporte@kolvix.hn'
-  urlDocumentacion: '',  // Ej. 'https://docs.kolvix.hn'
+  whatsapp: '',          
+  correo: '',            
+  urlDocumentacion: '',  
 };
 
 const soloDigitos = (telefono: string): string => telefono.replace(/\D/g, '');
@@ -23,7 +22,6 @@ export const SoportePage: React.FC = () => {
     <DashboardLayout
       title="Soporte"
       subtitle="Asistencia y documentación"
-      role="admin"
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 

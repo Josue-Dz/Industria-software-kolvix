@@ -173,7 +173,6 @@ export const NuevaOrdenPage: React.FC = () => {
     <DashboardLayout
       title="Órdenes"
       subtitle=""
-      role="admin"
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 

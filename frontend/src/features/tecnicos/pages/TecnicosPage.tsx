@@ -71,7 +71,7 @@ export const TecnicosPage: React.FC = () => {
   });
 
   return (
-    <DashboardLayout title="Técnicos" subtitle="" role="admin">
+    <DashboardLayout title="Técnicos" subtitle="">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
 
         {/* Top Tabs */}

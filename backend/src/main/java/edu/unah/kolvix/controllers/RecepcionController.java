@@ -3,6 +3,7 @@ package edu.unah.kolvix.controllers;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import edu.unah.kolvix.services.AccesoEmpresa;
 import edu.unah.kolvix.services.RecepcionService;
 import jakarta.validation.Valid;
 import edu.unah.kolvix.dtos.orden.ChecklistRecepcionRequest;
@@ -27,12 +28,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class RecepcionController {
     
     private final RecepcionService recepcionService;
+    private final AccesoEmpresa accesoEmpresa;
 
-    // Registrar con entidad ChecklistRecepcion. Validar que el usuario es recepcionista y que la orden existe.
     @PostMapping("/registrar")
         public ResponseEntity<ChecklistRecepcionResponse> registrarRecepcion(
         @Valid @RequestBody ChecklistRecepcionRequest request
         ) {
+        accesoEmpresa.validarOrdenPropia(request.ordenId());
         return ResponseEntity.ok(recepcionService.registrarRecepcion(request));
     }
 
@@ -41,6 +43,7 @@ public class RecepcionController {
             @PathVariable Long idChecklist,
             @Valid @RequestBody ActualizarDanosFisicosRequest request
     ) {
+        accesoEmpresa.validarChecklistPropio(idChecklist);
         return ResponseEntity.ok(recepcionService.actualizarDanosFisicos(idChecklist, request));
     }
 
@@ -49,6 +52,7 @@ public class RecepcionController {
             @PathVariable Long idChecklist,
             @RequestParam String observaciones
     ) {
+        accesoEmpresa.validarChecklistPropio(idChecklist);
         return ResponseEntity.ok(recepcionService.actualizarObservaciones(idChecklist, observaciones));
     }
 
@@ -57,6 +61,7 @@ public class RecepcionController {
             @PathVariable Long idChecklist,
             @RequestParam Long plantillaInspeccionId
     ) {
+        accesoEmpresa.validarChecklistPropio(idChecklist);
         return ResponseEntity.ok(recepcionService.actualizarPlantillaInspeccion(idChecklist, plantillaInspeccionId));
     }
     
@@ -66,6 +71,8 @@ public class RecepcionController {
             @PathVariable Long idOrden,
             @RequestParam Long empresaId
     ) {
+        accesoEmpresa.validarEmpresa(empresaId);
+        accesoEmpresa.validarOrdenPropia(idOrden);
         return ResponseEntity.ok(recepcionService.obtenerChecklistPorOrden(idOrden, empresaId));
     }
 
@@ -73,6 +80,7 @@ public class RecepcionController {
     public ResponseEntity<ChecklistRecepcionResponse> obtenerChecklist(
             @PathVariable Long idChecklist
     ) {
+        accesoEmpresa.validarChecklistPropio(idChecklist);
         return ResponseEntity.ok(recepcionService.obtenerChecklist(idChecklist));
     }
 

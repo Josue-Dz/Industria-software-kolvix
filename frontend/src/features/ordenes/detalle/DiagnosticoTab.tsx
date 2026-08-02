@@ -14,7 +14,7 @@ interface DiagnosticoTabProps {
 
 export const DiagnosticoTab: React.FC<DiagnosticoTabProps> = ({ d, orden }) => {
   const {
-    diagnostico, diagnosticoBloqueado, cotizacionActual, tecnicos, isSaving,
+    diagnostico, diagnosticoBloqueado, cotizacionActual, tecnicos, isSaving, esTecnico,
     diagTecnicoId, setDiagTecnicoId, diagProblema, setDiagProblema, diagCausa, setDiagCausa,
     diagTiempo, setDiagTiempo, diagComplejidad, setDiagComplejidad, diagObs, setDiagObs,
     montoRepuestosDiagnostico, setIsInventoryModalOpen, setActiveSubTab,
@@ -52,7 +52,9 @@ export const DiagnosticoTab: React.FC<DiagnosticoTabProps> = ({ d, orden }) => {
               className="input-field"
               value={diagTecnicoId}
               onChange={(e) => setDiagTecnicoId(e.target.value)}
-              disabled={diagnostico !== null}
+              // Un técnico solo puede registrar el diagnóstico a su nombre; el
+              // administrador elige a quién asignarlo mientras no exista.
+              disabled={diagnostico !== null || esTecnico}
             >
               <option value="">-- Seleccionar técnico --</option>
               {tecnicos.filter((t) => t.activo).map((t) => (
@@ -229,13 +231,14 @@ export const DiagnosticoTab: React.FC<DiagnosticoTabProps> = ({ d, orden }) => {
         <Button variant="outline" disabled={isSaving || diagnosticoBloqueado} onClick={handleGuardarDiagnostico}>
           {diagnostico ? 'Guardar cambios' : 'Guardar diagnóstico'}
         </Button>
+        {/* El técnico no cotiza: su siguiente paso es registrar evidencia. */}
         <Button
           variant="primary"
           style={{ backgroundColor: '#3730A3' }}
           disabled={!diagnostico}
-          onClick={() => setActiveSubTab('cot')}
+          onClick={() => setActiveSubTab(esTecnico ? 'evi' : 'cot')}
         >
-          Ir a cotización
+          {esTecnico ? 'Ir a evidencia' : 'Ir a cotización'}
         </Button>
       </div>
     </Card>
