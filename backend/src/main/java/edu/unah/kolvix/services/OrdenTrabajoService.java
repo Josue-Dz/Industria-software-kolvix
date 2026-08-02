@@ -26,6 +26,7 @@ import edu.unah.kolvix.entities.Tecnico;
 import edu.unah.kolvix.entities.Usuario;
 import edu.unah.kolvix.enums.EstadoPagoOrden;
 import edu.unah.kolvix.enums.RolUsuario;
+import edu.unah.kolvix.events.OrdenListaEntregaEvent;
 import edu.unah.kolvix.repositories.ClienteRepository;
 import edu.unah.kolvix.repositories.DispositivoRepository;
 import edu.unah.kolvix.repositories.EmpresaRepository;
@@ -33,12 +34,15 @@ import edu.unah.kolvix.repositories.EstadoReparacionRepository;
 import edu.unah.kolvix.repositories.HistorialOrdenRepository;
 import edu.unah.kolvix.repositories.OrdenTrabajoRepository;
 import edu.unah.kolvix.repositories.TecnicoRepository;
+
+import org.springframework.context.ApplicationEventPublisher;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class OrdenTrabajoService {
 
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final OrdenTrabajoRepository ordenTrabajoRepository;
     private final EmpresaRepository empresaRepository;
     private final ClienteRepository clienteRepository;
@@ -187,6 +191,11 @@ public class OrdenTrabajoService {
         historial.setEstadoAnterior(estadoAnterior);
         historial.setComentario(normalizarTexto(request.comentario()));
         historialOrdenRepository.save(historial);
+
+        if ("Listo para entrega".equalsIgnoreCase(estadoDestino.getNombre())){
+            String mensaje = "La orden de trabajo con número " + orden.getNumeroOrden() + " está lista para entrega.";
+            applicationEventPublisher.publishEvent(new OrdenListaEntregaEvent(orden, mensaje));
+        }
 
         return mapearResponse(orden);
     }
