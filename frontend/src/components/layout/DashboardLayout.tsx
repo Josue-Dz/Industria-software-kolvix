@@ -1,7 +1,8 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
 import { NotificationsBell } from './NotificationsBell';
-import { useUsuarioActual } from '../../hooks/useUsuarioActual';
+import { useAuth } from '../../auth/useAuth';
+import type { UserRole } from '../../api/types';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -9,7 +10,7 @@ interface DashboardLayoutProps {
   subtitle?: string;
 }
 
-const ROL_LABEL: Record<string, string> = {
+const ROL_LABEL: Record<UserRole, string> = {
   ADMIN: 'Administrador',
   TECNICO: 'Técnico',
   RECEPCIONISTA: 'Recepcionista',
@@ -21,9 +22,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   title,
   subtitle
 }) => {
-  const usuario = useUsuarioActual();
-
-  const rolPanel = usuario?.rol === 'TECNICO' ? 'tecnico' : 'admin';
+  // La sesion sale del contexto, que ya la resolvio contra /auth/me antes de que
+  // RutaProtegida dejara entrar. Leerla de sessionStorage, como se hacia antes,
+  // daba dos problemas: el dato es editable desde el navegador y quedaba en null
+  // al remontar el layout, y ese null pintaba el menu de administrador.
+  const { usuario } = useAuth();
 
   const nombreCompleto = usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Usuario';
   const detalleUsuario = usuario
@@ -35,7 +38,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F8FAFC' }}>
-      <Sidebar userRole={rolPanel} />
+      <Sidebar rol={usuario?.rol ?? null} />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Top Header */}

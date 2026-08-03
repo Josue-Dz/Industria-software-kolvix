@@ -17,11 +17,11 @@ export const FlujoOperativoCard: React.FC<FlujoOperativoCardProps> = ({ d, orden
     entrega, setIsEntregaModalOpen,
   } = d;
 
-  // Se puede registrar la entrega cuando el estado actual de la orden es
-  // "Entregado" y aún no existe un registro de entrega para ella.
+  // Se puede registrar la entrega cuando la orden llegó a la etapa de entrega y
+  // aún no existe un registro de entrega para ella.
   const estadoActual = estadosOrdenados[estadoActualIdx];
   const puedeRegistrarEntrega =
-  estadoActual?.nombre?.toLowerCase() === 'entregado' && !entrega && !orden.fechaEntrega;
+    estadoActual?.codigo === 'ENTREGADO' && !entrega && !orden.fechaEntrega;
 
   return (
     <Card hoverable={false} style={{ padding: '24px', borderRadius: '20px', backgroundColor: '#FFFFFF', alignSelf: 'start' }}>

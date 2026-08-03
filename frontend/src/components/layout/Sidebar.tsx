@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
+import type { UserRole } from '../../api/types';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -9,14 +10,50 @@ import {
   Settings,
   Headset,
   Wrench,
-  LogOut
+  LogOut,
+  type LucideIcon
 } from 'lucide-react';
 
-interface SidebarProps {
-  userRole?: 'admin' | 'tecnico' | 'cliente';
+interface NavItem {
+  label: string;
+  path: string;
+  icon: LucideIcon;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ userRole = 'admin' }) => {
+const MENU_TALLER: NavItem[] = [
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Órdenes', path: '/ordenes', icon: ClipboardList },
+  { label: 'Técnicos', path: '/tecnicos', icon: Users },
+  { label: 'Inventario', path: '/inventario', icon: Package },
+  { label: 'Configuración', path: '/configuracion', icon: Settings },
+  { label: 'Soporte', path: '/soporte', icon: Headset }
+];
+
+const MENU_TECNICO: NavItem[] = [
+  { label: 'Mis Trabajos', path: '/dashboard/tecnico', icon: Wrench },
+  { label: 'Soporte', path: '/soporte', icon: Headset }
+];
+
+const MENU_POR_ROL: Record<UserRole, NavItem[]> = {
+  ADMIN: MENU_TALLER,
+  PROPIETARIO: MENU_TALLER,
+  RECEPCIONISTA: MENU_TALLER,
+  TECNICO: MENU_TECNICO
+};
+
+const ETIQUETA_PANEL: Record<UserRole, string> = {
+  ADMIN: 'Panel Taller',
+  PROPIETARIO: 'Panel Taller',
+  RECEPCIONISTA: 'Panel Taller',
+  TECNICO: 'Panel Técnico'
+};
+
+interface SidebarProps {
+  /** Rol del usuario en sesión. null mientras no se sepa quién es. */
+  rol: UserRole | null;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ rol }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { cerrarSesion } = useAuth();
@@ -32,21 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ userRole = 'admin' }) => {
     }
   };
 
-  const adminNavItems = [
-    { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { label: 'Órdenes', path: '/ordenes', icon: ClipboardList },
-    { label: 'Técnicos', path: '/tecnicos', icon: Users },
-    { label: 'Inventario', path: '/inventario', icon: Package },
-    { label: 'Configuración', path: '/configuracion', icon: Settings },
-    { label: 'Soporte', path: '/soporte', icon: Headset }
-  ];
-
-  const tecnicoNavItems = [
-    { label: 'Mis Trabajos', path: '/dashboard/tecnico', icon: Wrench },
-    { label: 'Soporte', path: '/soporte', icon: Headset }
-  ];
-
-  const navItems = userRole === 'tecnico' ? tecnicoNavItems : adminNavItems;
+  const navItems = rol ? MENU_POR_ROL[rol] : [];
 
   return (
     <aside style={{
@@ -69,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ userRole = 'admin' }) => {
           style={{ height: '32px', objectFit: 'contain', alignSelf: 'flex-start' }}
         />
         <span style={{ fontSize: '11px', color: '#A78BFA', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          {userRole === 'tecnico' ? 'Panel Técnico' : 'Panel Taller'}
+          {rol ? ETIQUETA_PANEL[rol] : ''}
         </span>
       </div>
 

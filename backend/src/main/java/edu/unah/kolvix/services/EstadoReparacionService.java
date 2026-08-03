@@ -7,10 +7,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import static edu.unah.kolvix.enums.CodigoEstadoReparacion.CANCELADO;
+import static edu.unah.kolvix.enums.CodigoEstadoReparacion.CONTROL_CALIDAD;
+import static edu.unah.kolvix.enums.CodigoEstadoReparacion.COTIZACION;
+import static edu.unah.kolvix.enums.CodigoEstadoReparacion.DIAGNOSTICO;
+import static edu.unah.kolvix.enums.CodigoEstadoReparacion.ENTREGADO;
+import static edu.unah.kolvix.enums.CodigoEstadoReparacion.EN_REPARACION;
+import static edu.unah.kolvix.enums.CodigoEstadoReparacion.LISTO_ENTREGA;
+import static edu.unah.kolvix.enums.CodigoEstadoReparacion.RECEPCION;
+
 import edu.unah.kolvix.dtos.orden.EstadoReparacionRequest;
 import edu.unah.kolvix.dtos.orden.EstadoReparacionResponse;
 import edu.unah.kolvix.entities.Empresa;
 import edu.unah.kolvix.entities.EstadoReparacion;
+import edu.unah.kolvix.enums.CodigoEstadoReparacion;
 import edu.unah.kolvix.repositories.EstadoReparacionRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -67,21 +77,19 @@ public class EstadoReparacionService {
         return mapearResponse(estado);
     }
 
-    // Estados base que trae toda empresa nueva al registrarse (ver DDL, sección
-    // comentada de estados_reparacion). Se llama desde EmpresaService.
     @Transactional
     public void crearEstadosPorDefecto(Empresa empresa) {
         estadoReparacionRepository.saveAll(estadosPorDefecto(empresa));
     }
 
-    // Idempotente: agrega solo los estados por defecto que la empresa no tenga aún
-    // (comparando por nombre). Pensado para empresas creadas antes de la semilla
-    // automática o que borraron parte de su flujo.
+    // Idempotente: agrega solo las etapas del flujo estándar que la empresa no
+    // tenga aún. Se compara por código, no por nombre, para no duplicar una etapa
+    // que el taller haya renombrado.
     @Transactional
     public List<EstadoReparacionResponse> asegurarEstadosPorDefecto(Empresa empresa) {
         List<EstadoReparacion> faltantes = estadosPorDefecto(empresa).stream()
-                .filter(estado -> !estadoReparacionRepository.existsByEmpresaIdEmpresaAndNombreIgnoreCase(
-                        empresa.getIdEmpresa(), estado.getNombre()))
+                .filter(estado -> !estadoReparacionRepository.existsByEmpresaIdEmpresaAndCodigo(
+                        empresa.getIdEmpresa(), estado.getCodigo()))
                 .toList();
 
         estadoReparacionRepository.saveAll(faltantes);
@@ -90,24 +98,22 @@ public class EstadoReparacionService {
 
     private List<EstadoReparacion> estadosPorDefecto(Empresa empresa) {
         return List.of(
-                construirEstado(empresa, "Solicitud recibida",  (short) 1,  false, true),
-                construirEstado(empresa, "Recepcion",            (short) 2,  false, true),
-                construirEstado(empresa, "Diagnostico",           (short) 3,  false, false),
-                construirEstado(empresa, "Cotizacion",             (short) 4,  false, true),
-                construirEstado(empresa, "Aprobado",               (short) 5,  false, false),
-                construirEstado(empresa, "Rechazado",              (short) 6,  true,  true),
-                construirEstado(empresa, "En reparacion",          (short) 7,  false, false),
-                construirEstado(empresa, "Control de calidad",     (short) 8,  false, false),
-                construirEstado(empresa, "Listo para entrega",     (short) 9,  false, true),
-                construirEstado(empresa, "Entregado",              (short) 10, true,  true),
-                construirEstado(empresa, "Cerrado",                (short) 11, true,  false)
+                construirEstado(empresa, RECEPCION,       "Recepción",          (short) 1, false, true),
+                construirEstado(empresa, DIAGNOSTICO,     "Diagnóstico",        (short) 2, false, false),
+                construirEstado(empresa, COTIZACION,      "Cotización",         (short) 3, false, true),
+                construirEstado(empresa, EN_REPARACION,   "En reparación",      (short) 4, false, false),
+                construirEstado(empresa, CONTROL_CALIDAD, "Control de calidad", (short) 5, false, false),
+                construirEstado(empresa, LISTO_ENTREGA,   "Listo para entrega", (short) 6, false, true),
+                construirEstado(empresa, ENTREGADO,       "Entregado",          (short) 7, true,  true),
+                construirEstado(empresa, CANCELADO,       "Cancelado",          (short) 8, true,  true)
         );
     }
 
-    private EstadoReparacion construirEstado(Empresa empresa, String nombre, short orden,
-                                              boolean esFinal, boolean notificarCliente) {
+    private EstadoReparacion construirEstado(Empresa empresa, CodigoEstadoReparacion codigo, String nombre,
+                                              short orden, boolean esFinal, boolean notificarCliente) {
         EstadoReparacion estado = new EstadoReparacion();
         estado.setEmpresa(empresa);
+        estado.setCodigo(codigo);
         estado.setNombre(nombre);
         estado.setOrden(orden);
         estado.setEsEstadoFinal(esFinal);
@@ -140,6 +146,7 @@ public class EstadoReparacionService {
                 estado.getIdEstado(),
                 estado.getEmpresa().getIdEmpresa(),
                 estado.getNombre(),
+                estado.getCodigo(),
                 estado.getColorHex(),
                 estado.getOrden(),
                 estado.getEsEstadoFinal(),

@@ -24,6 +24,7 @@ import edu.unah.kolvix.entities.HistorialOrden;
 import edu.unah.kolvix.entities.OrdenTrabajo;
 import edu.unah.kolvix.entities.Tecnico;
 import edu.unah.kolvix.entities.Usuario;
+import edu.unah.kolvix.enums.CodigoEstadoReparacion;
 import edu.unah.kolvix.enums.EstadoPagoOrden;
 import edu.unah.kolvix.enums.RolUsuario;
 import edu.unah.kolvix.events.OrdenListaEntregaEvent;
@@ -51,6 +52,7 @@ public class OrdenTrabajoService {
     private final EstadoReparacionRepository estadoReparacionRepository;
     private final HistorialOrdenRepository historialOrdenRepository;
     private final AuthService authService;
+    private final ConsumoRepuestosService consumoRepuestosService;
 
     @Transactional
     public OrdenTrabajoResponse crearOrdenTrabajo(Long empresaId, OrdenTrabajoRequest request) {
@@ -84,9 +86,13 @@ public class OrdenTrabajoService {
             }
         }
 
-        EstadoReparacion estadoInicial = estadoReparacionRepository.findByEmpresaIdEmpresaOrderByOrdenAsc(empresaId)
-                .stream()
-                .findFirst()
+        // Toda orden nace en Recepción. Antes se tomaba el primer estado por
+        // "orden", que cambia si el taller reordena su flujo.
+        EstadoReparacion estadoInicial = estadoReparacionRepository
+                .findByEmpresaIdEmpresaAndCodigo(empresaId, CodigoEstadoReparacion.RECEPCION)
+                .or(() -> estadoReparacionRepository.findByEmpresaIdEmpresaOrderByOrdenAsc(empresaId)
+                        .stream()
+                        .findFirst())
                 .orElseGet(() -> crearEstadoInicial(empresa));
 
         OrdenTrabajo orden = new OrdenTrabajo();
@@ -192,7 +198,13 @@ public class OrdenTrabajoService {
         historial.setComentario(normalizarTexto(request.comentario()));
         historialOrdenRepository.save(historial);
 
-        if ("Listo para entrega".equalsIgnoreCase(estadoDestino.getNombre())){
+        // El taller puede renombrar sus estados, así que la lógica se decide por
+        // código y no por el nombre visible.
+        if (CodigoEstadoReparacion.EN_REPARACION == estadoDestino.getCodigo()) {
+            consumoRepuestosService.consumirRepuestosDelDiagnostico(orden, usuario);
+        }
+
+        if (CodigoEstadoReparacion.LISTO_ENTREGA == estadoDestino.getCodigo()) {
             String mensaje = "La orden de trabajo con número " + orden.getNumeroOrden() + " está lista para entrega.";
             applicationEventPublisher.publishEvent(new OrdenListaEntregaEvent(orden, mensaje));
         }
@@ -270,11 +282,12 @@ private void validarEmpresa(Long empresaId) {
     private EstadoReparacion crearEstadoInicial(Empresa empresa) {
         EstadoReparacion estado = new EstadoReparacion();
         estado.setEmpresa(empresa);
-        estado.setNombre("Recibido");
+        estado.setCodigo(CodigoEstadoReparacion.RECEPCION);
+        estado.setNombre("Recepción");
         estado.setColorHex("#3B82F6");
         estado.setOrden((short) 1);
         estado.setEsEstadoFinal(false);
-        estado.setNotificarCliente(false);
+        estado.setNotificarCliente(true);
         return estadoReparacionRepository.save(estado);
     }
 
@@ -310,6 +323,7 @@ private void validarEmpresa(Long empresaId) {
                 orden.getDispositivo() != null ? resumenDispositivo(orden.getDispositivo()) : null,
                 orden.getTecnico() != null && orden.getTecnico().getUsuario() != null ? nombreCompleto(orden.getTecnico().getUsuario()) : null,
                 orden.getEstado() != null ? orden.getEstado().getNombre() : null,
+                orden.getEstado() != null ? orden.getEstado().getCodigo() : null,
                 orden.getEstado() != null ? orden.getEstado().getColorHex() : null,
                 orden.getNumeroOrden(),
                 orden.getCodigoSeguimiento(),

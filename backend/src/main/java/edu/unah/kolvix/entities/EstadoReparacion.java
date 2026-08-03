@@ -1,7 +1,10 @@
 package edu.unah.kolvix.entities;
 
+import edu.unah.kolvix.enums.CodigoEstadoReparacion;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,6 +31,11 @@ public class EstadoReparacion {
     private Integer idEstado;
 
     private String nombre;
+
+    // Null en los estados que el taller crea a mano.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "codigo", length = 30)
+    private CodigoEstadoReparacion codigo;
 
     @Column(name = "color_hex")
     private String colorHex = "#6B7280";
