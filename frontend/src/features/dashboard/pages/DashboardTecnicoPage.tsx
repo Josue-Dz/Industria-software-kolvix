@@ -8,7 +8,6 @@ import { useAuth } from '../../../auth/useAuth';
 import { tecnicosService } from '../../../api/services/tecnicosService';
 import { ordenesService } from '../../../api/services/ordenesService';
 import type { OrdenTrabajoResponse } from '../../../api/types';
-import { normalizarTexto as normalizar } from '../../../utils/formato';
 
 const esDeHoy = (iso: string | null): boolean => {
   if (!iso) return false;
@@ -51,7 +50,7 @@ export const DashboardTecnicoPage: React.FC = () => {
   }, [empresaId]);
 
   const asignadasHoy = ordenes.filter((o) => esDeHoy(o.fechaIngreso)).length;
-  const enProceso = ordenes.filter((o) => normalizar(o.nombreEstado ?? '').includes('reparacion')).length;
+  const enProceso = ordenes.filter((o) => o.codigoEstado === 'EN_REPARACION').length;
   const completadasHoy = ordenes.filter((o) => o.fechaEntrega && esDeHoy(o.fechaEntrega)).length;
 
   return (

@@ -15,8 +15,8 @@ import {
   Clock
 } from 'lucide-react';
 import { useDashboardTaller } from '../hooks/useDashboardTaller';
-import { formatoFechaHora, normalizarTexto as normalizar } from '../../../utils/formato';
-import type { OrdenTrabajoResponse } from '../../../api/types';
+import { formatoFechaHora } from '../../../utils/formato';
+import type { CodigoEstadoReparacion, OrdenTrabajoResponse } from '../../../api/types';
 
 const esDeHoy = (iso: string | null): boolean => {
   if (!iso) return false;
@@ -31,16 +31,16 @@ export const DashboardTallerPage: React.FC = () => {
   const nombreEstadoDe = (orden: OrdenTrabajoResponse): string =>
     orden.nombreEstado || estados.find((e) => e.id === orden.idEstado)?.nombre || 'Sin estado';
 
-  const contarPorEstado = (fragmento: string): number =>
-    ordenes.filter((o) => normalizar(nombreEstadoDe(o)).includes(fragmento)).length;
+  const contarPorEstado = (codigo: CodigoEstadoReparacion): number =>
+    ordenes.filter((o) => o.codigoEstado === codigo).length;
 
   const kpiCards = [
     { label: 'Órdenes recibidas hoy', count: ordenes.filter((o) => esDeHoy(o.fechaIngreso)).length, icon: Inbox },
-    { label: 'Diagnósticos pendientes', count: contarPorEstado('diagnos'), icon: Stethoscope },
-    { label: 'Cotizaciones pendientes', count: contarPorEstado('cotiza'), icon: FileSpreadsheet },
-    { label: 'Reparaciones activas', count: contarPorEstado('reparacion'), icon: Wrench },
-    { label: 'Control de calidad', count: contarPorEstado('calidad'), icon: ShieldCheck },
-    { label: 'Listo para entrega', count: contarPorEstado('listo'), icon: PackageCheck }
+    { label: 'Diagnósticos pendientes', count: contarPorEstado('DIAGNOSTICO'), icon: Stethoscope },
+    { label: 'Cotizaciones pendientes', count: contarPorEstado('COTIZACION'), icon: FileSpreadsheet },
+    { label: 'Reparaciones activas', count: contarPorEstado('EN_REPARACION'), icon: Wrench },
+    { label: 'Control de calidad', count: contarPorEstado('CONTROL_CALIDAD'), icon: ShieldCheck },
+    { label: 'Listo para entrega', count: contarPorEstado('LISTO_ENTREGA'), icon: PackageCheck }
   ];
 
   const ordenesRecientes = [...ordenes]
@@ -49,7 +49,7 @@ export const DashboardTallerPage: React.FC = () => {
   const actividadReciente = ordenesRecientes.slice(0, 5);
 
   const proximasEntregas = ordenes
-    .filter((o) => normalizar(nombreEstadoDe(o)).includes('listo'))
+    .filter((o) => o.codigoEstado === 'LISTO_ENTREGA')
     .slice(0, 4);
 
   const alertasInventario = repuestos.filter((r) => r.stockBajo && r.activo).slice(0, 5);

@@ -16,6 +16,7 @@ import type {
   PerfilMarketplace,
   PerfilMarketplaceRequest,
   PlanSuscripcionResponse,
+  UserRole,
   UsuarioResponse,
 } from '../../api/types';
 
@@ -213,7 +214,7 @@ export const useConfiguracion = () => {
     apellido: string;
     correo: string;
     password: string;
-    rol: string;
+    rol: UserRole;
   }) => {
     setIsSaving(true);
     try {

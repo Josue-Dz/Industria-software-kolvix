@@ -13,6 +13,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,6 +25,7 @@ import edu.unah.kolvix.entities.Dispositivo;
 import edu.unah.kolvix.entities.Empresa;
 import edu.unah.kolvix.entities.EstadoReparacion;
 import edu.unah.kolvix.entities.OrdenTrabajo;
+import edu.unah.kolvix.enums.CodigoEstadoReparacion;
 import edu.unah.kolvix.repositories.ClienteRepository;
 import edu.unah.kolvix.repositories.DispositivoRepository;
 import edu.unah.kolvix.repositories.EmpresaRepository;
@@ -68,11 +70,12 @@ class OrdenTrabajoServiceTest {
         EstadoReparacion estadoInicial = new EstadoReparacion();
         estadoInicial.setIdEstado(100);
         estadoInicial.setEmpresa(empresa);
-        estadoInicial.setNombre("Recibido");
+        estadoInicial.setCodigo(CodigoEstadoReparacion.RECEPCION);
+        estadoInicial.setNombre("Recepción");
         estadoInicial.setOrden((short) 1);
         estadoInicial.setColorHex("#3B82F6");
         estadoInicial.setEsEstadoFinal(false);
-        estadoInicial.setNotificarCliente(false);
+        estadoInicial.setNotificarCliente(true);
 
         when(empresaRepository.findById(1L)).thenReturn(Optional.of(empresa));
         when(clienteRepository.findById(10L)).thenReturn(Optional.of(cliente));
@@ -97,8 +100,13 @@ class OrdenTrabajoServiceTest {
         assertEquals(1L, response.idEmpresa());
         assertNotNull(response.numeroOrden());
         assertNotNull(response.codigoSeguimiento());
-        assertEquals("Recibido", response.nombreEstado());
-        verify(estadoReparacionRepository).save(any(EstadoReparacion.class));
+        assertEquals("Recepción", response.nombreEstado());
+
+        // Lo que importa no es el nombre (el taller puede cambiarlo) sino que la
+        // etapa creada sea la de recepción.
+        ArgumentCaptor<EstadoReparacion> estadoCreado = ArgumentCaptor.forClass(EstadoReparacion.class);
+        verify(estadoReparacionRepository).save(estadoCreado.capture());
+        assertEquals(CodigoEstadoReparacion.RECEPCION, estadoCreado.getValue().getCodigo());
         verify(ordenTrabajoRepository).save(any(OrdenTrabajo.class));
     }
 }

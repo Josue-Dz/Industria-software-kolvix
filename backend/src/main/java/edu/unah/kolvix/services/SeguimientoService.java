@@ -81,6 +81,7 @@ public class SeguimientoService {
                         ? orden.getTecnico().getUsuario().getNombre() + " " + orden.getTecnico().getUsuario().getApellido()
                         : null,
                 orden.getEstado().getNombre(),
+                orden.getEstado().getCodigo(),
                 orden.getEstado().getColorHex(),
                 orden.getNumeroOrden(),
                 orden.getCodigoSeguimiento(),

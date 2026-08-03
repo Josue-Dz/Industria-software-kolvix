@@ -68,13 +68,14 @@ export const AppRouter: React.FC = () => {
           <Route path="/dashboard" element={<RutaProtegida roles={ROLES_TALLER}><DashboardTallerPage /></RutaProtegida>} />
           <Route path="/dashboard/tecnico" element={<RutaProtegida roles={['TECNICO']}><DashboardTecnicoPage /></RutaProtegida>} />
 
-          <Route path="/ordenes" element={<RutaProtegida><OrdenesPage /></RutaProtegida>} />
-          <Route path="/ordenes/nueva" element={<RutaProtegida><NuevaOrdenPage /></RutaProtegida>} />
+          <Route path="/ordenes" element={<RutaProtegida roles={ROLES_TALLER}><OrdenesPage /></RutaProtegida>} />
+          <Route path="/ordenes/nueva" element={<RutaProtegida roles={ROLES_TALLER}><NuevaOrdenPage /></RutaProtegida>} />
           <Route path="/ordenes/detalle/:id" element={<RutaProtegida><DetalleOrdenPage /></RutaProtegida>} />
 
-          <Route path="/inventario" element={<RutaProtegida><InventarioDashboardPage /></RutaProtegida>} />
-          <Route path="/inventario/nuevo" element={<RutaProtegida><RegistroRepuestosPage /></RutaProtegida>} />
-          <Route path="/inventario/movimientos" element={<RutaProtegida><MovimientosInventarioPage /></RutaProtegida>} />
+          {/* El tecnico consulta repuestos desde el diagnostico, no administra el inventario. */}
+          <Route path="/inventario" element={<RutaProtegida roles={ROLES_TALLER}><InventarioDashboardPage /></RutaProtegida>} />
+          <Route path="/inventario/nuevo" element={<RutaProtegida roles={ROLES_TALLER}><RegistroRepuestosPage /></RutaProtegida>} />
+          <Route path="/inventario/movimientos" element={<RutaProtegida roles={ROLES_TALLER}><MovimientosInventarioPage /></RutaProtegida>} />
 
           <Route path="/soporte" element={<RutaProtegida><SoportePage /></RutaProtegida>} />
 

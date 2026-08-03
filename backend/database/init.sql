@@ -784,6 +784,22 @@ UPDATE planes_suscripcion SET max_usuarios = 2    WHERE codigo = 'BASICO';
 UPDATE planes_suscripcion SET max_usuarios = 5    WHERE codigo = 'PROFESIONAL';
 UPDATE planes_suscripcion SET max_usuarios = NULL WHERE codigo = 'EMPRESARIAL';
 
+--Se agrega un campo codigo
+ALTER TABLE estados_reparacion
+    ADD COLUMN codigo VARCHAR(30);
+
+ALTER TABLE estados_reparacion
+    ADD CONSTRAINT ck_estado_reparacion_codigo CHECK (
+        codigo IS NULL OR codigo IN (
+            'RECEPCION', 'DIAGNOSTICO', 'COTIZACION', 'EN_REPARACION',
+            'CONTROL_CALIDAD', 'LISTO_ENTREGA', 'ENTREGADO', 'CANCELADO'
+        )
+    );
+
+CREATE UNIQUE INDEX uq_estado_reparacion_codigo_empresa
+    ON estados_reparacion (id_empresa, codigo)
+    WHERE codigo IS NOT NULL;
+
 
 -- ============================================================
 -- 

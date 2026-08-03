@@ -1,4 +1,4 @@
-export type UserRole = "ADMIN" | "PROPIETARIO" | "TECNICO" | string;
+export type UserRole = "ADMIN" | "PROPIETARIO" | "TECNICO" | "RECEPCIONISTA";
 
 export interface UsuarioResponse {
   id: number;
@@ -21,10 +21,23 @@ export interface LoginRequest {
   password: string;
 }
 
+// Identidad estable de cada etapa. El nombre lo edita el taller, el código no.
+// null en los estados que el taller creó a mano.
+export type CodigoEstadoReparacion =
+  | "RECEPCION"
+  | "DIAGNOSTICO"
+  | "COTIZACION"
+  | "EN_REPARACION"
+  | "CONTROL_CALIDAD"
+  | "LISTO_ENTREGA"
+  | "ENTREGADO"
+  | "CANCELADO";
+
 export interface EstadoReparacionResponse {
   id: number;
   idEmpresa: number;
   nombre: string;
+  codigo: CodigoEstadoReparacion | null;
   colorHex: string;
   orden: number;
   estadoFinal: boolean;
@@ -42,6 +55,7 @@ export interface OrdenTrabajoResponse {
   dispositivoResumen: string;
   nombreTecnico: string | null;
   nombreEstado: string;
+  codigoEstado: CodigoEstadoReparacion | null;
   colorHexEstado: string | null;
   numeroOrden: string;
   codigoSeguimiento: string;
@@ -502,18 +516,6 @@ export interface EmpresaResponse {
   nombrePlan: string;
   activo: boolean;
   fechaRegistro: string;
-}
-
-export interface UsuarioResponse {
-  id: number;
-  empresaId: number;
-  nombre: string;
-  apellido: string;
-  correo: string;
-  rol: string;
-  activo: boolean;
-  debeCambiarPassword: boolean;
-  ultimoAcceso: string | null;
 }
 
 export interface RegistroEmpresaResponse {

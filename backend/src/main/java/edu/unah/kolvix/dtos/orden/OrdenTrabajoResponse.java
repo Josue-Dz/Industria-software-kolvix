@@ -1,6 +1,7 @@
 package edu.unah.kolvix.dtos.orden;
 
 import java.time.Instant;
+import edu.unah.kolvix.enums.CodigoEstadoReparacion;
 import edu.unah.kolvix.enums.EstadoPagoOrden;
 
 public record OrdenTrabajoResponse(
@@ -14,6 +15,7 @@ public record OrdenTrabajoResponse(
     String dispositivoResumen,
     String nombreTecnico,
     String nombreEstado,
+    CodigoEstadoReparacion codigoEstado,
     String colorHexEstado,
     String numeroOrden,
     String codigoSeguimiento,
