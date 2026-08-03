@@ -544,8 +544,17 @@ input, select, textarea {
   align-items: start;
 }
 
+.recepcion-grid {
+  grid-template-columns: 1.1fr 1fr;
+  align-items: start;
+}
+
 @media (max-width: 900px) {
   .detalle-taller-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recepcion-grid {
     grid-template-columns: 1fr;
   }
 }

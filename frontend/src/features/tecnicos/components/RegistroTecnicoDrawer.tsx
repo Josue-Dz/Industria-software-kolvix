@@ -24,7 +24,7 @@ interface RegistroTecnicoDrawerProps {
   onRegistrado: (tecnico: TecnicoResponse) => void;
 }
 
-// Drawer lateral con el formulario de registro; maneja su propio estado y envío.
+// Drawer lateral con el formulario de registro, maneja su propio estado y envío.
 export const RegistroTecnicoDrawer: React.FC<RegistroTecnicoDrawerProps> = ({ onClose, onRegistrado }) => {
   const [form, setForm] = useState<TecnicoRegistroRequest>(FORM_INICIAL);
   const [formError, setFormError] = useState('');
@@ -34,7 +34,7 @@ export const RegistroTecnicoDrawer: React.FC<RegistroTecnicoDrawerProps> = ({ on
     setForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError('');
     setIsSaving(true);

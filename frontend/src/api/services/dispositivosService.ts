@@ -11,6 +11,11 @@ export const dispositivosService = {
     return data;
   },
 
+  async obtener(idDispositivo: number): Promise<DispositivoResponse> {
+    const { data } = await apiClient.get<DispositivoResponse>(`/dispositivos/${idDispositivo}`);
+    return data;
+  },
+
   async listarPorCliente(clienteId: number): Promise<DispositivoResponse[]> {
     const { data } = await apiClient.get<DispositivoResponse[]>(`/dispositivos/cliente/${clienteId}`);
     return data;

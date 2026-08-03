@@ -15,10 +15,9 @@ export const LoginPage: React.FC = () => {
   const location = useLocation();
   const { iniciarSesion } = useAuth();
 
-  // Ruta que el usuario intentaba abrir antes de que lo mandaran al login.
   const desde = (location.state as { desde?: string } | null)?.desde;
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setLoginError('');

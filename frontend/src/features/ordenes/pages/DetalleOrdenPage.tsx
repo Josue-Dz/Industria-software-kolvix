@@ -2,10 +2,11 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { DashboardLayout } from '../../../components/layout/DashboardLayout';
 import { Card } from '../../../components/ui/Card';
-import { Info, Stethoscope, FileText, Camera } from 'lucide-react';
+import { Info, ClipboardCheck, Stethoscope, FileText, Camera } from 'lucide-react';
 import { useDetalleOrden } from '../detalle/useDetalleOrden';
 import { OrdenHeaderCard } from '../detalle/OrdenHeaderCard';
 import { InfoTab } from '../detalle/InfoTab';
+import { RecepcionTab } from '../detalle/RecepcionTab';
 import { DiagnosticoTab } from '../detalle/DiagnosticoTab';
 import { CotizacionTab } from '../detalle/CotizacionTab';
 import { EvidenciaTab } from '../detalle/EvidenciaTab';
@@ -64,6 +65,7 @@ export const DetalleOrdenPage: React.FC = () => {
             <Card hoverable={false} style={{ padding: '8px 16px', borderRadius: '16px', backgroundColor: '#FFFFFF' }}>
               <div style={{ display: 'flex', gap: '12px' }}>
                 {tabButton('info', <Info size={18} />, 'Información')}
+                {tabButton('rec', <ClipboardCheck size={18} />, 'Recepción')}
                 {tabButton('diag', <Stethoscope size={18} />, 'Diagnóstico')}
                 {/* La cotización es comercial: el técnico ve solo si fue
                     aprobada, desde la pestaña Información. */}
@@ -89,6 +91,7 @@ export const DetalleOrdenPage: React.FC = () => {
               {/* Left Dynamic Tab Content */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {activeSubTab === 'info' && <InfoTab d={d} orden={orden} />}
+                {activeSubTab === 'rec' && <RecepcionTab orden={orden} soloLectura={d.esTecnico} />}
                 {activeSubTab === 'diag' && <DiagnosticoTab d={d} orden={orden} />}
                 {activeSubTab === 'cot' && !d.esTecnico && <CotizacionTab d={d} orden={orden} />}
                 {activeSubTab === 'evi' && <EvidenciaTab d={d} />}

@@ -11,7 +11,7 @@ export const EstadosTab: React.FC<{ c: ConfiguracionController }> = ({ c }) => {
   const [nombre, setNombre] = useState('');
   const [color, setColor] = useState('#6366F1');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     const creado = await crearEstado(nombre, color);
     if (creado) setNombre('');

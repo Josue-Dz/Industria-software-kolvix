@@ -10,11 +10,23 @@ import { clientesService } from '../../../api/services/clientesService';
 import { dispositivosService } from '../../../api/services/dispositivosService';
 import { tecnicosService } from '../../../api/services/tecnicosService';
 import { ordenesService } from '../../../api/services/ordenesService';
+import { plantillasInspeccionService, recepcionService } from '../../../api/services/recepcionService';
+import { ChasisInteractivo } from '../detalle/ChasisInteractivo';
 import type {
   CategoriaDispositivoResponse,
   ClienteResponse,
+  DanoFisico,
+  PlantillaInspeccionResponse,
   TecnicoResponse,
+  VistaChasis,
 } from '../../../api/types';
+
+const VISTAS_POR_DEFECTO: VistaChasis[] = [
+  { codigo: 'FRONTAL', titulo: 'Frontal', orden: 1 },
+  { codigo: 'TRASERA', titulo: 'Trasera', orden: 2 },
+  { codigo: 'LATERAL_IZQ', titulo: 'Lateral izq.', orden: 3 },
+  { codigo: 'LATERAL_DER', titulo: 'Lateral der.', orden: 4 },
+];
 
 export const NuevaOrdenPage: React.FC = () => {
   const navigate = useNavigate();
@@ -44,15 +56,41 @@ export const NuevaOrdenPage: React.FC = () => {
   const [issueDescription, setIssueDescription] = useState('');
   const [observations, setObservations] = useState('');
 
-  // Evidencia visual (panel derecho, módulo de recepción pendiente de conectar)
-  const [markType, setMarkType] = useState('Rotura / Crack');
-  const [markNote, setMarkNote] = useState('');
+  // Evidencia visual: daños marcados sobre el chasis del equipo recibido.
+  const [danos, setDanos] = useState<DanoFisico[]>([]);
+  const [plantillas, setPlantillas] = useState<PlantillaInspeccionResponse[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [loadError, setLoadError] = useState('');
 
   const isExistingClient = selectedClienteId !== '';
+
+  // La plantilla decide qué caras del equipo se pueden marcar; si la categoría
+  // no tiene una cargada se usan las vistas genéricas.
+  const plantillaActiva = plantillas.find((p) => String(p.categoriaId) === categoriaId) ?? null;
+  const vistasChasis =
+    plantillaActiva && plantillaActiva.vistas.length > 0 ? plantillaActiva.vistas : VISTAS_POR_DEFECTO;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const cargarPlantillas = async () => {
+      if (categoriaId === '') return;
+
+      try {
+        const disponibles = await plantillasInspeccionService.listar(Number(categoriaId));
+        if (isMounted) setPlantillas(disponibles);
+      } catch {
+        if (isMounted) setPlantillas([]);
+      }
+    };
+
+    void cargarPlantillas();
+    return () => {
+      isMounted = false;
+    };
+  }, [categoriaId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -113,7 +151,7 @@ export const NuevaOrdenPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (empresaId === null) {
       setSubmitError('No se pudo identificar la empresa activa. Inicia sesion nuevamente.');
@@ -153,13 +191,23 @@ export const NuevaOrdenPage: React.FC = () => {
         accesoriosRecibidos: accessories.trim() || undefined,
       });
 
-      await ordenesService.crear(empresaId, {
+      const orden = await ordenesService.crear(empresaId, {
         idCliente: clienteId,
         idDispositivo: dispositivo.idDispositivo,
         idTecnico: technicianId === '' ? undefined : Number(technicianId),
         problemaReportado: issueDescription.trim(),
         observaciones: observations.trim() || undefined,
       });
+
+      if (danos.length > 0) {
+        await recepcionService.registrar({
+          ordenId: orden.idOrden,
+          plantillaInspeccionId: plantillaActiva?.id ?? null,
+          danosFisicos: danos,
+          observaciones: observations.trim() || undefined,
+          aceptacionCliente: false,
+        });
+      }
 
       navigate('/ordenes');
     } catch {
@@ -298,7 +346,10 @@ export const NuevaOrdenPage: React.FC = () => {
                     <select
                       className="input-field"
                       value={categoriaId}
-                      onChange={(e) => setCategoriaId(e.target.value)}
+                      onChange={(e) => {
+                        setCategoriaId(e.target.value);
+                        setDanos([]);
+                      }}
                       required
                     >
                       {categorias.length === 0 && <option value="">Cargando catalogo...</option>}
@@ -417,24 +468,11 @@ export const NuevaOrdenPage: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="input-group">
-                  <label className="input-label" style={{ fontSize: '12px', textTransform: 'uppercase' }}>TIPO DE MARCA:</label>
-                  <select
-                    className="input-field"
-                    value={markType}
-                    onChange={(e) => setMarkType(e.target.value)}
-                  >
-                    <option value="Rotura / Crack">Rotura / Crack</option>
-                    <option value="Rasguño / Rayón">Rasguño / Rayón</option>
-                    <option value="Golpe / Abolladura">Golpe / Abolladura</option>
-                    <option value="Desgaste normal">Desgaste normal</option>
-                  </select>
-                </div>
-
-                <Input
-                  placeholder="Añadir nota a la marca (Ej. Camara frontal quebrada)"
-                  value={markNote}
-                  onChange={(e) => setMarkNote(e.target.value)}
+                <ChasisInteractivo
+                  categoriaId={categoriaId === '' ? null : Number(categoriaId)}
+                  vistas={vistasChasis}
+                  danos={danos}
+                  onChange={setDanos}
                 />
 
                 <div style={{

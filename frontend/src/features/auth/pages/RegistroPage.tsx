@@ -43,7 +43,7 @@ export const RegistroPage: React.FC = () => {
     setForm((prev) => ({ ...prev, [campo]: e.target.value }));
   };
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 

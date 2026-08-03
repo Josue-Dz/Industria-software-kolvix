@@ -18,7 +18,7 @@ export const ConsultaReparacionPage: React.FC = () => {
   const [comentario, setComentario] = useState('');
   const [enviandoReview, setEnviandoReview] = useState(false);
 
-  const handleSearch = async (e: React.SubmitEvent) => {
+  const handleSearch = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!code.trim()) return;
 
@@ -36,7 +36,7 @@ export const ConsultaReparacionPage: React.FC = () => {
     }
   };
 
-  const handleEnviarReview = async (e: React.SubmitEvent) => {
+  const handleEnviarReview = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!data) return;
 

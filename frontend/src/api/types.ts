@@ -619,3 +619,73 @@ export interface EstadoReparacionRequest {
   estadoFinal: boolean;
   notificarCliente: boolean;
 }
+
+export type EstadoFisicoGeneral = "BUENO" | "REGULAR" | "DANIADO" | "NO_APLICA";
+
+export type TipoDanoFisico =
+  | "RAYON"
+  | "GOLPE"
+  | "FISURA"
+  | "FALTANTE"
+  | "MANCHA"
+  | "OXIDO";
+
+/** Una cara del dispositivo; el codigo decide que silueta dibuja el chasis. */
+export interface VistaChasis {
+  codigo: string;
+  titulo: string;
+  orden: number;
+}
+
+/** x e y van en porcentaje del area dibujada, no en pixeles. */
+export interface DanoFisico {
+  vista: string;
+  x: number;
+  y: number;
+  tipo: TipoDanoFisico;
+  nota?: string | null;
+}
+
+export interface PlantillaInspeccionResponse {
+  id: number;
+  categoriaId: number;
+  categoriaNombre: string;
+  nombre: string;
+  descripcion: string | null;
+  vistas: VistaChasis[];
+  activo: boolean;
+}
+
+export interface ChecklistRecepcionRequest {
+  ordenId: number;
+  plantillaInspeccionId?: number | null;
+  estadoFisicoGeneral?: EstadoFisicoGeneral | null;
+  danosFisicos?: DanoFisico[];
+  observaciones?: string;
+  aceptacionCliente: boolean;
+  urlDocumentoAceptacion?: string;
+  fechaAceptacion?: string | null;
+}
+
+export interface ChecklistRecepcionResponse {
+  id: number;
+  ordenId: number;
+  usuarioId: number | null;
+  usuarioNombre: string | null;
+  plantillaInspeccionId: number | null;
+  plantillaNombre: string | null;
+  estadoFisicoGeneral: EstadoFisicoGeneral | null;
+  danosFisicos: DanoFisico[];
+  observaciones: string | null;
+  aceptacionCliente: boolean;
+  urlDocumentoAceptacion: string | null;
+  fechaAceptacion: string | null;
+  fecha: string;
+}
+
+export interface ActualizarDetallesChecklistRequest {
+  estadoFisicoGeneral?: EstadoFisicoGeneral | null;
+  aceptacionCliente?: boolean | null;
+  urlDocumentoAceptacion?: string | null;
+  fechaAceptacion?: string | null;
+}

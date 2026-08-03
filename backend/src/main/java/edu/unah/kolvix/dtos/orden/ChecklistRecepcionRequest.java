@@ -1,20 +1,20 @@
 package edu.unah.kolvix.dtos.orden;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 import edu.unah.kolvix.enums.EstadoFisicoGeneral;
+import edu.unah.kolvix.model.DanoFisico;
 
 public record ChecklistRecepcionRequest(
         @NotNull Long ordenId,
-        @NotNull Long usuarioId,
         Long plantillaInspeccionId,
         EstadoFisicoGeneral estadoFisicoGeneral,
-        List<Map<String, Object>> danosFisicos,
+        @Valid List<DanoFisico> danosFisicos,
         @Size(max = 500) String observaciones,
         boolean aceptacionCliente,
         @Size(max = 255) String urlDocumentoAceptacion,
