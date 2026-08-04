@@ -11,8 +11,6 @@ interface PerfilMarketplaceFormProps {
   onGuardar: (datos: PerfilMarketplaceRequest) => Promise<boolean>;
 }
 
-// El componente se remonta (key) cuando cambia el perfil cargado, así los
-// valores iniciales se toman en el useState sin necesidad de un efecto.
 export const PerfilMarketplaceForm: React.FC<PerfilMarketplaceFormProps> = ({
   empresa, perfil, isSaving, onGuardar,
 }) => {
@@ -21,14 +19,13 @@ export const PerfilMarketplaceForm: React.FC<PerfilMarketplaceFormProps> = ({
   const [latitud, setLatitud] = useState(perfil?.latitud != null ? String(perfil.latitud) : '');
   const [longitud, setLongitud] = useState(perfil?.longitud != null ? String(perfil.longitud) : '');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     await onGuardar({
       descripcionPublica: descripcion.trim() || undefined,
       horarioAtencion: horario.trim() || undefined,
       latitud: latitud.trim() === '' ? null : Number(latitud),
       longitud: longitud.trim() === '' ? null : Number(longitud),
-      // La visibilidad se administra con el interruptor; aquí solo se conserva.
       marketplaceVisible: perfil?.marketplaceVisible ?? false,
     });
   };

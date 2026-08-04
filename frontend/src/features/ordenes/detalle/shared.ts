@@ -1,6 +1,6 @@
 // Helpers compartidos por las vistas del detalle de orden.
 
-export type SubTab = 'info' | 'diag' | 'cot' | 'evi';
+export type SubTab = 'info' | 'rec' | 'diag' | 'cot' | 'evi';
 
 export const formatMoney = (monto: number | null | undefined): string =>
   monto === null || monto === undefined ? '—' : `L. ${Number(monto).toLocaleString('es-HN', { minimumFractionDigits: 2 })}`;

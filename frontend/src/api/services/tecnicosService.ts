@@ -1,7 +1,18 @@
 import apiClient from "../axiosConfig";
-import type { PageResponse, TecnicoRegistroRequest, TecnicoResponse } from "../types";
+import type {
+  CargaTecnicoResponse,
+  PageResponse,
+  TecnicoRegistroRequest,
+  TecnicoResponse,
+} from "../types";
 
 export const tecnicosService = {
+  // Técnicos activos con sus órdenes abiertas, del menos al más cargado.
+  async listarCarga(): Promise<CargaTecnicoResponse[]> {
+    const { data } = await apiClient.get<CargaTecnicoResponse[]>("/tecnicos/carga");
+    return data;
+  },
+
   async listar(): Promise<TecnicoResponse[]> {
     const { data } = await apiClient.get<PageResponse<TecnicoResponse>>("/tecnicos/enlistar", {
       params: { size: 100 },

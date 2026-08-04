@@ -88,8 +88,9 @@ public class RecepcionController {
     @PatchMapping("/{idChecklist}/detalles")
     public ResponseEntity<ChecklistRecepcionResponse> actualizarDetallesChecklist(
             @PathVariable Long idChecklist,
-            @RequestBody ActualizarDetallesRequest request // Todo viaja seguro en el body
+            @RequestBody ActualizarDetallesRequest request
     ) {
+        accesoEmpresa.validarChecklistPropio(idChecklist);
         return ResponseEntity.ok(recepcionService.actualizarDetallesChecklist(idChecklist, request));
     }
 

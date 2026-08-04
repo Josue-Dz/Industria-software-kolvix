@@ -57,6 +57,12 @@ public class DispositivoService {
                 .toList();
     }
 
+    public DispositivoResponse obtenerDispositivo(Long idDispositivo) {
+        return dispositivoRepository.findById(idDispositivo)
+                .map(this::mapearResponse)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El dispositivo no existe"));
+    }
+
     @Transactional
     public DispositivoResponse editarDispositivo(Long idDispositivo, DispositivoRequest request) {
         Dispositivo dispositivo = dispositivoRepository.findById(idDispositivo)

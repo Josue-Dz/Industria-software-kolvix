@@ -41,7 +41,7 @@ export const MovimientoFormDrawer: React.FC<MovimientoFormDrawerProps> = ({
 
   const repuestoSeleccionado = repuestos.find(r => String(r.id) === repuestoId);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError('');
     setIsSaving(true);

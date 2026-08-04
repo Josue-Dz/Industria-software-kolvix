@@ -19,13 +19,12 @@ import type {
   EvidenciaFotograficaResponse,
   OrdenTrabajoResponse,
   RepuestoResponse,
-  TecnicoResponse,
+  CargaTecnicoResponse,
   UsuarioResponse,
 } from '../../../api/types';
 import type { SubTab } from './shared';
 
-// Toda la lógica (estado + acciones) del detalle de la orden. Las vistas de cada
-// pestaña reciben este controlador y se limitan a renderizar.
+
 export const useDetalleOrden = (ordenId: number) => {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('info');
   const [user, setUser] = useState<UsuarioResponse | null>(null);
@@ -35,7 +34,7 @@ export const useDetalleOrden = (ordenId: number) => {
   const [cotizaciones, setCotizaciones] = useState<CotizacionResponse[]>([]);
   const [evidencias, setEvidencias] = useState<EvidenciaFotograficaResponse[]>([]);
   const [albumes, setAlbumes] = useState<AlbumEvidenciaResponse[]>([]);
-  const [tecnicos, setTecnicos] = useState<TecnicoResponse[]>([]);
+  const [tecnicos, setTecnicos] = useState<CargaTecnicoResponse[]>([]);
   const [inventario, setInventario] = useState<RepuestoResponse[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -84,10 +83,13 @@ export const useDetalleOrden = (ordenId: number) => {
     ? diagnostico.repuestos.reduce((total, repuesto) => total + Number(repuesto.subtotal ?? 0), 0)
     : 0;
 
-  // El diagnóstico y sus repuestos solo se bloquean con cotización ENVIADA (el cliente la evalúa)
-  // o APROBADA (compromiso cerrado); con PENDIENTE/RECHAZADA/VENCIDA/CANCELADA se pueden ajustar
-  // para preparar la siguiente versión.
+
   const diagnosticoBloqueado = cotizacionActual?.estado === 'ENVIADA' || cotizacionActual?.estado === 'APROBADA';
+
+  // Corregir el técnico asignado solo tiene sentido antes de que la orden avance
+  const codigoEstadoActual = estados.find((e) => e.id === orden?.idEstado)?.codigo ?? null;
+  const puedeCambiarTecnico =
+    codigoEstadoActual === 'RECEPCION' || codigoEstadoActual === 'DIAGNOSTICO';
 
   const estadosOrdenados = [...estados].sort((a, b) => a.orden - b.orden);
   const estadoActualIdx = orden ? estadosOrdenados.findIndex((e) => e.id === orden.idEstado) : -1;
@@ -134,12 +136,12 @@ export const useDetalleOrden = (ordenId: number) => {
           cotizacionesService.listarPorOrden(ordenId),
           evidenciasService.listarPorOrden(ordenId),
           evidenciasService.listarAlbumes(),
-          // El listado completo de técnicos es solo para ADMIN/PROPIETARIO. Un
-          // técnico recibiría 403 y se quedaría sin poder elegirse a sí mismo,
-          // así que para ese rol se consulta únicamente su propio perfil.
+
           currentUser.rol === 'TECNICO'
-            ? tecnicosService.obtenerMiPerfil().then((perfil) => [perfil])
-            : tecnicosService.listar(),
+            ? tecnicosService.obtenerMiPerfil().then((perfil): CargaTecnicoResponse[] => [
+                { idTecnico: perfil.idTecnico, nombre: perfil.nombre, apellido: perfil.apellido, ordenesActivas: 0 },
+              ])
+            : tecnicosService.listarCarga(),
           repuestosService.listar(),
           entregasService.obtenerPorOrden(currentUser.empresaId, ordenId), 
         ]);
@@ -159,9 +161,13 @@ export const useDetalleOrden = (ordenId: number) => {
         if (albR.status === 'fulfilled') setAlbumes(albR.value);
         if (tecR.status === 'fulfilled') {
           setTecnicos(tecR.value);
-          // Al ser el único técnico posible, se deja elegido de entrada: sin esto
-          // el campo quedaría vacío y deshabilitado, y no podría guardar.
+
           if (currentUser.rol === 'TECNICO' && tecR.value.length === 1) {
+            setDiagTecnicoId(String(tecR.value[0].idTecnico));
+          } else if (ordenData.idTecnico !== null) {
+            setDiagTecnicoId(String(ordenData.idTecnico));
+          } else if (tecR.value.length > 0) {
+            // Sin técnico asignado se propone el menos cargado, que viene primero.
             setDiagTecnicoId(String(tecR.value[0].idTecnico));
           }
         }
@@ -216,8 +222,7 @@ export const useDetalleOrden = (ordenId: number) => {
     setOrden(actualizada);
   };
 
-  // Avanza el flujo automáticamente al completar un hito, buscando el estado por nombre
-  // entre los configurados por la empresa. Nunca retrocede y nunca rompe el hito principal.
+
   const avanzarEstadoPorHito = async (candidatos: string[], comentario: string) => {
     if (!orden) return;
     const idxDestino = estadosOrdenados.findIndex((e) => candidatos.includes(normalizarTexto(e.nombre)));
@@ -226,11 +231,13 @@ export const useDetalleOrden = (ordenId: number) => {
     try {
       await cambiarEstadoOrden(estadosOrdenados[idxDestino].id, comentario);
     } catch {
-      // El hito principal ya se completó; el avance del flujo es secundario.
+      // El avance es un efecto secundario del hito: la acción principal ya se
+      // guardó, así que no se interrumpe al usuario. El estado se puede mover a
+      // mano desde el flujo operativo.
     }
   };
 
-  // Completa en el backend los estados estándar que falten (idempotente) y refresca el timeline.
+
   const handleInicializarEstados = async () => {
     setIsSaving(true);
     try {
@@ -292,7 +299,10 @@ export const useDetalleOrden = (ordenId: number) => {
       };
 
       if (diagnostico) {
-        await diagnosticosService.editar(diagnostico.id, { ...base, tecnicoId: diagnostico.tecnicoId });
+        await diagnosticosService.editar(diagnostico.id, { ...base, tecnicoId: Number(diagTecnicoId) });
+        if (orden.idTecnico !== Number(diagTecnicoId)) {
+          setOrden(await ordenesService.obtenerPorId(user.empresaId, orden.idOrden));
+        }
         feedback('Diagnóstico actualizado.');
       } else {
         if (diagTecnicoId === '') {
@@ -300,12 +310,9 @@ export const useDetalleOrden = (ordenId: number) => {
           setIsSaving(false);
           return;
         }
-        const tecnicoId = Number(diagTecnicoId);
-        if (orden.idTecnico !== tecnicoId) {
-          const ordenActualizada = await ordenesService.cambiarTecnico(user.empresaId, orden.idOrden, tecnicoId);
-          setOrden(ordenActualizada);
-        }
-        await diagnosticosService.crear({ ...base, tecnicoId });
+
+        await diagnosticosService.crear({ ...base, tecnicoId: Number(diagTecnicoId) });
+        setOrden(await ordenesService.obtenerPorId(user.empresaId, orden.idOrden));
         feedback('Diagnóstico registrado.');
         await avanzarEstadoPorHito(['diagnostico'], 'Diagnóstico técnico registrado');
       }
@@ -349,11 +356,10 @@ export const useDetalleOrden = (ordenId: number) => {
 };
 
   // Si hay un borrador PENDIENTE, lo re-guarda para que el backend recalcule los montos
-  // con los repuestos actuales; así el total de la cotización nunca queda desfasado.
+  // con los repuestos actuales, así el total de la cotización nunca queda desfasado.
   const sincronizarCotizacionBorrador = async () => {
     if (!user || !orden || !diagnostico || !cotizacionActual || cotizacionActual.estado !== 'PENDIENTE') return;
-    // El técnico no puede editar cotizaciones (el backend responde 403): sus
-    // montos los recalcula quien la administre al guardar el borrador.
+
     if (user.rol === 'TECNICO') return;
     try {
       await cotizacionesService.editarBorrador(cotizacionActual.id, {
@@ -369,7 +375,7 @@ export const useDetalleOrden = (ordenId: number) => {
       });
       await refrescarCotizaciones();
     } catch {
-      // Secundario: los montos también se recalculan al guardar el borrador manualmente.
+      // La cotización sí se guardó; solo falló el refresco de la lista.
     }
   };
 
@@ -575,7 +581,7 @@ export const useDetalleOrden = (ordenId: number) => {
   return {
     // Datos
     activeSubTab, setActiveSubTab,
-    orden, diagnostico, cotizaciones, cotizacionActual, evidencias, albumes, tecnicos,
+    orden, diagnostico, cotizaciones, cotizacionActual, evidencias, albumes, tecnicos, puedeCambiarTecnico,
     // Un técnico solo puede diagnosticar a su propio nombre.
     esTecnico: user?.rol === 'TECNICO',
     estadosOrdenados, estadoActualIdx, siguienteEstado,

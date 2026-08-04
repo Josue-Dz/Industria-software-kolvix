@@ -3,13 +3,13 @@ package edu.unah.kolvix.entities;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import edu.unah.kolvix.enums.EstadoFisicoGeneral;
+import edu.unah.kolvix.model.DanoFisico;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -46,7 +46,7 @@ public class ChecklistRecepcion {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "danos_fisicos", nullable = false, columnDefinition = "jsonb")
-    private List<Map<String, Object>> danosFisicos = new ArrayList<>();
+    private List<DanoFisico> danosFisicos = new ArrayList<>();
 
     private String observaciones;
 

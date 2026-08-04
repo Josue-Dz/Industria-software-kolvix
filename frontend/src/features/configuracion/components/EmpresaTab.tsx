@@ -27,7 +27,7 @@ export const EmpresaTab: React.FC<{ c: ConfiguracionController }> = ({ c }) => {
   const [newMoneda, setNewMoneda] = useState('HNL');
   const [newInstrucciones, setNewInstrucciones] = useState('');
 
-  const handleAddAccount = async (e: React.FormEvent) => {
+  const handleAddAccount = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     const creada = await agregarCuentaPago({
       banco: newBanco,

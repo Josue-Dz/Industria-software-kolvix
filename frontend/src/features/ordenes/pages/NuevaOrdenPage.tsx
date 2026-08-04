@@ -10,11 +10,26 @@ import { clientesService } from '../../../api/services/clientesService';
 import { dispositivosService } from '../../../api/services/dispositivosService';
 import { tecnicosService } from '../../../api/services/tecnicosService';
 import { ordenesService } from '../../../api/services/ordenesService';
+import { plantillasInspeccionService, recepcionService } from '../../../api/services/recepcionService';
+import { ChasisInteractivo } from '../detalle/ChasisInteractivo';
+import { BuscadorCliente } from '../nueva/BuscadorCliente';
+import { SelectorDispositivo } from '../nueva/SelectorDispositivo';
 import type {
   CategoriaDispositivoResponse,
   ClienteResponse,
-  TecnicoResponse,
+  DanoFisico,
+  DispositivoResponse,
+  PlantillaInspeccionResponse,
+  CargaTecnicoResponse,
+  VistaChasis,
 } from '../../../api/types';
+
+const VISTAS_POR_DEFECTO: VistaChasis[] = [
+  { codigo: 'FRONTAL', titulo: 'Frontal', orden: 1 },
+  { codigo: 'TRASERA', titulo: 'Trasera', orden: 2 },
+  { codigo: 'LATERAL_IZQ', titulo: 'Lateral izq.', orden: 3 },
+  { codigo: 'LATERAL_DER', titulo: 'Lateral der.', orden: 4 },
+];
 
 export const NuevaOrdenPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,7 +38,8 @@ export const NuevaOrdenPage: React.FC = () => {
   const [empresaId, setEmpresaId] = useState<number | null>(null);
   const [clientes, setClientes] = useState<ClienteResponse[]>([]);
   const [categorias, setCategorias] = useState<CategoriaDispositivoResponse[]>([]);
-  const [tecnicos, setTecnicos] = useState<TecnicoResponse[]>([]);
+  // Ordenados por carga: el backend devuelve primero al menos ocupado.
+  const [tecnicos, setTecnicos] = useState<CargaTecnicoResponse[]>([]);
 
   // Cliente ('' = registrar cliente nuevo)
   const [selectedClienteId, setSelectedClienteId] = useState('');
@@ -31,7 +47,8 @@ export const NuevaOrdenPage: React.FC = () => {
   const [clientLastName, setClientLastName] = useState('');
   const [phone, setPhone] = useState('');
 
-  // Dispositivo
+  // Dispositivo (null = se registra uno nuevo; si no, se reutiliza el del cliente)
+  const [dispositivoExistente, setDispositivoExistente] = useState<DispositivoResponse | null>(null);
   const [categoriaId, setCategoriaId] = useState('');
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
@@ -44,15 +61,43 @@ export const NuevaOrdenPage: React.FC = () => {
   const [issueDescription, setIssueDescription] = useState('');
   const [observations, setObservations] = useState('');
 
-  // Evidencia visual (panel derecho, módulo de recepción pendiente de conectar)
-  const [markType, setMarkType] = useState('Rotura / Crack');
-  const [markNote, setMarkNote] = useState('');
+  // Evidencia visual: daños marcados sobre el chasis del equipo recibido.
+  const [danos, setDanos] = useState<DanoFisico[]>([]);
+  const [plantillas, setPlantillas] = useState<PlantillaInspeccionResponse[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [loadError, setLoadError] = useState('');
 
   const isExistingClient = selectedClienteId !== '';
+  const clienteSeleccionado =
+    clientes.find((cliente) => String(cliente.idCliente) === selectedClienteId) ?? null;
+
+  // La plantilla decide qué caras del equipo se pueden marcar; si la categoría
+  // no tiene una cargada se usan las vistas genéricas.
+  const plantillaActiva = plantillas.find((p) => String(p.categoriaId) === categoriaId) ?? null;
+  const vistasChasis =
+    plantillaActiva && plantillaActiva.vistas.length > 0 ? plantillaActiva.vistas : VISTAS_POR_DEFECTO;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const cargarPlantillas = async () => {
+      if (categoriaId === '') return;
+
+      try {
+        const disponibles = await plantillasInspeccionService.listar(Number(categoriaId));
+        if (isMounted) setPlantillas(disponibles);
+      } catch {
+        if (isMounted) setPlantillas([]);
+      }
+    };
+
+    void cargarPlantillas();
+    return () => {
+      isMounted = false;
+    };
+  }, [categoriaId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -67,7 +112,7 @@ export const NuevaOrdenPage: React.FC = () => {
         const [clientesResult, categoriasResult, tecnicosResult] = await Promise.allSettled([
           clientesService.listar(user.empresaId),
           dispositivosService.listarCategorias(),
-          tecnicosService.listar(),
+          tecnicosService.listarCarga(),
         ]);
 
         if (!isMounted) return;
@@ -97,29 +142,30 @@ export const NuevaOrdenPage: React.FC = () => {
     };
   }, []);
 
-  const handleClienteChange = (value: string) => {
-    setSelectedClienteId(value);
-    if (value === '') {
-      setClientName('');
-      setClientLastName('');
-      setPhone('');
-      return;
-    }
-    const cliente = clientes.find((c) => String(c.idCliente) === value);
-    if (cliente) {
-      setClientName(cliente.nombre);
-      setClientLastName(cliente.apellido);
-      setPhone(cliente.telefono ?? '');
+  const handleSeleccionarCliente = (cliente: ClienteResponse | null) => {
+    setSelectedClienteId(cliente ? String(cliente.idCliente) : '');
+    setClientName(cliente?.nombre ?? '');
+    setClientLastName(cliente?.apellido ?? '');
+    setPhone(cliente?.telefono ?? '');
+    setDispositivoExistente(null);
+  };
+
+  const handleSeleccionarDispositivo = (dispositivo: DispositivoResponse | null) => {
+    setDispositivoExistente(dispositivo);
+    setDanos([]);
+    if (dispositivo) {
+      // El chasis se dibuja según la categoría, así que se toma la del equipo elegido.
+      setCategoriaId(dispositivo.idCategoria === null ? '' : String(dispositivo.idCategoria));
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (empresaId === null) {
       setSubmitError('No se pudo identificar la empresa activa. Inicia sesion nuevamente.');
       return;
     }
-    if (categoriaId === '') {
+    if (dispositivoExistente === null && categoriaId === '') {
       setSubmitError('Selecciona el tipo de dispositivo.');
       return;
     }
@@ -143,23 +189,39 @@ export const NuevaOrdenPage: React.FC = () => {
         setSelectedClienteId(String(cliente.idCliente));
       }
 
-      const dispositivo = await dispositivosService.crear({
-        idCliente: clienteId,
-        idCategoria: Number(categoriaId),
-        marca: brand.trim() || undefined,
-        modelo: model.trim() || undefined,
-        color: color.trim() || undefined,
-        numeroSerie: serial.trim() || undefined,
-        accesoriosRecibidos: accessories.trim() || undefined,
-      });
+      // Si el cliente vuelve con un equipo ya registrado se reutiliza su ficha,
+      // en vez de crear un duplicado en cada visita.
+      const idDispositivo =
+        dispositivoExistente?.idDispositivo ??
+        (
+          await dispositivosService.crear({
+            idCliente: clienteId,
+            idCategoria: Number(categoriaId),
+            marca: brand.trim() || undefined,
+            modelo: model.trim() || undefined,
+            color: color.trim() || undefined,
+            numeroSerie: serial.trim() || undefined,
+            accesoriosRecibidos: accessories.trim() || undefined,
+          })
+        ).idDispositivo;
 
-      await ordenesService.crear(empresaId, {
+      const orden = await ordenesService.crear(empresaId, {
         idCliente: clienteId,
-        idDispositivo: dispositivo.idDispositivo,
+        idDispositivo,
         idTecnico: technicianId === '' ? undefined : Number(technicianId),
         problemaReportado: issueDescription.trim(),
         observaciones: observations.trim() || undefined,
       });
+
+      if (danos.length > 0) {
+        await recepcionService.registrar({
+          ordenId: orden.idOrden,
+          plantillaInspeccionId: plantillaActiva?.id ?? null,
+          danosFisicos: danos,
+          observaciones: observations.trim() || undefined,
+          aceptacionCliente: false,
+        });
+      }
 
       navigate('/ordenes');
     } catch {
@@ -246,138 +308,148 @@ export const NuevaOrdenPage: React.FC = () => {
                   </h3>
                 </div>
 
+                <BuscadorCliente
+                  clientes={clientes}
+                  seleccionado={clienteSeleccionado}
+                  onSeleccionar={handleSeleccionarCliente}
+                />
+
+                {!isExistingClient && (
+                  <>
+                    <div className="grid-2">
+                      <Input
+                        label="Nombre *"
+                        placeholder="Ej. Andrea"
+                        value={clientName}
+                        onChange={(e) => setClientName(e.target.value)}
+                        maxLength={50}
+                        required
+                      />
+                      <Input
+                        label="Apellido *"
+                        placeholder="Ej. Zelaya"
+                        value={clientLastName}
+                        onChange={(e) => setClientLastName(e.target.value)}
+                        maxLength={50}
+                        required
+                      />
+                    </div>
+
+                    <Input
+                      label="Teléfono"
+                      placeholder="Ej. 9855-2210"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      maxLength={20}
+                      inputMode="tel"
+                    />
+                  </>
+                )}
+
+                <SelectorDispositivo
+                  clienteId={isExistingClient ? Number(selectedClienteId) : null}
+                  seleccionado={dispositivoExistente}
+                  onSeleccionar={handleSeleccionarDispositivo}
+                />
+
+                {dispositivoExistente === null && (
+                  <>
+                    <div className="input-group">
+                      <label className="input-label">Tipo de dispositivo *</label>
+                      <select
+                        className="input-field"
+                        value={categoriaId}
+                        onChange={(e) => {
+                          setCategoriaId(e.target.value);
+                          setDanos([]);
+                        }}
+                        required
+                      >
+                        {categorias.length === 0 && <option value="">Cargando catálogo…</option>}
+                        {categorias.map((categoria) => (
+                          <option key={categoria.id} value={String(categoria.id)}>
+                            {categoria.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid-3">
+                      <Input
+                        label="Marca *"
+                        placeholder="Ej. Samsung"
+                        value={brand}
+                        onChange={(e) => setBrand(e.target.value)}
+                        maxLength={50}
+                        required
+                      />
+
+                      <Input
+                        label="Modelo *"
+                        placeholder="Ej. Galaxy S22"
+                        value={model}
+                        onChange={(e) => setModel(e.target.value)}
+                        maxLength={50}
+                        required
+                      />
+
+                      <Input
+                        label="Color"
+                        placeholder="Ej. Negro mate"
+                        value={color}
+                        onChange={(e) => setColor(e.target.value)}
+                        maxLength={30}
+                      />
+                    </div>
+
+                    <div className="grid-2">
+                      <Input
+                        label="Número de serie o IMEI"
+                        placeholder="Ej. SM-S901ULB7734"
+                        value={serial}
+                        onChange={(e) => setSerial(e.target.value)}
+                        maxLength={80}
+                      />
+
+                      <Input
+                        label="Accesorios recibidos"
+                        placeholder="Ej. Cargador, funda, tarjeta SIM"
+                        value={accessories}
+                        onChange={(e) => setAccessories(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+
                 <div className="input-group">
-                  <label className="input-label">CLIENTE</label>
-                  <select
-                    className="input-field"
-                    value={selectedClienteId}
-                    onChange={(e) => handleClienteChange(e.target.value)}
-                  >
-                    <option value="">-- Registrar cliente nuevo --</option>
-                    {clientes.map((cliente) => (
-                      <option key={cliente.idCliente} value={String(cliente.idCliente)}>
-                        {cliente.nombre} {cliente.apellido}{cliente.telefono ? ` — ${cliente.telefono}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid-2">
-                  <Input
-                    label="NOMBRE DE CLIENTE *"
-                    placeholder="Nombre del cliente"
-                    value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
-                    disabled={isExistingClient}
-                    maxLength={50}
-                    required
-                  />
-                  <Input
-                    label="APELLIDO DE CLIENTE *"
-                    placeholder="Ej. Reyes"
-                    value={clientLastName}
-                    onChange={(e) => setClientLastName(e.target.value)}
-                    disabled={isExistingClient}
-                    maxLength={50}
-                    required
-                  />
-                </div>
-
-                <div className="grid-2">
-                  <Input
-                    label="TELÉFONO DE ENLACE"
-                    placeholder="Ej. +504 8956-3652"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    disabled={isExistingClient}
-                    maxLength={20}
-                  />
-
-                  <div className="input-group">
-                    <label className="input-label">TIPO DE DISPOSITIVO *</label>
-                    <select
-                      className="input-field"
-                      value={categoriaId}
-                      onChange={(e) => setCategoriaId(e.target.value)}
-                      required
-                    >
-                      {categorias.length === 0 && <option value="">Cargando catalogo...</option>}
-                      {categorias.map((categoria) => (
-                        <option key={categoria.id} value={String(categoria.id)}>
-                          {categoria.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid-3">
-                  <Input
-                    label="MARCA *"
-                    placeholder="Ej. Samsung"
-                    value={brand}
-                    onChange={(e) => setBrand(e.target.value)}
-                    maxLength={50}
-                    required
-                  />
-
-                  <Input
-                    label="MODELO *"
-                    placeholder="Ej. Galaxy 23"
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                    maxLength={50}
-                    required
-                  />
-
-                  <Input
-                    label="COLOR (OPCIONAL)"
-                    placeholder="Ej. Negro"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    maxLength={30}
-                  />
-                </div>
-
-                <div className="grid-2">
-                  <Input
-                    label="NÚMERO DE SERIE (OPCIONAL)"
-                    placeholder="Escriba código de etiqueta"
-                    value={serial}
-                    onChange={(e) => setSerial(e.target.value)}
-                    maxLength={80}
-                  />
-
-                  <Input
-                    label="ACCESORIOS RECIBIDOS (OPCIONAL)"
-                    placeholder="Ej. Cargador, estuche"
-                    value={accessories}
-                    onChange={(e) => setAccessories(e.target.value)}
-                  />
-                </div>
-
-                <div className="input-group">
-                  <label className="input-label">ASIGNAR TÉCNICO RESPONSABLE</label>
+                  <label className="input-label">Técnico responsable</label>
                   <select
                     className="input-field"
                     value={technicianId}
                     onChange={(e) => setTechnicianId(e.target.value)}
                   >
-                    <option value="">-- Dejar sin asignar temporalmente --</option>
-                    {tecnicos.filter((tecnico) => tecnico.activo).map((tecnico) => (
+                    <option value="">Asignar más tarde</option>
+                    {tecnicos.map((tecnico, indice) => (
                       <option key={tecnico.idTecnico} value={String(tecnico.idTecnico)}>
-                        {tecnico.nombre} {tecnico.apellido}
+                        {tecnico.nombre} {tecnico.apellido} · {tecnico.ordenesActivas}{' '}
+                        {tecnico.ordenesActivas === 1 ? 'orden activa' : 'órdenes activas'}
+                        {indice === 0 && tecnicos.length > 1 ? ' — sugerido' : ''}
                       </option>
                     ))}
                   </select>
+                  {tecnicos.length > 1 && (
+                    <span style={{ fontSize: '12px', color: '#94A3B8' }}>
+                      Se sugiere al técnico con menos órdenes abiertas, pero puedes elegir otro.
+                    </span>
+                  )}
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">FALLO REPORTADO (DESCRIPCIÓN)</label>
+                  <label className="input-label">Fallo reportado por el cliente *</label>
                   <textarea
                     className="input-field"
                     rows={4}
-                    placeholder="Describa el fallo indicado por el cliente..."
+                    placeholder="Ej. Se apaga sola a los 10 minutos y no carga con el cable original"
                     value={issueDescription}
                     onChange={(e) => setIssueDescription(e.target.value)}
                     maxLength={500}
@@ -386,11 +458,11 @@ export const NuevaOrdenPage: React.FC = () => {
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">OBSERVACIONES (OPCIONAL)</label>
+                  <label className="input-label">Observaciones internas</label>
                   <textarea
                     className="input-field"
                     rows={2}
-                    placeholder="Notas internas del ingreso..."
+                    placeholder="Ej. Cliente autoriza abrir el equipo. No deja cargador."
                     value={observations}
                     onChange={(e) => setObservations(e.target.value)}
                     maxLength={300}
@@ -413,28 +485,15 @@ export const NuevaOrdenPage: React.FC = () => {
                     2. Evidencia Visual Antireclamos
                   </h4>
                   <p style={{ fontSize: '12px', color: '#64748B', marginTop: '6px', lineHeight: 1.4 }}>
-                    Haga click sobre el esquema de celular para fijar la ubicación exacta de golpes, rasguños o vidrios fracturados del equipo recibidos en recepción del cliente.
+                    Marca sobre el esquema del equipo dónde viene cada golpe, rayón o vidrio quebrado. Queda como respaldo del estado en que ingresó.
                   </p>
                 </div>
 
-                <div className="input-group">
-                  <label className="input-label" style={{ fontSize: '12px', textTransform: 'uppercase' }}>TIPO DE MARCA:</label>
-                  <select
-                    className="input-field"
-                    value={markType}
-                    onChange={(e) => setMarkType(e.target.value)}
-                  >
-                    <option value="Rotura / Crack">Rotura / Crack</option>
-                    <option value="Rasguño / Rayón">Rasguño / Rayón</option>
-                    <option value="Golpe / Abolladura">Golpe / Abolladura</option>
-                    <option value="Desgaste normal">Desgaste normal</option>
-                  </select>
-                </div>
-
-                <Input
-                  placeholder="Añadir nota a la marca (Ej. Camara frontal quebrada)"
-                  value={markNote}
-                  onChange={(e) => setMarkNote(e.target.value)}
+                <ChasisInteractivo
+                  categoriaId={categoriaId === '' ? null : Number(categoriaId)}
+                  vistas={vistasChasis}
+                  danos={danos}
+                  onChange={setDanos}
                 />
 
                 <div style={{

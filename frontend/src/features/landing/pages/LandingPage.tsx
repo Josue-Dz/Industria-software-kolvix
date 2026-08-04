@@ -49,39 +49,33 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Mockup Graphic */}
+          {/* Right Hero Image */}
           <div style={{
             position: 'relative',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center'
           }}>
-            <div style={{
-              width: '100%',
-              backgroundColor: '#FFFFFF',
-              borderRadius: '24px',
-              padding: '24px',
-              boxShadow: '0 20px 40px rgba(99, 102, 241, 0.15)',
-              border: '1px solid #EDE9FE'
-            }}>
-              {/* Animated / Rendered Interface Preview */}
-              <div style={{
-                backgroundColor: '#F8FAFC',
-                borderRadius: '16px',
-                padding: '20px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#6366F1' }} />
-                  <div style={{ width: '140px', height: '14px', borderRadius: '7px', backgroundColor: '#3730A3' }} />
-                </div>
-                <div style={{ width: '100%', height: '32px', borderRadius: '8px', backgroundColor: '#EDE9FE' }} />
-                <div style={{ width: '100%', height: '32px', borderRadius: '8px', backgroundColor: '#EDE9FE' }} />
-                <div style={{ width: '80%', height: '32px', borderRadius: '8px', backgroundColor: '#EDE9FE' }} />
-              </div>
-            </div>
+            <img
+              src="/logos/Kolvix_hero.webp"
+              // En pantallas angostas la imagen ocupa todo el ancho; en el grid
+              // del hero, la mitad. El navegador elige la versión que le baste.
+              srcSet="/logos/Kolvix_hero-760.webp 760w, /logos/Kolvix_hero.webp 1520w"
+              sizes="(max-width: 900px) 100vw, 50vw"
+              alt="Panel de Kolvix mostrando la gestión de órdenes de un taller"
+              width={1520}
+              height={978}
+              // Es la imagen principal: se carga de una y con prioridad, no en diferido.
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+                borderRadius: '24px'
+              }}
+            />
           </div>
         </div>
       </section>

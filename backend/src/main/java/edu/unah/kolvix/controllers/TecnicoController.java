@@ -1,5 +1,7 @@
 package edu.unah.kolvix.controllers;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.unah.kolvix.dtos.usuario.CambiarEstadoRequest;
+import edu.unah.kolvix.dtos.usuario.CargaTecnicoResponse;
 import edu.unah.kolvix.dtos.usuario.TecnicoRegistroRequest;
 import edu.unah.kolvix.dtos.usuario.TecnicoRequest;
 import edu.unah.kolvix.dtos.usuario.TecnicoResponse;
@@ -69,6 +72,11 @@ public class TecnicoController {
     public ResponseEntity<TecnicoResponse> cambiarEstado(@PathVariable Long id,
                                                           @Valid @RequestBody CambiarEstadoRequest request) {
         return ResponseEntity.ok(tecnicoService.cambiarEstado(id, empresaIdActual(), request.activo()));
+    }
+
+    @GetMapping("/carga")
+    public ResponseEntity<List<CargaTecnicoResponse>> listarCarga() {
+        return ResponseEntity.ok(tecnicoService.listarCarga(empresaIdActual()));
     }
 
     @GetMapping("/me")

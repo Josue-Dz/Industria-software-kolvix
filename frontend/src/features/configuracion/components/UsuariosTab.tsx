@@ -6,7 +6,6 @@ import { Plus, AlertTriangle } from 'lucide-react';
 import type { ConfiguracionController } from '../useConfiguracion';
 import type { UserRole } from '../../../api/types';
 
-// Roles reales del sistema (enum RolUsuario en el backend).
 const ROLES: { valor: UserRole; etiqueta: string }[] = [
   { valor: 'ADMIN', etiqueta: 'Administrador' },
   { valor: 'PROPIETARIO', etiqueta: 'Propietario' },
@@ -28,7 +27,6 @@ export const UsuariosTab: React.FC<{ c: ConfiguracionController }> = ({ c }) => 
 
   const activos = usuarios.filter(u => u.activo).length;
 
-  // El backend es quien decide; aquí solo se anticipa el bloqueo en la interfaz.
   const cupoLleno = limiteUsuarios ? !limiteUsuarios.cupoDisponible : false;
   const textoCupo = !limiteUsuarios
     ? `${activos} ${activos === 1 ? 'activo' : 'activos'}`
@@ -36,7 +34,7 @@ export const UsuariosTab: React.FC<{ c: ConfiguracionController }> = ({ c }) => 
       ? `${limiteUsuarios.usuariosActivos} activos · usuarios ilimitados`
       : `${limiteUsuarios.usuariosActivos} de ${limiteUsuarios.maxUsuarios} usuarios activos`;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     const creado = await crearUsuario({ nombre, apellido, correo, password, rol });
     if (creado) {

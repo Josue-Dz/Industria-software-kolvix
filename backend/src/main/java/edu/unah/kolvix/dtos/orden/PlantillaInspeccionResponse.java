@@ -1,7 +1,8 @@
 package edu.unah.kolvix.dtos.orden;
 
 import java.util.List;
-import java.util.Map;
+
+import edu.unah.kolvix.model.VistaChasis;
 
 public record PlantillaInspeccionResponse(
         Long id,
@@ -9,7 +10,7 @@ public record PlantillaInspeccionResponse(
         String categoriaNombre,
         String nombre,
         String descripcion,
-        List<Map<String, Object>> vistas,
+        List<VistaChasis> vistas,
         boolean activo
 ) {
 }

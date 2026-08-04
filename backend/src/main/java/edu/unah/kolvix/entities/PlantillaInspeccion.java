@@ -3,12 +3,12 @@ package edu.unah.kolvix.entities;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import edu.unah.kolvix.model.VistaChasis;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -44,7 +44,7 @@ public class PlantillaInspeccion {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "vistas", nullable = false, columnDefinition = "jsonb")
-    private List<Map<String, Object>> vistas = new ArrayList<>();
+    private List<VistaChasis> vistas = new ArrayList<>();
 
     @Column(name = "activo", nullable = false)
     private boolean activo = true;

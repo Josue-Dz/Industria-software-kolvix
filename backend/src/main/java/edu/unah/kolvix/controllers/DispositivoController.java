@@ -39,6 +39,12 @@ public class DispositivoController {
         return ResponseEntity.ok(dispositivoService.listarDispositivosPorCliente(idCliente));
     }
 
+    @GetMapping("/{idDispositivo}")
+    public ResponseEntity<DispositivoResponse> obtenerDispositivo(@PathVariable Long idDispositivo) {
+        accesoEmpresa.validarDispositivoPropio(idDispositivo);
+        return ResponseEntity.ok(dispositivoService.obtenerDispositivo(idDispositivo));
+    }
+
     @PutMapping("/{idDispositivo}")
     public ResponseEntity<DispositivoResponse> editarDispositivo(
             @PathVariable Long idDispositivo,
