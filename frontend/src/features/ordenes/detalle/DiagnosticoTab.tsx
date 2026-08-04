@@ -15,6 +15,7 @@ interface DiagnosticoTabProps {
 export const DiagnosticoTab: React.FC<DiagnosticoTabProps> = ({ d, orden }) => {
   const {
     diagnostico, diagnosticoBloqueado, cotizacionActual, tecnicos, isSaving, esTecnico,
+    puedeCambiarTecnico,
     diagTecnicoId, setDiagTecnicoId, diagProblema, setDiagProblema, diagCausa, setDiagCausa,
     diagTiempo, setDiagTiempo, diagComplejidad, setDiagComplejidad, diagObs, setDiagObs,
     montoRepuestosDiagnostico, setIsInventoryModalOpen, setActiveSubTab,
@@ -47,20 +48,33 @@ export const DiagnosticoTab: React.FC<DiagnosticoTabProps> = ({ d, orden }) => {
           <span style={{ fontSize: '14px', fontWeight: '800', color: '#1E1B4B' }}>Hallazgos del técnico</span>
 
           <div className="input-group">
-            <label className="input-label">Técnico responsable</label>
+            <label className="input-label">
+              {orden.idTecnico === null ? 'Asignar técnico *' : 'Técnico responsable'}
+            </label>
             <select
               className="input-field"
               value={diagTecnicoId}
               onChange={(e) => setDiagTecnicoId(e.target.value)}
-              // Un técnico solo puede registrar el diagnóstico a su nombre; el
-              // administrador elige a quién asignarlo mientras no exista.
-              disabled={diagnostico !== null || esTecnico}
+              // Un técnico solo puede registrar el diagnóstico a su nombre. El
+              // administrador puede corregir la asignación mientras la orden no
+              // haya avanzado más allá de Diagnóstico.
+              disabled={esTecnico || !puedeCambiarTecnico}
             >
               <option value="">-- Seleccionar técnico --</option>
-              {tecnicos.filter((t) => t.activo).map((t) => (
-                <option key={t.idTecnico} value={String(t.idTecnico)}>{t.nombre} {t.apellido}</option>
+              {tecnicos.map((t, indice) => (
+                <option key={t.idTecnico} value={String(t.idTecnico)}>
+                  {t.nombre} {t.apellido}
+                  {esTecnico ? '' : ` · ${t.ordenesActivas} ${t.ordenesActivas === 1 ? 'orden activa' : 'órdenes activas'}`}
+                  {!esTecnico && indice === 0 && tecnicos.length > 1 ? ' — sugerido' : ''}
+                </option>
               ))}
             </select>
+            {orden.idTecnico === null && !esTecnico && (
+              <span style={{ fontSize: '12px', color: '#94A3B8' }}>
+                Esta orden aún no tiene técnico. Al guardar el diagnóstico se le asignará a toda la
+                orden, no solo a este diagnóstico.
+              </span>
+            )}
           </div>
 
           <Input

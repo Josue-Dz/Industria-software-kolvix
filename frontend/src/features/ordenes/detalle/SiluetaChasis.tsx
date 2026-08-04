@@ -23,29 +23,37 @@ const Barras: React.FC<{ x: number; y: number; ancho: number; alto: number; paso
   </>
 );
 
+
 const Celular: React.FC<{ vista: string }> = ({ vista }) => {
   if (esLateral(vista)) {
     return (
       <>
-        <rect x={44} y={6} width={12} height={88} rx={4} fill={RELLENO} stroke={TRAZO} strokeWidth={1.2} />
-        <rect x={56} y={26} width={2} height={10} rx={1} fill={DETALLE} />
-        <rect x={56} y={40} width={2} height={16} rx={1} fill={DETALLE} />
+        <rect x={44} y={8} width={12} height={84} rx={4} fill={RELLENO} stroke={TRAZO} strokeWidth={1.2} />
+        {vista === 'LATERAL_DER' ? (
+          <rect x={54.5} y={34} width={3} height={14} rx={1.5} fill={RELLENO} stroke={TRAZO} strokeWidth={0.9} />
+        ) : (
+          <>
+            <rect x={42.5} y={30} width={3} height={11} rx={1.5} fill={RELLENO} stroke={TRAZO} strokeWidth={0.9} />
+            <rect x={42.5} y={44} width={3} height={11} rx={1.5} fill={RELLENO} stroke={TRAZO} strokeWidth={0.9} />
+            <rect x={47} y={66} width={6} height={1.4} rx={0.7} fill={DETALLE} />
+          </>
+        )}
       </>
     );
   }
   return (
     <>
-      <rect x={31} y={5} width={38} height={90} rx={6} fill={RELLENO} stroke={TRAZO} strokeWidth={1.2} />
+      <rect x={30} y={8} width={40} height={84} rx={6} fill={RELLENO} stroke={TRAZO} strokeWidth={1.2} />
       {vista === 'TRASERA' ? (
         <>
-          <rect x={36} y={11} width={14} height={14} rx={3} fill={DETALLE} />
-          <circle cx={40} cy={15} r={2.2} fill={TRAZO} />
-          <circle cx={46} cy={21} r={2.2} fill={TRAZO} />
+          <rect x={35} y={14} width={14} height={14} rx={3} fill={DETALLE} />
+          <circle cx={39} cy={18} r={2.2} fill={TRAZO} />
+          <circle cx={45} cy={24} r={2.2} fill={TRAZO} />
         </>
       ) : (
         <>
-          <rect x={35} y={12} width={30} height={72} rx={2} fill={HUECO} stroke={DETALLE} strokeWidth={0.8} />
-          <rect x={45} y={8} width={10} height={1.6} rx={0.8} fill={DETALLE} />
+          <rect x={34} y={15} width={32} height={67} rx={2} fill={HUECO} stroke={DETALLE} strokeWidth={0.8} />
+          <rect x={45} y={11} width={10} height={1.6} rx={0.8} fill={DETALLE} />
         </>
       )}
     </>
@@ -54,7 +62,12 @@ const Celular: React.FC<{ vista: string }> = ({ vista }) => {
 
 const Tablet: React.FC<{ vista: string }> = ({ vista }) => {
   if (esLateral(vista)) {
-    return <rect x={45} y={14} width={10} height={72} rx={3} fill={RELLENO} stroke={TRAZO} strokeWidth={1.2} />;
+    return (
+      <>
+        <rect x={45} y={14} width={10} height={72} rx={3} fill={RELLENO} stroke={TRAZO} strokeWidth={1.2} />
+        <rect x={43.5} y={26} width={3} height={10} rx={1.5} fill={RELLENO} stroke={TRAZO} strokeWidth={0.9} />
+      </>
+    );
   }
   return (
     <>
@@ -70,10 +83,21 @@ const Tablet: React.FC<{ vista: string }> = ({ vista }) => {
 
 const Laptop: React.FC<{ vista: string }> = ({ vista }) => {
   if (esLateral(vista)) {
+
     return (
       <>
-        <rect x={18} y={44} width={64} height={5} rx={2} fill={RELLENO} stroke={TRAZO} strokeWidth={1.2} />
-        <rect x={18} y={20} width={4} height={24} rx={1.5} fill={RELLENO} stroke={TRAZO} strokeWidth={1.2} />
+        <rect x={20} y={62} width={60} height={5} rx={2} fill={RELLENO} stroke={TRAZO} strokeWidth={1.2} />
+        <rect
+          x={20}
+          y={20}
+          width={5}
+          height={42}
+          rx={2}
+          fill={RELLENO}
+          stroke={TRAZO}
+          strokeWidth={1.2}
+          transform="rotate(-14 22.5 62)"
+        />
       </>
     );
   }
@@ -139,7 +163,8 @@ const Televisor: React.FC<{ vista: string }> = ({ vista }) => {
     return (
       <>
         <rect x={46} y={20} width={8} height={44} rx={2} fill={RELLENO} stroke={TRAZO} strokeWidth={1.2} />
-        <rect x={40} y={78} width={20} height={3} rx={1.5} fill={DETALLE} />
+        <rect x={48} y={64} width={4} height={14} rx={1} fill={DETALLE} />
+        <rect x={40} y={78} width={20} height={3.5} rx={1.75} fill={TRAZO} />
       </>
     );
   }
@@ -162,7 +187,12 @@ const Televisor: React.FC<{ vista: string }> = ({ vista }) => {
 
 const Consola: React.FC<{ vista: string }> = ({ vista }) => {
   if (esLateral(vista)) {
-    return <rect x={40} y={28} width={20} height={44} rx={4} fill={RELLENO} stroke={TRAZO} strokeWidth={1.2} />;
+    return (
+      <>
+        <rect x={40} y={28} width={20} height={44} rx={4} fill={RELLENO} stroke={TRAZO} strokeWidth={1.2} />
+        <rect x={44} y={46} width={12} height={2} rx={1} fill={DETALLE} />
+      </>
+    );
   }
   return (
     <>
@@ -287,7 +317,7 @@ const Generico: React.FC<{ vista: string }> = ({ vista }) => {
   );
 };
 
-// Ids de categoria_dispositivos, que es catalogo global.
+
 const POR_CATEGORIA: Record<number, React.FC<{ vista: string }>> = {
   1: Celular,
   2: Laptop,

@@ -1,6 +1,7 @@
 package edu.unah.kolvix.services;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Objects;
 
 import org.springframework.http.HttpStatus;
@@ -14,10 +15,12 @@ import edu.unah.kolvix.entities.Diagnostico;
 import edu.unah.kolvix.entities.OrdenTrabajo;
 import edu.unah.kolvix.entities.Tecnico;
 import edu.unah.kolvix.entities.Usuario;
+import edu.unah.kolvix.enums.CodigoEstadoReparacion;
 import edu.unah.kolvix.enums.EstadoCotizacion;
 import edu.unah.kolvix.repositories.CotizacionRepository;
 import edu.unah.kolvix.repositories.DiagnosticoRepository;
 import edu.unah.kolvix.repositories.OrdenTrabajoRepository;
+import edu.unah.kolvix.repositories.TecnicoRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -28,6 +31,7 @@ public class DiagnosticoService {
     private final OrdenTrabajoRepository ordenTrabajoRepository;
     private final CotizacionRepository cotizacionRepository;
     private final DiagnosticoRepuestoService diagnosticoRepuestoService;
+    private final TecnicoRepository tecnicoRepository;
 
     @Transactional
     public DiagnosticoResponse crear(Long empresaId, DiagnosticoRequest request) {
@@ -42,13 +46,13 @@ public class DiagnosticoService {
                     );
                 });
 
-        validarTecnicoAsignado(orden, request.tecnicoId());
+        Tecnico tecnico = resolverTecnico(orden, request.tecnicoId());
         validarTiempoEstimado(request.tiempoEstimadoHoras());
 
         Diagnostico diagnostico = new Diagnostico();
         diagnostico.setEmpresa(orden.getEmpresa());
         diagnostico.setOrden(orden);
-        diagnostico.setTecnico(orden.getTecnico());
+        diagnostico.setTecnico(tecnico);
         diagnostico.setProblemaEncontrado(request.problemaEncontrado());
         diagnostico.setCausaRaiz(request.causaRaiz());
         diagnostico.setTiempoEstimado(request.tiempoEstimadoHoras());
@@ -92,10 +96,20 @@ public class DiagnosticoService {
         }
 
         if (!Objects.equals(diagnostico.getTecnico().getIdTecnico(), request.tecnicoId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "El tecnico del diagnostico no puede modificarse"
-            );
+            OrdenTrabajo orden = diagnostico.getOrden();
+
+            if (!permiteCambiarTecnico(orden)) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "El tecnico ya no puede cambiarse: la orden avanzo mas alla del diagnostico"
+                );
+            }
+
+            Tecnico nuevoTecnico = buscarTecnicoDeEmpresa(request.tecnicoId(), empresaId);
+            diagnostico.setTecnico(nuevoTecnico);
+            orden.setTecnico(nuevoTecnico);
+            orden.setUpdatedAt(Instant.now());
+            ordenTrabajoRepository.save(orden);
         }
 
         asegurarDiagnosticoSinCotizacion(diagnostico);
@@ -140,22 +154,65 @@ public class DiagnosticoService {
                 ));
     }
 
-    private void validarTecnicoAsignado(OrdenTrabajo orden, Long tecnicoIdRequest) {
+    /**
+     * Devuelve el tecnico que firma el diagnostico.
+     *
+     * Si la orden aun no tiene tecnico, se le asigna el del request dentro de esta
+     * misma transaccion: antes el frontend tenia que llamar aparte a asignar y
+     * luego crear, y si lo segundo fallaba la orden quedaba asignada sin
+     * diagnostico.
+     */
+    private Tecnico resolverTecnico(OrdenTrabajo orden, Long tecnicoIdRequest) {
         Tecnico tecnicoAsignado = orden.getTecnico();
 
-        if (tecnicoAsignado == null) {
+        if (tecnicoAsignado != null) {
+            if (!Objects.equals(tecnicoAsignado.getIdTecnico(), tecnicoIdRequest)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "El tecnico indicado no coincide con el tecnico asignado a la orden"
+                );
+            }
+            return tecnicoAsignado;
+        }
+
+        Tecnico tecnico = buscarTecnicoDeEmpresa(tecnicoIdRequest, orden.getEmpresa().getIdEmpresa());
+        orden.setTecnico(tecnico);
+        orden.setUpdatedAt(Instant.now());
+        ordenTrabajoRepository.save(orden);
+        return tecnico;
+    }
+
+    private Tecnico buscarTecnicoDeEmpresa(Long idTecnico, Long empresaId) {
+        if (idTecnico == null) {
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "La orden debe tener un tecnico asignado antes de registrar el diagnostico"
+                    HttpStatus.BAD_REQUEST,
+                    "Indica el tecnico responsable del diagnostico"
             );
         }
 
-        if (!Objects.equals(tecnicoAsignado.getIdTecnico(), tecnicoIdRequest)) {
+        Tecnico tecnico = tecnicoRepository.findByIdTecnicoAndEmpresaIdEmpresa(idTecnico, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "El tecnico no existe en la empresa"
+                ));
+
+        if (!tecnico.isActivo()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "El tecnico indicado no coincide con el tecnico asignado a la orden"
+                    "El tecnico esta inactivo"
             );
         }
+
+        return tecnico;
+    }
+
+    /**
+     * El tecnico solo se puede corregir mientras la orden no haya salido de
+     * Diagnostico. Despues ya hay trabajo hecho a su nombre.
+     */
+    private boolean permiteCambiarTecnico(OrdenTrabajo orden) {
+        CodigoEstadoReparacion codigo = orden.getEstado() == null ? null : orden.getEstado().getCodigo();
+        return codigo == CodigoEstadoReparacion.RECEPCION || codigo == CodigoEstadoReparacion.DIAGNOSTICO;
     }
 
     private void validarTiempoEstimado(BigDecimal tiempoEstimadoHoras) {
@@ -167,9 +224,6 @@ public class DiagnosticoService {
         }
     }
 
-    // El diagnóstico solo se bloquea cuando su última versión de cotización está ENVIADA
-    // o APROBADA; con borrador PENDIENTE o cotización RECHAZADA/VENCIDA/CANCELADA se
-    // permiten cambios para preparar la siguiente versión.
     private void asegurarDiagnosticoSinCotizacion(Diagnostico diagnostico) {
         cotizacionRepository
                 .findByOrdenIdOrdenAndEmpresaIdEmpresaOrderByVersionDesc(

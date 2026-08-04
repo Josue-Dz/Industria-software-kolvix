@@ -1,5 +1,10 @@
 package edu.unah.kolvix.services;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -7,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import edu.unah.kolvix.dtos.usuario.CargaTecnicoResponse;
 import edu.unah.kolvix.dtos.usuario.TecnicoRegistroRequest;
 import edu.unah.kolvix.dtos.usuario.TecnicoRequest;
 import edu.unah.kolvix.dtos.usuario.TecnicoResponse;
@@ -16,6 +22,7 @@ import edu.unah.kolvix.entities.Empresa;
 import edu.unah.kolvix.entities.Tecnico;
 import edu.unah.kolvix.entities.Usuario;
 import edu.unah.kolvix.enums.RolUsuario;
+import edu.unah.kolvix.repositories.OrdenTrabajoRepository;
 import edu.unah.kolvix.repositories.TecnicoRepository;
 import edu.unah.kolvix.repositories.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +34,8 @@ public class TecnicoService {
     private final TecnicoRepository tecnicoRepository;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
+    private final OrdenTrabajoRepository ordenTrabajoRepository;
 
-    // Registro en un solo paso: crea Usuario (rol TECNICO) + Tecnico en la misma transaccion
     @Transactional
     public TecnicoResponse registrar(TecnicoRegistroRequest request, Empresa empresa) {
         if (tecnicoRepository.existsByEmpresaIdEmpresaAndDni(empresa.getIdEmpresa(), request.dni())) {
@@ -165,6 +172,30 @@ public class TecnicoService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Este usuario no tiene un registro de técnico asociado"));
     return mapearResponse(tecnico);
+    }
+
+    /**
+     * Técnicos activos con su cantidad de órdenes abiertas, ordenados del menos
+     * cargado al más cargado para que el primero sea el candidato natural.
+     */
+    @Transactional(readOnly = true)
+    public List<CargaTecnicoResponse> listarCarga(Long empresaId) {
+        Map<Long, Long> activasPorTecnico = ordenTrabajoRepository
+                .contarOrdenesActivasPorTecnico(empresaId).stream()
+                .collect(Collectors.toMap(
+                        OrdenTrabajoRepository.CargaTecnico::getIdTecnico,
+                        OrdenTrabajoRepository.CargaTecnico::getOrdenesActivas));
+
+        return tecnicoRepository
+                .findByEmpresaIdEmpresaAndActivoTrueOrderByUsuarioNombreAscUsuarioApellidoAsc(empresaId)
+                .stream()
+                .map(tecnico -> new CargaTecnicoResponse(
+                        tecnico.getIdTecnico(),
+                        tecnico.getUsuario().getNombre(),
+                        tecnico.getUsuario().getApellido(),
+                        activasPorTecnico.getOrDefault(tecnico.getIdTecnico(), 0L)))
+                .sorted(Comparator.comparingLong(CargaTecnicoResponse::ordenesActivas))
+                .toList();
     }
 
 }

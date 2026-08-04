@@ -1,5 +1,6 @@
 package edu.unah.kolvix.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -13,6 +14,8 @@ public interface TecnicoRepository extends JpaRepository<Tecnico, Long>{
 
     @EntityGraph(attributePaths = {"usuario"})
     Page<Tecnico> findByEmpresaIdEmpresaOrderByIdTecnicoDesc(Long empresaId, Pageable pageable);
+
+    List<Tecnico> findByEmpresaIdEmpresaAndActivoTrueOrderByUsuarioNombreAscUsuarioApellidoAsc(Long empresaId);
 
     @EntityGraph(attributePaths = {"usuario"})
     Optional<Tecnico> findByIdTecnicoAndEmpresaIdEmpresa(Long idTecnico, Long empresaId);

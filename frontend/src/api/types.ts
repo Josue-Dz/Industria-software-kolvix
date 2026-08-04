@@ -150,6 +150,13 @@ export interface TecnicoResponse {
   activo: boolean;
 }
 
+export interface CargaTecnicoResponse {
+  idTecnico: number;
+  nombre: string;
+  apellido: string;
+  ordenesActivas: number;
+}
+
 export interface TecnicoRegistroRequest {
   nombre: string;
   apellido: string;

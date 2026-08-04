@@ -7,12 +7,27 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import edu.unah.kolvix.entities.EstadoReparacion;
 import edu.unah.kolvix.entities.OrdenTrabajo;
 import edu.unah.kolvix.enums.EstadoPagoOrden;
 
 public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long> {
+
+    @Query("""
+            select t.idTecnico as idTecnico, count(o.idOrden) as ordenesActivas
+            from Tecnico t
+            left join OrdenTrabajo o on o.tecnico = t and o.estado.esEstadoFinal = false
+            where t.empresa.idEmpresa = :empresaId and t.activo = true
+            group by t.idTecnico
+            """)
+    List<CargaTecnico> contarOrdenesActivasPorTecnico(Long empresaId);
+
+    interface CargaTecnico {
+        Long getIdTecnico();
+        long getOrdenesActivas();
+    }
 
     @EntityGraph(attributePaths = {"cliente", "dispositivo", "tecnico", "estado"})
     Optional<OrdenTrabajo> findByIdOrdenAndEmpresaIdEmpresa(Long id, Long empresaId);

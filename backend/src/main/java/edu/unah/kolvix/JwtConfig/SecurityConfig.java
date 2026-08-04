@@ -35,8 +35,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/seguimiento/**").permitAll()
                         .requestMatchers("/api/usuarios/**").hasAnyRole("ADMIN",           
                                         "PROPIETARIO")
-                        .requestMatchers("/api/tecnicos/me").hasAnyRole("ADMIN",        
+                        .requestMatchers("/api/tecnicos/me").hasAnyRole("ADMIN",
                                         "PROPIETARIO", "TECNICO")
+                        // La recepcionista asigna tecnico al registrar la orden, asi que
+                        // necesita ver la carga de trabajo aunque no administre tecnicos.
+                        .requestMatchers(HttpMethod.GET, "/api/tecnicos/carga").hasAnyRole("ADMIN",
+                                        "PROPIETARIO", "RECEPCIONISTA")
                         .requestMatchers("/api/tecnicos/**").hasAnyRole("ADMIN", 
                                         "PROPIETARIO")
                         .requestMatchers(HttpMethod.GET, "/api/estados-reparacion/**").
